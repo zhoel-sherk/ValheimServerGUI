@@ -261,7 +261,7 @@ namespace ValheimServerGUI.Game
             var steamId = captures[0];
             if (string.IsNullOrWhiteSpace(steamId)) return;
 
-            PlayerDataRepository.SetPlayerJoining(new() { Platform = PlayerPlatforms.Steam, PlayerId = steamId });
+            PlayerDataRepository.SetPlayerJoining(Options.Name, new() { Platform = PlayerPlatforms.Steam, PlayerId = steamId });
         }
 
         private void OnPlayerConnectingCrossplay(params string[] captures)
@@ -270,7 +270,7 @@ namespace ValheimServerGUI.Game
             var playerId = captures[1];
             if (!hasValidPlatform || string.IsNullOrWhiteSpace(playerId)) return;
 
-            PlayerDataRepository.SetPlayerJoining(new() { Platform = platform, PlayerId = playerId });
+            PlayerDataRepository.SetPlayerJoining(Options.Name, new() { Platform = platform, PlayerId = playerId });
         }
 
         private void OnPlayerConnected(params string[] captures)
@@ -281,7 +281,7 @@ namespace ValheimServerGUI.Game
 
             if (string.IsNullOrWhiteSpace(playerName)) return;
 
-            PlayerDataRepository.SetPlayerOnline(playerName, zdoid);
+            PlayerDataRepository.SetPlayerOnline(Options.Name, new() { CharacterName = playerName, ZdoId = zdoid });
         }
 
         private void OnPlayerDisconnecting(params string[] captures)
@@ -298,7 +298,7 @@ namespace ValheimServerGUI.Game
                 }
             };
 
-            PlayerDataRepository.SetPlayerLeaving(query);
+            PlayerDataRepository.SetPlayerLeaving(Options.Name, query);
         }
 
         private void OnPlayerDisconnected(params string[] captures)
@@ -315,7 +315,7 @@ namespace ValheimServerGUI.Game
                 }
             };
 
-            PlayerDataRepository.SetPlayerOffline(query);
+            PlayerDataRepository.SetPlayerOffline(Options.Name, query);
         }
 
         private void OnPlayerDisconnectedCrossplay(params string[] captures)
@@ -324,7 +324,7 @@ namespace ValheimServerGUI.Game
             var playerId = captures[1];
             if (!hasValidPlatform || string.IsNullOrWhiteSpace(playerId)) return;
 
-            PlayerDataRepository.SetPlayerOffline(new() { Platform = platform, PlayerId = playerId });
+            PlayerDataRepository.SetPlayerOffline(Options.Name, new() { Platform = platform, PlayerId = playerId });
         }
 
         private void OnWorldSaved(params string[] captures)

@@ -56,13 +56,13 @@ namespace ValheimServerGUI.Game
 
         IEnumerable<PlayerInfo> FindPlayersByQuery(PlayerDataQuery query);
 
-        PlayerInfo SetPlayerJoining(PlayerDataQuery query);
+        PlayerInfo SetPlayerJoining(string serverName, PlayerDataQuery query);
 
-        PlayerInfo SetPlayerOnline(string characterName, string zdoId);
+        PlayerInfo SetPlayerOnline(string serverName, PlayerDataQuery query);
 
-        void SetPlayerLeaving(PlayerDataQuery query);
+        void SetPlayerLeaving(string serverName, PlayerDataQuery query);
 
-        void SetPlayerOffline(PlayerDataQuery query);
+        void SetPlayerOffline(string serverName, PlayerDataQuery query);
 
         Task LoadAsync(); // todo: find a way to automatically load data without exposing this
     }
@@ -128,7 +128,7 @@ namespace ValheimServerGUI.Game
             return results;
         }
 
-        public PlayerInfo SetPlayerJoining(PlayerDataQuery query)
+        public PlayerInfo SetPlayerJoining(string serverName, PlayerDataQuery query)
         {
             if (!query.HasParameters()) return null;
 
@@ -152,6 +152,7 @@ namespace ValheimServerGUI.Game
             player.PlayerStatus = PlayerStatus.Joining;
             player.LastStatusChange = DateTime.UtcNow;
             player.LastStatusCharacter = !string.IsNullOrWhiteSpace(query.CharacterName) ? query.CharacterName : null;
+            player.LastStatusServer = serverName;
             Upsert(player);
 
             if (string.IsNullOrWhiteSpace(player.PlayerName))
@@ -162,15 +163,18 @@ namespace ValheimServerGUI.Game
             return player;
         }
 
-        public PlayerInfo SetPlayerOnline(string characterName, string zdoId)
+        public PlayerInfo SetPlayerOnline(string serverName, PlayerDataQuery query)
         {
             PlayerInfo player = null;
             var playersToSave = new List<PlayerInfo>();
 
             var playersWithCharName = Enumerable.Empty<PlayerInfo>();
-            if (!string.IsNullOrWhiteSpace(characterName))
+            // This method has not been updated to handle anything except character name,
+            // so continue to check that.
+            if (!string.IsNullOrWhiteSpace(query.CharacterName))
             {
-                playersWithCharName = FindPlayersByQuery(new() { CharacterName = characterName })
+
+                playersWithCharName = FindPlayersByQuery(new() { CharacterName = query.CharacterName })
                     .Where(p => p.PlayerStatus.IsAnyValue(PlayerStatus.Joining, PlayerStatus.Offline));
             }
 
@@ -183,7 +187,7 @@ namespace ValheimServerGUI.Game
             {
                 // One player record with this name has been seen in the past with this name, so use it
                 player = playersWithCharName.Single();
-                Logger.Information("(PlayerOnline) Character {name} belongs to player {key} (Single match by name)", characterName, player.Key);
+                Logger.Information("(PlayerOnline) Character {name} belongs to player {key} (Single match by name)", query.CharacterName, player.Key);
 
                 if (player.PlayerStatus == PlayerStatus.Offline)
                 {
@@ -215,19 +219,19 @@ namespace ValheimServerGUI.Game
                 {
                     // If one of those is joining, assume that's the right player
                     player = joiningPlayersWithSameName.Single();
-                    Logger.Information("(PlayerOnline) Character {name} belongs to player {key} (Single joining by name)", characterName, player.Key);
+                    Logger.Information("(PlayerOnline) Character {name} belongs to player {key} (Single joining by name)", query.CharacterName, player.Key);
                 }
                 else
                 {
                     // Otherwise, we cannot reliably pick which of the players by this name we should update
-                    Logger.Information("Cannot resolve identity for character {name} (Multiple joining w/ same name)", characterName);
+                    Logger.Information("Cannot resolve identity for character {name} (Multiple joining w/ same name)", query.CharacterName);
                 }
             }
             else if (joiningPlayers.Count() == 1)
             {
                 // No players were found joining or offline w/ this name, but there is only one joining player, so we can confirm this match
                 player = joiningPlayers.Single();
-                Logger.Information("(PlayerOnline) Character {name} belongs to player {key} (Single player joining)", characterName, player.Key);
+                Logger.Information("(PlayerOnline) Character {name} belongs to player {key} (Single player joining)", query.CharacterName, player.Key);
             }
             else if (joiningPlayers.Count() > 1)
             {
@@ -235,11 +239,11 @@ namespace ValheimServerGUI.Game
                 // Assume that this character belongs to the earliest joining player, but flag the match as low-confidence.
                 player = joiningPlayers.OrderBy(p => p.LastStatusChange).First();
                 matchConfident = false;
-                Logger.Information("Ambiguous identity for character {name} (Multiple players joining, no match by name, best guess: {key})", characterName, player.Key);
+                Logger.Information("Ambiguous identity for character {name} (Multiple players joining, no match by name, best guess: {key})", query.CharacterName, player.Key);
             }
             else
             {
-                Logger.Information("Cannot resolve identity for character {name} (No players joining, no match by name)", characterName);
+                Logger.Information("Cannot resolve identity for character {name} (No players joining, no match by name)", query.CharacterName);
             }
 
             if (player != null)
@@ -247,9 +251,10 @@ namespace ValheimServerGUI.Game
                 // If we could actually determine which player to update, do it now
                 player.PlayerStatus = PlayerStatus.Online;
                 player.LastStatusChange = DateTime.UtcNow;
-                player.LastStatusCharacter = characterName;
-                player.ZdoId = zdoId;
-                player.AddCharacter(characterName, matchConfident);
+                player.LastStatusCharacter = query.CharacterName; // Assuming this cannot be null here...
+                player.LastStatusServer = serverName;
+                player.ZdoId = query.ZdoId;
+                player.AddCharacter(query.CharacterName, matchConfident);
                 playersToSave.Add(player);
             }
 
@@ -262,7 +267,7 @@ namespace ValheimServerGUI.Game
             return player;
         }
 
-        public void SetPlayerLeaving(PlayerDataQuery query)
+        public void SetPlayerLeaving(string serverName, PlayerDataQuery query)
         {
             var players = FindPlayersByQuery(query)
                 .Where(p => p.PlayerStatus.IsAnyValue(PlayerStatus.Joining, PlayerStatus.Online))
@@ -274,6 +279,7 @@ namespace ValheimServerGUI.Game
                 {
                     player.PlayerStatus = PlayerStatus.Leaving;
                     player.LastStatusChange = DateTime.UtcNow;
+                    player.LastStatusServer = serverName;
                     player.ZdoId = null;
                 }
 
@@ -283,7 +289,7 @@ namespace ValheimServerGUI.Game
             }
         }
 
-        public void SetPlayerOffline(PlayerDataQuery query)
+        public void SetPlayerOffline(string serverName, PlayerDataQuery query)
         {
             var players = FindPlayersByQuery(query)
                 .Where(p => p.PlayerStatus != PlayerStatus.Offline)
@@ -295,6 +301,7 @@ namespace ValheimServerGUI.Game
                 {
                     player.PlayerStatus = PlayerStatus.Offline;
                     player.LastStatusChange = DateTime.UtcNow;
+                    player.LastStatusServer = serverName;
                     player.ZdoId = null;
                 }
 
