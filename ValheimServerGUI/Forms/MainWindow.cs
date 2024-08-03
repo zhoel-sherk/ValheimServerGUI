@@ -110,7 +110,7 @@ namespace ValheimServerGUI.Forms
 
         private void InitializeServices()
         {
-            Server.StatusChanged += this.BuildEventHandler<ServerStatus>(OnServerStatusChanged);
+            Server.ServerStatusChanged += this.BuildEventHandler<ServerStatusEvent>(OnServerStatusChanged);
             Server.WorldSaved += this.BuildEventHandler<decimal>(OnWorldSaved);
             Server.InviteCodeReady += this.BuildEventHandler<string>(OnInviteCodeReady);
 
@@ -224,13 +224,13 @@ namespace ValheimServerGUI.Forms
                 }
                 else
                 {
-                    OnServerStatusChanged(ServerStatus.Stopped);
+                    OnServerStatusChanged(new(null, ServerStatus.Stopped));
                 }
             }
             else
             {
                 // No server to start, mock a "stopped" event to initialize the form
-                OnServerStatusChanged(ServerStatus.Stopped);
+                OnServerStatusChanged(new(null, ServerStatus.Stopped));
             }
         }
 
@@ -724,13 +724,13 @@ namespace ValheimServerGUI.Forms
             LogViewer.AddLogToView(message, LogViews.Server);
         }
 
-        private void OnServerStatusChanged(ServerStatus status)
+        private void OnServerStatusChanged(ServerStatusEvent ev)
         {
-            SetStatusTextLeft(status.ToString(), ServerStatusIconMap[status]);
+            SetStatusTextLeft(ev.ServerStatus.ToString(), ServerStatusIconMap[ev.ServerStatus]);
 
             RefreshFormStateForServer();
 
-            if (status == ServerStatus.Running && WorldSelectRadioNew.Value)
+            if (ev.ServerStatus == ServerStatus.Running && WorldSelectRadioNew.Value)
             {
                 // Once a "new world" starts running, switch back to the Existing Worlds screen
                 // and select the newly created world
@@ -740,7 +740,7 @@ namespace ValheimServerGUI.Forms
                 WorldSelectExistingNameField.Value = worldName;
             }
 
-            if (status == ServerStatus.Running)
+            if (ev.ServerStatus == ServerStatus.Running)
             {
                 ServerUptimeTimer.Restart();
             }
@@ -749,12 +749,12 @@ namespace ValheimServerGUI.Forms
                 if (ServerUptimeTimer.IsRunning) ServerUptimeTimer.Stop();
             }
 
-            if (status == ServerStatus.Stopped)
+            if (ev.ServerStatus == ServerStatus.Stopped)
             {
                 // Invite codes are only good for the session, clear it out when it's done
                 SetInviteCode(null);
             }
-            else if (status == ServerStatus.Starting && ServerCrossplayField.Value)
+            else if (ev.ServerStatus == ServerStatus.Starting && ServerCrossplayField.Value)
             {
                 SetInviteCode("Loading...", false);
             }
@@ -1421,9 +1421,9 @@ namespace ValheimServerGUI.Forms
                 return;
             }
 
-            Server.StatusChanged += this.BuildEventHandler<ServerStatus>((status) =>
+            Server.ServerStatusChanged += this.BuildEventHandler<ServerStatusEvent>((ev) =>
             {
-                if (status == ServerStatus.Stopped)
+                if (ev.ServerStatus == ServerStatus.Stopped)
                 {
                     Close();
                 }

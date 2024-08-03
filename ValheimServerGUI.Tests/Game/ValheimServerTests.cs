@@ -35,7 +35,7 @@ namespace ValheimServerGUI.Tests.Game
         public void CanDetectServerRunning()
         {
             ServerStatus? eventStatus = null;
-            Server.StatusChanged += (_, status) => eventStatus = status;
+            Server.ServerStatusChanged += (_, ev) => eventStatus = ev.ServerStatus;
 
             Log("Game server connected");
 

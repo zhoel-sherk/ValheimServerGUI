@@ -32,7 +32,7 @@ namespace ValheimServerGUI.Game
             {
                 if (_status == value) return;
                 _status = value;
-                StatusChanged?.Invoke(this, value);
+                ServerStatusChanged?.Invoke(this, new(Options.Name, value));
             }
         }
         private ServerStatus _status = ServerStatus.Stopped;
@@ -40,7 +40,8 @@ namespace ValheimServerGUI.Game
         private bool IsRestarting;
         private readonly Dictionary<string, LogEventHandler> LogBasedActions = new();
 
-        public event EventHandler<ServerStatus> StatusChanged;
+        public event EventHandler<ServerStatusEvent> ServerStatusChanged;
+        public event EventHandler<PlayerStatusEvent> PlayerStatusChanged;
         public event EventHandler<decimal> WorldSaved;
         public event EventHandler<string> InviteCodeReady;
 
@@ -96,7 +97,7 @@ namespace ValheimServerGUI.Game
 
         private void InitializeStatusBasedActions()
         {
-            StatusChanged += BuildStatusHandler(ServerStatus.Stopped, () =>
+            ServerStatusChanged += BuildStatusHandler(ServerStatus.Stopped, () =>
             {
                 if (IsRestarting)
                 {
@@ -115,11 +116,11 @@ namespace ValheimServerGUI.Game
             });
         }
 
-        private static EventHandler<ServerStatus> BuildStatusHandler(ServerStatus status, Action action)
+        private static EventHandler<ServerStatusEvent> BuildStatusHandler(ServerStatus status, Action action)
         {
-            return (obj, s) =>
+            return (obj, ev) =>
             {
-                if (s == status) action();
+                if (ev.ServerStatus == status) action();
             };
         }
 
