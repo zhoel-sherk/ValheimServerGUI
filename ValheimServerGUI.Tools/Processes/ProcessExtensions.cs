@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 
 namespace ValheimServerGUI.Tools.Processes
 {
@@ -20,6 +21,11 @@ namespace ValheimServerGUI.Tools.Processes
                     UseShellExecute = false,
                     RedirectStandardError = true,
                     RedirectStandardOutput = true,
+
+                    // The Valheim server writes its console output in UTF-8,
+                    // which is required for non-ASCII character names
+                    StandardOutputEncoding = Encoding.UTF8,
+                    StandardErrorEncoding = Encoding.UTF8,
                 },
             };
 

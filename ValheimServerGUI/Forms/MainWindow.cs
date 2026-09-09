@@ -1118,8 +1118,10 @@ namespace ValheimServerGUI.Forms
 
             // Update existing prefs if they exist with this server name
             // Otherwise, create new prefs with this profile name
-            var prefs = ServerPrefsProvider.LoadPreferences(profileName)
-                ?? new ServerPreferences { ProfileName = profileName };
+            // NOTE: profileName may be null if no profile has been loaded yet (e.g. during form init)
+            var prefs = profileName == null
+                ? new ServerPreferences()
+                : ServerPrefsProvider.LoadPreferences(profileName) ?? new ServerPreferences { ProfileName = profileName };
 
             prefs.Name = ServerNameField.Value;
             prefs.Port = ServerPortField.Value;

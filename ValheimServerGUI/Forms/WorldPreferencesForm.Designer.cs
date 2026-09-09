@@ -99,7 +99,7 @@
             ModifierRaidsFormField.DropdownEnabled = true;
             ModifierRaidsFormField.EmptyText = "";
             ModifierRaidsFormField.HelpText = "Governs how often enemies may raid your base.\r\n";
-            ModifierRaidsFormField.LabelText = "Raids";
+            ModifierRaidsFormField.LabelText = "Raid Rate";
             ModifierRaidsFormField.Location = new System.Drawing.Point(6, 163);
             ModifierRaidsFormField.Name = "ModifierRaidsFormField";
             ModifierRaidsFormField.Size = new System.Drawing.Size(188, 41);
@@ -112,7 +112,7 @@
             ModifierDeathPenaltyFormField.DropdownEnabled = true;
             ModifierDeathPenaltyFormField.EmptyText = "";
             ModifierDeathPenaltyFormField.HelpText = "Governs what happens when you die. See the wiki\r\nfor an explanation of the different options.";
-            ModifierDeathPenaltyFormField.LabelText = "Death Penalty";
+            ModifierDeathPenaltyFormField.LabelText = "Death penalty";
             ModifierDeathPenaltyFormField.Location = new System.Drawing.Point(6, 69);
             ModifierDeathPenaltyFormField.Name = "ModifierDeathPenaltyFormField";
             ModifierDeathPenaltyFormField.Size = new System.Drawing.Size(188, 41);

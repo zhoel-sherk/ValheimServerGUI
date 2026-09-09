@@ -319,7 +319,7 @@ namespace ValheimServerGUI.Forms
 
                 var nl = Environment.NewLine;
                 var result = MessageBox.Show(
-                    $"ValheimServerGUI requires the .NET 6.0 Desktop Runtime (or higher) to be installed.{nl}" +
+                    $"ValheimServerGUI requires the .NET 10.0 Desktop Runtime (or higher) to be installed.{nl}" +
                     $"You are currently using .NET {dotnetVersion}.{nl}{nl}" +
                     "Would you like to go to the download page now?",
                     ".NET Upgrade Required",

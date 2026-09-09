@@ -34,10 +34,19 @@ namespace ValheimServerGUI.Game
                 {
                     if (!Directory.Exists(info.FullName)) continue;
 
+                    // Legacy world format: a pair of files named <world>.fwl / <world>.db
                     allNames.AddRange(info
                         .GetFiles("*.fwl")
                         .Where(f => !AutoBackupRegex.IsMatch(f.Name))
                         .Select(f => Path.GetFileNameWithoutExtension(f.FullName)));
+
+                    // New world format (1.0.x+): a folder named <world> containing
+                    // a set of _main.<save number>.fwl2 / .db2 / .chunks files
+                    allNames.AddRange(info
+                        .GetDirectories()
+                        .Where(d => !AutoBackupRegex.IsMatch(d.Name))
+                        .Where(d => d.GetFiles("*.fwl2").Length > 0)
+                        .Select(d => d.Name));
                 }
 
                 return allNames;
@@ -55,9 +64,19 @@ namespace ValheimServerGUI.Game
 
             try
             {
-                return !saveDataFolder.GetWorldsFolders()
+                // Legacy format: <world>.fwl must not exist in any worlds folder
+                var legacyExists = saveDataFolder.GetWorldsFolders()
                     .Select(p => Path.Join(p.FullName, $"{worldName}.fwl"))
                     .Any(p => File.Exists(p));
+
+                if (legacyExists) return false;
+
+                // New format: a folder named <world> w/ at least one .fwl2 file
+                var newFormatExists = saveDataFolder.GetWorldsFolders()
+                    .Select(p => Path.Join(p.FullName, worldName))
+                    .Any(p => Directory.Exists(p) && Directory.GetFiles(p, "*.fwl2").Length > 0);
+
+                return !newFormatExists;
             }
             catch
             {

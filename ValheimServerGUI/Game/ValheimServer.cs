@@ -74,9 +74,16 @@ namespace ValheimServerGUI.Game
 
         private void InitializeLogBasedActions()
         {
-            LogBasedActions.Add(@"Game server connected", OnServerConnected);
+            // NOTE: Newer server builds also log "Game server connected failed" on
+            // startup errors, so this pattern must not match that message
+            LogBasedActions.Add(@"Game server connected\s*$", OnServerConnected);
+
+            // NOTE: Older server builds log "World saved (x ms)", newer builds (1.0.x+) log
+            // "World save (5/5) done. Total time [x ms]" - the time may include group separators
             LogBasedActions.Add(@"World saved \(\s*?([[\d\.]+?)\s*?ms\s*?\)\s*?$", OnWorldSaved);
+            LogBasedActions.Add(@"World save \(5/5\) done\. Total time \[([\d\.,\s]+?)ms\]", OnWorldSaved);
             LogBasedActions.Add(@"Session "".*?"" with join code (.*?) ", OnCrossplayJoinCodeAvailable);
+            LogBasedActions.Add(@"Session "".*?"" registered with join code (\S+?)\s*$", OnCrossplayJoinCodeAvailable);
 
             // Connecting
             LogBasedActions.Add(@"Got connection SteamID (\d+?)\D*?$", OnPlayerConnecting);
@@ -87,11 +94,11 @@ namespace ValheimServerGUI.Game
 
             // Disconnecting
             LogBasedActions.Add(@"Peer (\d+?) has wrong password", OnPlayerDisconnecting);
+            LogBasedActions.Add(@"Peer (\d+?) has incompatible version", OnPlayerDisconnecting);
 
             // Disconnected
             LogBasedActions.Add(@"Closing socket (\d+?)\D*?$", OnPlayerDisconnected); // This is technically "disconnecting" but it's the best terminator I can find
             LogBasedActions.Add(@"Destroying abandoned non persistent zdo ([\d-]+?):.*$", OnPlayerDisconnected); // Crossplay
-            LogBasedActions.Add(@"Disconnect: The client \((\w+?)_(\d+?)\)", OnPlayerDisconnectedCrossplay); // Valheim Plus version mismatch
         }
 
         private void InitializeStatusBasedActions()
@@ -318,18 +325,13 @@ namespace ValheimServerGUI.Game
             PlayerDataRepository.SetPlayerOffline(query);
         }
 
-        private void OnPlayerDisconnectedCrossplay(params string[] captures)
-        {
-            var hasValidPlatform = PlayerPlatforms.TryGetValidPlatform(captures[0], out var platform);
-            var playerId = captures[1];
-            if (!hasValidPlatform || string.IsNullOrWhiteSpace(playerId)) return;
-
-            PlayerDataRepository.SetPlayerOffline(new() { Platform = platform, PlayerId = playerId });
-        }
-
         private void OnWorldSaved(params string[] captures)
         {
-            if (!decimal.TryParse(captures[0], out var timeMs))
+            // Newer server builds format the elapsed time with group separators,
+            // which cannot be parsed as a number (e.g. "1,234")
+            var timeText = new string(captures[0].Where(char.IsDigit).ToArray());
+
+            if (!decimal.TryParse(timeText, out var timeMs))
             {
                 timeMs = 0;
             }

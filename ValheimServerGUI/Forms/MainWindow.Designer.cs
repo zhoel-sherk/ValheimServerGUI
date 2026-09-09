@@ -427,7 +427,7 @@ namespace ValheimServerGUI.Forms
             // 
             WorldsListSettingsButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             WorldsListSettingsButton.ClickFunction = null;
-            WorldsListSettingsButton.HelpText = "World Modifier Settings";
+            WorldsListSettingsButton.HelpText = "Difficulty presets & world modifiers (Easy, Hard, Casual, etc.)";
             WorldsListSettingsButton.Location = new System.Drawing.Point(166, 24);
             WorldsListSettingsButton.Name = "WorldsListSettingsButton";
             WorldsListSettingsButton.Size = new System.Drawing.Size(16, 16);

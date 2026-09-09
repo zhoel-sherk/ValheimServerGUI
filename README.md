@@ -1,5 +1,7 @@
 # ValheimServerGUI
 
+English | [Русский](README.ru.md)
+
 A simple user interface for running a [Valheim](https://www.valheimgame.com/) Dedicated Server on your Windows PC.
 
 Download the [latest release here](https://github.com/runeberry/ValheimServerGUI/releases). It's just a single, small .exe file!
@@ -24,7 +26,7 @@ Need help? Join our [Discord server](https://discord.gg/HBsNJTY) to ask question
 In order to run ValheimServerGUI, you will need the following:
 
 * **Windows 10 or 11 x64-based PC** - Other Windows configurations may or may not work. 🤷‍♀
-* **.NET 6 Desktop Runtime** - If you don't have it, you should be prompted to install it when you first run this app. Otherwise, you can install the latest release [here](https://dotnet.microsoft.com/download/dotnet/6.0) (under ".NET Desktop Runtime 6.X.X").
+* **.NET 10 Desktop Runtime** - If you don't have it, you should be prompted to install it when you first run this app. Otherwise, you can install the latest release [here](https://dotnet.microsoft.com/download/dotnet/10.0) (under ".NET Desktop Runtime 10.X.X").
 * **Valheim Dedicated Server** - Comes free with your purchase of Valheim. See the installation guide [here](https://github.com/runeberry/ValheimServerGUI/wiki/Installing-Valheim-Dedicated-Server).
 
 ## Features
@@ -40,14 +42,24 @@ In order to run ValheimServerGUI, you will need the following:
 * **Automatic startup** - If enabled, can automatically start up your server when Windows starts
 * **Minimize to tray** - Minimize this app and control your server entirely from the Windows system tray
 * **Multi-server support** - Run multiple servers at once by creating separate server profiles (see [FAQs](https://github.com/runeberry/ValheimServerGUI/wiki/Frequently-Asked-Questions) for details)
-* **Works with mods!** - Tested and working with server-side mods such as ~~[Valheim Plus](https://www.nexusmods.com/valheim/mods/4)~~ "**NEW** [Valheim Plus](https://www.nexusmods.com/valheim/mods/2323)".
+* **Difficulty presets** - Apply world difficulty presets (Easy, Hard, Hardcore, Casual, etc.) via the world settings dialog (the gear icon next to the world selector)
+* **Works with mods!** - Tested and working with server-side mods such as [Valheim Plus](https://www.nexusmods.com/valheim/mods/2323).
+
+## Roadmap
+
+Ideas for future releases (no timelines, contributions welcome):
+
+* **BepInEx support** - Install & update BepInEx for the dedicated server right from the app
+* **Mod list** - Browse & install server-side mods
+* **Mod config** - Enable/disable installed mods (on/off)
+* **Mod presets** - Save & apply whole mod loadouts (presets)
 
 ## Quick guide
 
 1. Launch ValheimServerGUI.exe.
 2. Enter your desired Server Name and Password. You don't need to change the Port in most cases.
 3. Select the world you want to host, or enter a new world name.
-4. Eheck any additional join options you want enabled:
+4. Check any additional join options you want enabled:
   * **Community Server** will show your server in the server browser in-game.
   * **Enable Crossplay** will allow players on any platform to join with an Invite Code
 1. Click "Start Server". When the status bar reads "Running", you're ready to play! You can copy your server's IP address or Invite Code from the Server Details tab to share with friends.

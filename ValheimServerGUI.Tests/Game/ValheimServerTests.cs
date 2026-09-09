@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using ValheimServerGUI.Game;
 using ValheimServerGUI.Tools.Models;
@@ -12,11 +13,32 @@ namespace ValheimServerGUI.Tests.Game
         private const string MessageJoiningCrossplay = "PlayFab socket with remote ID 123456 received local Platform ID {0}_{1}";
         private const string MessageOnline = "Got character ZDOID from {0} : {1}:1";
         private const string MessageWrongPassword = "Peer {0} has wrong password";
+        private const string MessageVersionMismatch = "Peer {0} has incompatible version, mine:1.0.7 (network version 39)   remote 1.0.6 (network version 38)";
         private const string MessageOffline = "Closing socket {0}";
         private const string MessageOfflineCrossplay = "Destroying abandoned non persistent zdo {0}:1";
+        private const string MessageOfflineCrossplayNew = "Destroying abandoned non persistent zdo {0}:1 owner 4194304";
+        private const string MessageWorldSaved = "World saved ({0} ms)";
+        private const string MessageWorldSavedNew = "World save (5/5) done. Total time [{0}ms]";
+        private const string MessageInviteCode = "Session \"Test Server\" with join code {0} and IP 1.2.3.4:2456 is active with 1 player(s)";
+        private const string MessageInviteCodeRegistered = "Session \"Test Server\" registered with join code {0}";
+
+        private static readonly string TestFolder = Path.Combine(Path.GetTempPath(), "vsg-tests");
+        private static readonly string TestServerExe = Path.Combine(TestFolder, "valheim_server_test.exe");
+        private static readonly string TestSaveFolder = Path.Combine(TestFolder, "savedata");
 
         private readonly ValheimServer Server;
         private readonly IPlayerDataRepository PlayerDataRepository;
+
+        static ValheimServerTests()
+        {
+            Directory.CreateDirectory(TestFolder);
+            Directory.CreateDirectory(TestSaveFolder);
+
+            if (!File.Exists(TestServerExe))
+            {
+                File.WriteAllText(TestServerExe, string.Empty);
+            }
+        }
 
         public ValheimServerTests()
         {
@@ -41,6 +63,55 @@ namespace ValheimServerGUI.Tests.Game
 
             Assert.Equal(ServerStatus.Running, Server.Status);
             Assert.Equal(ServerStatus.Running, eventStatus);
+        }
+
+        [Fact]
+        public void DoesNotDetectServerRunningOnFailure()
+        {
+            ServerStatus? eventStatus = null;
+            Server.StatusChanged += (_, status) => eventStatus = status;
+
+            Log("Game server connected failed");
+
+            Assert.Equal(ServerStatus.Starting, Server.Status);
+            Assert.Equal(ServerStatus.Starting, eventStatus);
+        }
+
+        [Theory]
+        [InlineData("1,024", 1024)]
+        [InlineData("1234", 1234)]
+        public void CanDetectWorldSaved(string elapsed, decimal expected)
+        {
+            decimal eventTime = -1;
+            Server.WorldSaved += (_, timeMs) => eventTime = timeMs;
+
+            Log(MessageWorldSavedNew, elapsed);
+
+            Assert.Equal(expected, eventTime);
+        }
+
+        [Fact]
+        public void CanDetectWorldSavedLegacy()
+        {
+            decimal eventTime = -1;
+            Server.WorldSaved += (_, timeMs) => eventTime = timeMs;
+
+            Log(MessageWorldSaved, "823");
+
+            Assert.Equal(823, eventTime);
+        }
+
+        [Theory]
+        [InlineData(MessageInviteCode)]
+        [InlineData(MessageInviteCodeRegistered)]
+        public void CanDetectInviteCode(string messageFormat)
+        {
+            string eventCode = null;
+            Server.InviteCodeReady += (_, code) => eventCode = code;
+
+            Log(messageFormat, "424941");
+
+            Assert.Equal("424941", eventCode);
         }
 
         [Fact]
@@ -109,6 +180,28 @@ namespace ValheimServerGUI.Tests.Game
         }
 
         [Fact]
+        public void CanDetectPlayerLeavingVersionMismatch()
+        {
+            var playerId = "1234";
+            Log(MessageJoining, playerId);
+            PlayerInfo eventPlayer = null;
+            PlayerDataRepository.PlayerStatusChanged += (_, player) => eventPlayer = player;
+
+            Log(MessageVersionMismatch, playerId);
+
+            var expected = new PlayerInfo
+            {
+                Platform = PlayerPlatforms.Steam,
+                PlayerId = playerId,
+                PlayerStatus = PlayerStatus.Leaving
+            };
+            AssertMatch(expected, eventPlayer);
+
+            var dataPlayer = Assert.Single(PlayerDataRepository.Data);
+            AssertMatch(expected, dataPlayer);
+        }
+
+        [Fact]
         public void CanDetectPlayerOffline()
         {
             var playerId = "1234";
@@ -121,6 +214,30 @@ namespace ValheimServerGUI.Tests.Game
             var expected = new PlayerInfo
             {
                 Platform = PlayerPlatforms.Steam,
+                PlayerId = playerId,
+                PlayerStatus = PlayerStatus.Offline
+            };
+            AssertMatch(expected, eventPlayer);
+
+            var dataPlayer = Assert.Single(PlayerDataRepository.Data);
+            AssertMatch(expected, dataPlayer);
+        }
+
+        [Theory]
+        [InlineData(MessageOfflineCrossplay)]
+        [InlineData(MessageOfflineCrossplayNew)]
+        public void CanDetectPlayerOfflineCrossplay(string messageFormat)
+        {
+            var playerId = "5678";
+            Log(MessageJoiningCrossplay, PlayerPlatforms.Xbox, playerId);
+            PlayerInfo eventPlayer = null;
+            PlayerDataRepository.PlayerStatusChanged += (_, player) => eventPlayer = player;
+
+            Log(messageFormat, playerId);
+
+            var expected = new PlayerInfo
+            {
+                Platform = PlayerPlatforms.Xbox,
                 PlayerId = playerId,
                 PlayerStatus = PlayerStatus.Offline
             };
@@ -255,8 +372,7 @@ namespace ValheimServerGUI.Tests.Game
             {
                 // A new server logger is now instantiated each time the server is started,
                 // so let's pretend to boot one up just for testing the log messages.
-                // A problem with this is that the tests will only pass if it can find the server exe
-                // and save data folders.
+                // Tests use dummy exe & save data paths so that no real Valheim install is required.
                 var options = new ValheimServerOptions
                 {
                     Name = "Test Server",
@@ -269,8 +385,8 @@ namespace ValheimServerGUI.Tests.Game
                     Backups = 1,
                     BackupShort = 60,
                     BackupLong = 120,
-                    ServerExePath = @"%ProgramFiles(x86)%\Steam\steamapps\common\Valheim dedicated server\valheim_server.exe",
-                    SaveDataFolderPath = @"%USERPROFILE%\AppData\LocalLow\IronGate\Valheim",
+                    ServerExePath = TestServerExe,
+                    SaveDataFolderPath = TestSaveFolder,
                     LogToFile = false,
                 };
 
