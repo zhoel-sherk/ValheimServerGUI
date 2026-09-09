@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using ValheimServerGUI.Forms;
+using Newtonsoft.Json;
+using ValheimServerGUI.Properties;
 using ValheimServerGUI.Tools.Logging;
 using ValheimServerGUI.Tools.Models;
 
@@ -17,13 +19,10 @@ namespace ValheimServerGUI.Tools
 
     public class ExceptionHandler : IExceptionHandler
     {
-        private readonly IRuneberryApiClient RuneberryApiClient;
-
         private readonly IApplicationLogger Logger;
 
-        public ExceptionHandler(IRuneberryApiClient runeberryApiClient, IApplicationLogger logger)
+        public ExceptionHandler(IApplicationLogger logger)
         {
-            RuneberryApiClient = runeberryApiClient;
             Logger = logger;
         }
 
@@ -36,7 +35,7 @@ namespace ValheimServerGUI.Tools
             e = e.GetPrimaryException();
 
             contextMessage ??= "Unknown Exception";
-            var userMessage = $"A fatal error has occured: {e.Message}{Environment.NewLine}{Environment.NewLine}Would you like to send an automated crash report to the developer?";
+            var userMessage = $"A fatal error has occured: {e.Message}{Environment.NewLine}{Environment.NewLine}Would you like to save a crash report to the logs folder?";
 
             var result = MessageBox.Show(
                 userMessage,
@@ -46,21 +45,31 @@ namespace ValheimServerGUI.Tools
 
             if (result == DialogResult.Yes)
             {
-                var crashReport = BuildCrashReport(e, contextMessage);
-                var task = RuneberryApiClient.SendCrashReportAsync(crashReport);
-
-                var asyncPopout = new AsyncPopout(task, o =>
-                {
-                    o.Title = "Crash Report";
-                    o.Text = "Sending crash report...";
-                    o.SuccessMessage = "Crash report received. Thank you!";
-                    o.FailureMessage = "Failed to send crash report.\r\nContact Runeberry Software for further support.";
-                });
-
-                asyncPopout.ShowDialog();
+                SaveCrashReport(e, contextMessage);
             }
 
             ExceptionHandled?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void SaveCrashReport(Exception e, string contextMessage)
+        {
+            try
+            {
+                var crashReport = BuildCrashReport(e, contextMessage);
+                var fileName = Path.Join(Resources.LogsFolderPath, $"crashreport_{DateTime.Now.ToFilenameISOFormat()}.json");
+
+                File.WriteAllText(fileName, JsonConvert.SerializeObject(crashReport, Formatting.Indented));
+
+                MessageBox.Show(
+                    $"Crash report saved:{Environment.NewLine}{fileName}{Environment.NewLine}{Environment.NewLine}Attach it to a GitHub issue if you'd like to report the problem.",
+                    "Crash Report",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception saveException)
+            {
+                Logger.Error(saveException, "Failed to save crash report");
+            }
         }
 
         private CrashReport BuildCrashReport(Exception e, string contextMessage)

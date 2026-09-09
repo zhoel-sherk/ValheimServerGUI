@@ -34,9 +34,7 @@ namespace ValheimServerGUI.Forms
             this.label2 = new System.Windows.Forms.Label();
             this.VersionLabel = new System.Windows.Forms.Label();
             this.ButtonGitHub = new System.Windows.Forms.Button();
-            this.ButtonDonate = new System.Windows.Forms.Button();
             this.ButtonValheimSite = new System.Windows.Forms.Button();
-            this.ButtonDiscord = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -95,24 +93,9 @@ namespace ValheimServerGUI.Forms
             this.ButtonGitHub.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.ButtonGitHub.UseVisualStyleBackColor = true;
             this.ButtonGitHub.Click += new System.EventHandler(this.ButtonGitHub_Click);
-            // 
-            // ButtonDonate
-            // 
-            this.ButtonDonate.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.ButtonDonate.Image = global::ValheimServerGUI.Properties.Resources.DonateLogo;
-            this.ButtonDonate.Location = new System.Drawing.Point(256, 216);
-            this.ButtonDonate.Name = "ButtonDonate";
-            this.ButtonDonate.Size = new System.Drawing.Size(116, 23);
-            this.ButtonDonate.TabIndex = 7;
-            this.ButtonDonate.Text = "Donate";
-            this.ButtonDonate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.ButtonDonate.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
-            this.ButtonDonate.UseVisualStyleBackColor = true;
-            this.ButtonDonate.Click += new System.EventHandler(this.ButtonDonate_Click);
-            // 
+            //
             // ButtonValheimSite
-            // 
+            //
             this.ButtonValheimSite.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ButtonValheimSite.Image = global::ValheimServerGUI.Properties.Resources.vsg_logo_16;
@@ -125,30 +108,13 @@ namespace ValheimServerGUI.Forms
             this.ButtonValheimSite.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.ButtonValheimSite.UseVisualStyleBackColor = true;
             this.ButtonValheimSite.Click += new System.EventHandler(this.ButtonValheimSite_Click);
-            // 
-            // ButtonDiscord
-            // 
-            this.ButtonDiscord.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.ButtonDiscord.Image = global::ValheimServerGUI.Properties.Resources.DiscordLogo;
-            this.ButtonDiscord.Location = new System.Drawing.Point(134, 216);
-            this.ButtonDiscord.Name = "ButtonDiscord";
-            this.ButtonDiscord.Size = new System.Drawing.Size(116, 23);
-            this.ButtonDiscord.TabIndex = 6;
-            this.ButtonDiscord.Text = "Discord";
-            this.ButtonDiscord.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.ButtonDiscord.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
-            this.ButtonDiscord.UseVisualStyleBackColor = true;
-            this.ButtonDiscord.Click += new System.EventHandler(this.ButtonDiscord_Click);
-            // 
+            //
             // AboutForm
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(384, 251);
-            this.Controls.Add(this.ButtonDiscord);
             this.Controls.Add(this.ButtonValheimSite);
-            this.Controls.Add(this.ButtonDonate);
             this.Controls.Add(this.ButtonGitHub);
             this.Controls.Add(this.VersionLabel);
             this.Controls.Add(this.label2);
@@ -172,8 +138,6 @@ namespace ValheimServerGUI.Forms
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label VersionLabel;
         private System.Windows.Forms.Button ButtonGitHub;
-        private System.Windows.Forms.Button ButtonDonate;
         private System.Windows.Forms.Button ButtonValheimSite;
-        private System.Windows.Forms.Button ButtonDiscord;
     }
 }

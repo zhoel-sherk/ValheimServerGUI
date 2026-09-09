@@ -141,9 +141,8 @@ namespace ValheimServerGUI.Forms
             MenuItemFileClose.Click += MenuItemFileClose_Click;
             MenuItemHelpManual.Click += MenuItemHelpManual_Click;
             MenuItemHelpPortForwarding.Click += MenuItemHelpPortForwarding_Click;
-            MenuItemHelpBugReport.Click += MenuItemHelpBugReport_Click;
+            MenuItemHelpIssues.Click += MenuItemHelpIssues_Click;
             MenuItemHelpUpdates.Click += MenuItemHelpUpdates_Click;
-            MenuItemHelpDiscord.Click += MenuItemHelpDiscord_Click;
             MenuItemHelpAbout.Click += MenuItemHelpAbout_Click;
 
             // Tray icon
@@ -451,20 +450,14 @@ namespace ValheimServerGUI.Forms
             OpenHelper.OpenWebAddress(Resources.UrlHelpPortForwarding);
         }
 
-        private void MenuItemHelpBugReport_Click(object sender, EventArgs e)
+        private void MenuItemHelpIssues_Click(object sender, EventArgs e)
         {
-            var bugReportForm = FormProvider.GetForm<BugReportForm>();
-            bugReportForm.ShowDialog();
+            OpenHelper.OpenWebAddress(Resources.UrlIssues);
         }
 
         private void MenuItemHelpUpdates_Click(object sender, EventArgs e)
         {
             CheckForUpdates(true);
-        }
-
-        private void MenuItemHelpDiscord_Click(object sender, EventArgs e)
-        {
-            OpenHelper.OpenWebAddress(Resources.UrlDiscord);
         }
 
         private void MenuItemHelpAbout_Click(object sender, EventArgs e)

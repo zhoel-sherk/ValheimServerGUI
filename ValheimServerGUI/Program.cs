@@ -77,7 +77,6 @@ namespace ValheimServerGUI
                 .AddTransient<MainWindow>()
                 .AddSingleton<DirectoriesForm>()
                 .AddSingleton<PreferencesForm>()
-                .AddSingleton<BugReportForm>()
                 .AddSingleton<AboutForm>()
                 .AddTransient<PlayerDetailsForm>()
                 .AddTransient<WorldPreferencesForm>();

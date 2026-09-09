@@ -4,9 +4,9 @@ English | [Русский](README.ru.md)
 
 A simple user interface for running a [Valheim](https://www.valheimgame.com/) Dedicated Server on your Windows PC.
 
-Download the [latest release here](https://github.com/runeberry/ValheimServerGUI/releases). It's just a single, small .exe file!
+Download the [latest release here](https://github.com/zhoel-sherk/ValheimServerGUI/releases). It's just a single, small .exe file!
 
-Need help? Join our [Discord server](https://discord.gg/HBsNJTY) to ask questions or give feedback, or check out [Online Manual](https://github.com/runeberry/ValheimServerGUI/wiki) for answers to some common questions.
+Need help? Create a [GitHub issue](https://github.com/zhoel-sherk/ValheimServerGUI/issues/new), or check out the [Online Manual](https://github.com/runeberry/ValheimServerGUI/wiki) for answers to some common questions.
 
 **Disclaimer:** _This is a fan-made project. Runeberry Software is not affiliated with Valheim or Iron Gate Studio in any official capacity. Use at your own risk!_
 
@@ -72,15 +72,8 @@ Why choose a dedicated server, and why use ValheimServerGUI? Find the answers on
 
 Interested in contributing code to ValheimServerGUI? Check out the guidelines and full developer's guide [here](CONTRIBUTING.md).
 
-## Support
+## License
 
-Got suggestions, feedback, or want to report a bug? Here's how you can reach me:
+This project is licensed under the [GNU GPLv3](LICENSE).
 
-* Post in the **#vsg-support** channel on our [Discord](https://discord.gg/HBsNJTY) server.
-* Create a [GitHub issue](https://github.com/runeberry/ValheimServerGUI/issues/new) - Include as many details as you can for bug reports!
-* Submit a bug report in the app itself (Help > Submit a Bug Report). This will include logs & machine info to help troubleshoot the problem.
-* Send me an email - feedback@runeberry.com
-
-## Donate
-
-Do you like open-source gaming projects like this one? Want to see more of them? [Buy me a coffee](https://www.buymeacoffee.com/runeberry) to show your support! And check out my other projects on the [main site](https://runeberry.com).
+It is a community fork of the original ValheimServerGUI project by [Runeberry Software](https://github.com/runeberry/ValheimServerGUI), whose original work is gratefully acknowledged. All copyright notices are preserved in accordance with the GPL.

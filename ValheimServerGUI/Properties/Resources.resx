@@ -263,11 +263,8 @@
   <data name="UpdateCheckInterval" xml:space="preserve">
     <value>1.00:00:00</value>
   </data>
-  <data name="UrlDiscord" xml:space="preserve">
-    <value>https://discord.gg/HBsNJTY</value>
-  </data>
-  <data name="UrlDonate" xml:space="preserve">
-    <value>https://www.buymeacoffee.com/runeberry</value>
+  <data name="UrlIssues" xml:space="preserve">
+    <value>https://github.com/zhoel-sherk/ValheimServerGUI/issues</value>
   </data>
   <data name="UrlDotnetDownload" xml:space="preserve">
     <value>https://dotnet.microsoft.com/download/dotnet/10.0</value>
@@ -279,7 +276,7 @@
     <value>https://api.github.com/repos/runeberry/ValheimServerGUI</value>
   </data>
   <data name="UrlGithubApplication" xml:space="preserve">
-    <value>https://github.com/runeberry/ValheimServerGUI</value>
+    <value>https://github.com/zhoel-sherk/ValheimServerGUI</value>
   </data>
   <data name="UrlGithubOrganization" xml:space="preserve">
     <value>https://github.com/runeberry</value>

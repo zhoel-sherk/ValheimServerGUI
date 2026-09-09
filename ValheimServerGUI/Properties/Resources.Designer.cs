@@ -518,23 +518,14 @@ namespace ValheimServerGUI.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://discord.gg/HBsNJTY.
+        ///   Looks up a localized string similar to https://github.com/zhoel-sherk/ValheimServerGUI/issues.
         /// </summary>
-        internal static string UrlDiscord {
+        internal static string UrlIssues {
             get {
-                return ResourceManager.GetString("UrlDiscord", resourceCulture);
+                return ResourceManager.GetString("UrlIssues", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to https://www.buymeacoffee.com/runeberry.
-        /// </summary>
-        internal static string UrlDonate {
-            get {
-                return ResourceManager.GetString("UrlDonate", resourceCulture);
-            }
-        }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to https://dotnet.microsoft.com/download/dotnet/6.0.
         /// </summary>

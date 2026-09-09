@@ -1,4 +1,4 @@
-﻿
+
 namespace ValheimServerGUI.Forms
 {
     partial class MainWindow
@@ -49,10 +49,9 @@ namespace ValheimServerGUI.Forms
             MenuItemHelp = new System.Windows.Forms.ToolStripMenuItem();
             MenuItemHelpManual = new System.Windows.Forms.ToolStripMenuItem();
             MenuItemHelpPortForwarding = new System.Windows.Forms.ToolStripMenuItem();
-            MenuItemHelpBugReport = new System.Windows.Forms.ToolStripMenuItem();
+            MenuItemHelpIssues = new System.Windows.Forms.ToolStripMenuItem();
             MenuItemHelpSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             MenuItemHelpUpdates = new System.Windows.Forms.ToolStripMenuItem();
-            MenuItemHelpDiscord = new System.Windows.Forms.ToolStripMenuItem();
             MenuItemHelpAbout = new System.Windows.Forms.ToolStripMenuItem();
             StatusStrip = new System.Windows.Forms.StatusStrip();
             StatusStripLabelLeft = new System.Windows.Forms.ToolStripStatusLabel();
@@ -254,7 +253,7 @@ namespace ValheimServerGUI.Forms
             // 
             // MenuItemHelp
             // 
-            MenuItemHelp.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { MenuItemHelpManual, MenuItemHelpPortForwarding, MenuItemHelpBugReport, MenuItemHelpSeparator1, MenuItemHelpUpdates, MenuItemHelpDiscord, MenuItemHelpAbout });
+            MenuItemHelp.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { MenuItemHelpManual, MenuItemHelpPortForwarding, MenuItemHelpIssues, MenuItemHelpSeparator1, MenuItemHelpUpdates, MenuItemHelpAbout });
             MenuItemHelp.Name = "MenuItemHelp";
             MenuItemHelp.Size = new System.Drawing.Size(44, 20);
             MenuItemHelp.Text = "&Help";
@@ -272,35 +271,28 @@ namespace ValheimServerGUI.Forms
             MenuItemHelpPortForwarding.Name = "MenuItemHelpPortForwarding";
             MenuItemHelpPortForwarding.Size = new System.Drawing.Size(192, 22);
             MenuItemHelpPortForwarding.Text = "&Port Forwarding";
-            // 
-            // MenuItemHelpBugReport
-            // 
-            MenuItemHelpBugReport.Image = Properties.Resources.NewBug_16x;
-            MenuItemHelpBugReport.Name = "MenuItemHelpBugReport";
-            MenuItemHelpBugReport.Size = new System.Drawing.Size(192, 22);
-            MenuItemHelpBugReport.Text = "Submit a &Bug Report...";
-            // 
+            //
+            // MenuItemHelpIssues
+            //
+            MenuItemHelpIssues.Image = Properties.Resources.OpenWeb_16x;
+            MenuItemHelpIssues.Name = "MenuItemHelpIssues";
+            MenuItemHelpIssues.Size = new System.Drawing.Size(192, 22);
+            MenuItemHelpIssues.Text = "GitHub &Issues";
+            //
             // MenuItemHelpSeparator1
-            // 
+            //
             MenuItemHelpSeparator1.Name = "MenuItemHelpSeparator1";
             MenuItemHelpSeparator1.Size = new System.Drawing.Size(189, 6);
-            // 
+            //
             // MenuItemHelpUpdates
-            // 
+            //
             MenuItemHelpUpdates.Image = Properties.Resources.UnsyncedCommits_16x_Horiz;
             MenuItemHelpUpdates.Name = "MenuItemHelpUpdates";
             MenuItemHelpUpdates.Size = new System.Drawing.Size(192, 22);
             MenuItemHelpUpdates.Text = "Check for &Updates";
-            // 
-            // MenuItemHelpDiscord
-            // 
-            MenuItemHelpDiscord.Image = Properties.Resources.DiscordLogo;
-            MenuItemHelpDiscord.Name = "MenuItemHelpDiscord";
-            MenuItemHelpDiscord.Size = new System.Drawing.Size(192, 22);
-            MenuItemHelpDiscord.Text = "Get support in &Discord";
-            // 
+            //
             // MenuItemHelpAbout
-            // 
+            //
             MenuItemHelpAbout.Name = "MenuItemHelpAbout";
             MenuItemHelpAbout.Size = new System.Drawing.Size(192, 22);
             MenuItemHelpAbout.Text = "&About...";
@@ -1297,7 +1289,6 @@ namespace ValheimServerGUI.Forms
         private System.Windows.Forms.ToolStripStatusLabel StatusStripLabelRight;
         private System.Windows.Forms.Timer UpdateCheckTimer;
         private System.Windows.Forms.ToolStripMenuItem MenuItemFilePreferences;
-        private System.Windows.Forms.ToolStripMenuItem MenuItemHelpBugReport;
         private ValheimServerGUI.Controls.CheckboxFormField ServerCrossplayField;
         private System.Windows.Forms.ToolStripMenuItem TrayContextMenuServerName;
         private System.Windows.Forms.ToolStripSeparator TrayContextMenuSeparator2;
@@ -1323,7 +1314,7 @@ namespace ValheimServerGUI.Forms
         private System.Windows.Forms.ToolStripMenuItem MenuItemFileOpenSettings;
         private System.Windows.Forms.GroupBox OtherSettingsGroupBox;
         private ValheimServerGUI.Controls.CheckboxFormField ServerAutoStartField;
-        private System.Windows.Forms.ToolStripMenuItem MenuItemHelpDiscord;
+        private System.Windows.Forms.ToolStripMenuItem MenuItemHelpIssues;
         private System.Windows.Forms.GroupBox SavingGroupBox;
         private ValheimServerGUI.Controls.FilenameFormField ServerSaveDataFolderPathField;
         private ValheimServerGUI.Controls.FilenameFormField ServerExePathField;

@@ -4,9 +4,9 @@
 
 Простой графический интерфейс для запуска выделенного сервера [Valheim](https://www.valheimgame.com/) на вашем ПК с Windows.
 
-Скачать последнюю версию можно [здесь](https://github.com/runeberry/ValheimServerGUI/releases). Это один небольшой .exe файл!
+Скачать последнюю версию можно [здесь](https://github.com/zhoel-sherk/ValheimServerGUI/releases). Это один небольшой .exe файл!
 
-Нужна помощь? Заходите в наш [Discord-сервер](https://discord.gg/HBsNJTY), чтобы задать вопросы или оставить отзыв, или посмотрите [онлайн-руководство](https://github.com/runeberry/ValheimServerGUI/wiki) с ответами на частые вопросы.
+Нужна помощь? Создайте [issue на GitHub](https://github.com/zhoel-sherk/ValheimServerGUI/issues/new) или посмотрите [онлайн-руководство](https://github.com/runeberry/ValheimServerGUI/wiki) с ответами на частые вопросы.
 
 **Дисклеймер:** _Это фанатский проект. Runeberry Software никак не связана с Valheim или Iron Gate Studio. Используйте на свой страх и риск!_
 
@@ -72,15 +72,8 @@
 
 Хотите помогать с кодом ValheimServerGUI? Инструкция для разработчиков - [здесь](CONTRIBUTING.md) (на английском).
 
-## Поддержка
+## Лицензия
 
-Есть предложения, отзыв или нашли баг? Вот как со мной связаться:
+Проект распространяется под лицензией [GNU GPLv3](LICENSE).
 
-* Напишите в канал **#vsg-support** в нашем [Discord](https://discord.gg/HBsNJTY).
-* Создайте [issue на GitHub](https://github.com/runeberry/ValheimServerGUI/issues/new) - в баг-репортах указывайте как можно больше деталей!
-* Отправьте баг-репорт из самого приложения (Help > Submit a Bug Report) - к нему автоматически приложатся логи и данные о системе.
-* Напишите мне на почту - feedback@runeberry.com
-
-## Поддержать
-
-Нравятся опенсорсные игровые проекты? [Угостите кофе](https://www.buymeacoffee.com/runeberry) - это будет приятно! Другие мои проекты - на [главном сайте](https://runeberry.com).
+Это комьюнити-форк оригинального проекта ValheimServerGUI от [Runeberry Software](https://github.com/runeberry/ValheimServerGUI) - благодарим за исходную работу. Все уведомления об авторских правах сохранены в соответствии с GPL.
