@@ -9,10 +9,12 @@ namespace ValheimServerGUI.Game
     public static class ValheimPathExtensions
     {
         /// <summary>
-        /// These are automatic backup files created by Valheim with the transition to
-        /// the worlds_local folder on 6/20/22. Do not list these as world names.
+        /// These are automatic backup files created by Valheim. With the transition to the
+        /// worlds_local folder on 6/20/22 they are named like "&lt;world&gt;_backup_&lt;date&gt;-&lt;time&gt;",
+        /// and modern builds (1.0.x+) use "&lt;world&gt;_backup_auto-&lt;yyyyMMdd-HHmmss&gt;".
+        /// Do not list these as world names.
         /// </summary>
-        private static readonly Regex AutoBackupRegex = new(@"^.*?_backup_\d+?-\d+?");
+        private static readonly Regex AutoBackupRegex = new(@"^.*?_backup_(auto-)?\d+?-\d+?");
 
         public static FileInfo GetValidatedServerExe(this IValheimServerOptions options)
         {

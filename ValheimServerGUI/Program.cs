@@ -4,6 +4,7 @@ using System;
 using System.Windows.Forms;
 using ValheimServerGUI.Forms;
 using ValheimServerGUI.Game;
+using ValheimServerGUI.Game.Mods;
 using ValheimServerGUI.Tools;
 using ValheimServerGUI.Tools.Data;
 using ValheimServerGUI.Tools.Http;
@@ -61,6 +62,13 @@ namespace ValheimServerGUI
                 .AddSingleton<ISoftwareUpdateProvider, SoftwareUpdateProvider>()
                 .AddSingleton<IExceptionHandler, ExceptionHandler>()
                 .AddSingleton<IRuneberryApiClient, RuneberryApiClient>();
+
+            // Mods & backups
+            services
+                .AddSingleton<IModSourceClient, ModSourceClient>()
+                .AddSingleton<IBepInExManager, BepInExManager>()
+                .AddSingleton<IValheimPlusManager, ValheimPlusManager>()
+                .AddSingleton<IBackupService, BackupService>();
 
             // Game & server data
             services

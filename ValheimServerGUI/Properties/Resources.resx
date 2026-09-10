@@ -209,6 +209,21 @@
   <data name="PlayerListFilePath" xml:space="preserve">
     <value>%USERPROFILE%\AppData\LocalLow\Runeberry\ValheimServerGUI\players-cache.json</value>
   </data>
+  <data name="PlayerLogFilePath" xml:space="preserve">
+    <value>%USERPROFILE%\AppData\LocalLow\IronGate\Valheim\Player.log</value>
+  </data>
+  <data name="UrlBepInExPack" xml:space="preserve">
+    <value>https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/</value>
+  </data>
+  <data name="UrlBepInExPackApi" xml:space="preserve">
+    <value>https://thunderstore.io/api/experimental/package/denikson/BepInExPack_Valheim/</value>
+  </data>
+  <data name="UrlValheimPlusApi" xml:space="preserve">
+    <value>https://api.github.com/repos/Grantapher/ValheimPlus/releases/latest</value>
+  </data>
+  <data name="UrlValheimPlus" xml:space="preserve">
+    <value>https://github.com/Grantapher/ValheimPlus</value>
+  </data>
   <data name="Remove_Red_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Remove_Red_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

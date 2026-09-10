@@ -337,6 +337,51 @@ namespace ValheimServerGUI.Properties {
                 return ResourceManager.GetString("PlayerListFilePath", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to %USERPROFILE%\AppData\LocalLow\IronGate\Valheim\Player.log.
+        /// </summary>
+        internal static string PlayerLogFilePath {
+            get {
+                return ResourceManager.GetString("PlayerLogFilePath", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/.
+        /// </summary>
+        internal static string UrlBepInExPack {
+            get {
+                return ResourceManager.GetString("UrlBepInExPack", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to https://thunderstore.io/api/experimental/package/denikson/BepInExPack_Valheim/.
+        /// </summary>
+        internal static string UrlBepInExPackApi {
+            get {
+                return ResourceManager.GetString("UrlBepInExPackApi", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to https://api.github.com/repos/Grantapher/ValheimPlus/releases/latest.
+        /// </summary>
+        internal static string UrlValheimPlusApi {
+            get {
+                return ResourceManager.GetString("UrlValheimPlusApi", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to https://github.com/Grantapher/ValheimPlus.
+        /// </summary>
+        internal static string UrlValheimPlus {
+            get {
+                return ResourceManager.GetString("UrlValheimPlus", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
