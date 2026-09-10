@@ -168,10 +168,14 @@ preserved for a smooth move.
   returned the Infrastructure assembly (informational version without the `+build` suffix), so
   `GetApplicationVersion()`/`GetApplicationBuildDate()` threw `ArgumentOutOfRangeException`. Now
   they read from `Assembly.GetEntryAssembly()` and tolerate a missing `+build` prefix.
+- Implemented Phase 2 steps 2-4 (main shell + server controls): `ServerControlsViewModel` (server
+  options, world selection, start/stop/restart with validation and port checks), a shell status bar
+  (status, uptime, external/internal IP, invite code), and the `IUserInteraction` contract
+  (`AvaloniaUserInteraction` with code-built dialogs). The `MainWindow` now renders the full control
+  surface with compiled bindings; options are editable only while the server is stopped.
 
-Next: Phase 2 step 2+ — main shell with profile selection and server status wired to `ValheimServer`
-(start/stop/restart), then options/world preferences, server details, players, logs, mods/backups,
-preferences/About dialogs.
+Next: Phase 2 step 5+ — players and player details, logs, mods/backups, preferences/update
+checks/About dialogs.
 
 ## Target architecture
 

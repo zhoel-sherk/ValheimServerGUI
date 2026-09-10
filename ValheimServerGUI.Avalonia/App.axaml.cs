@@ -6,8 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System;
 using System.Threading.Tasks;
+using ValheimServerGUI.Avalonia.Services;
 using ValheimServerGUI.Avalonia.Views;
 using ValheimServerGUI.Core.Logging;
+using ValheimServerGUI.Core.Platform;
 using ValheimServerGUI.Core.Processes;
 using ValheimServerGUI.Game;
 using ValheimServerGUI.Game.Mods;
@@ -104,6 +106,7 @@ namespace ValheimServerGUI.Avalonia
                 .AddSingleton<IGitHubClient, GitHubClient>()
                 .AddSingleton<ISoftwareUpdateProvider, SoftwareUpdateProvider>()
                 .AddSingleton<IExceptionHandler, AvaloniaExceptionHandler>()
+                .AddSingleton<IUserInteraction, AvaloniaUserInteraction>()
                 .AddSingleton<IRuneberryApiClient, RuneberryApiClient>();
 
             // Mods & backups
@@ -124,6 +127,7 @@ namespace ValheimServerGUI.Avalonia
 
             // Views / ViewModels
             services
+                .AddSingleton<ViewModels.ServerControlsViewModel>()
                 .AddSingleton<ViewModels.ShellViewModel>()
                 .AddSingleton<MainWindow>();
 
