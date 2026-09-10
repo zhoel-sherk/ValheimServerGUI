@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -145,6 +146,8 @@ namespace ValheimServerGUI.Game
 
             var exePath = options.GetValidatedServerExe().FullName;
             var processArgs = GenerateArgs(options);
+
+            WarnIfModsAndCrossplay(options, exePath);
 
             ApplicationLogger.Information(
                 @"Server run command: ""{exePath}"" {processArgs}",
@@ -361,6 +364,28 @@ namespace ValheimServerGUI.Game
         #endregion
 
         #region Helper methods
+
+        private void WarnIfModsAndCrossplay(IValheimServerOptions options, string exePath)
+        {
+            if (!options.Crossplay) return;
+
+            try
+            {
+                var serverFolder = Path.GetDirectoryName(exePath);
+                if (string.IsNullOrEmpty(serverFolder)) return;
+
+                // winhttp.dll is the BepInEx/doorstop proxy; its presence means mods are installed.
+                if (File.Exists(Path.Join(serverFolder, "winhttp.dll")))
+                {
+                    ApplicationLogger.Warning(
+                        "Crossplay is enabled and BepInEx appears to be installed (winhttp.dll found in the server folder). Many mods are incompatible with -crossplay; if players cannot connect, disable crossplay or remove the mods.");
+                }
+            }
+            catch
+            {
+                // Best-effort detection; never block startup on it
+            }
+        }
 
         private static string GenerateArgs(IValheimServerOptions options)
         {

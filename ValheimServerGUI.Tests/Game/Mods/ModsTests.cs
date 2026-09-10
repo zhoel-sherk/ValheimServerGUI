@@ -25,6 +25,38 @@ namespace ValheimServerGUI.Tests.Game.Mods
         }
     }
 
+    public class BepInExConfigTests
+    {
+        [Theory]
+        [InlineData("[Logging.Console]\nEnabled = true\nStandardOutType = Auto", "[Logging.Console]\nEnabled = false\nStandardOutType = Auto")]
+        [InlineData("[Logging.Console]\r\nEnabled = true\r\n", "[Logging.Console]\r\nEnabled = false\r\n")]
+        [InlineData("[General]\nSomething = 1\n\n[Logging.Console]\n# Setting type: Boolean\nEnabled = true\n", "[General]\nSomething = 1\n\n[Logging.Console]\n# Setting type: Boolean\nEnabled = false\n")]
+        public void DisablesConsoleLogging(string input, string expected)
+        {
+            Assert.Equal(expected, BepInExConfig.DisableConsoleLogging(input));
+        }
+
+        [Fact]
+        public void AppendsConsoleSectionWhenMissing()
+        {
+            var input = "[General]\nSomething = 1\n";
+
+            var result = BepInExConfig.DisableConsoleLogging(input);
+
+            Assert.Contains("[Logging.Console]", result);
+            Assert.Contains("Enabled = false", result);
+            Assert.Contains("Something = 1", result);
+        }
+
+        [Fact]
+        public void PreservesAlreadyDisabledConsole()
+        {
+            var input = "[Logging.Console]\nEnabled = false\nOther = true\n";
+
+            Assert.Equal(input, BepInExConfig.DisableConsoleLogging(input));
+        }
+    }
+
     public class PlayerLogReaderTests
     {
         private const string SampleLog = @"
@@ -275,21 +307,43 @@ namespace ValheimServerGUI.Tests.Game.Mods
         }
 
         [Fact]
-        public async Task BepInExInstallPreservesExistingConfig()
+        public async Task BepInExInstallPreservesExistingConfigAndDisablesConsole()
         {
             var serverFolder = Path.Combine(TestFolder, "server-preserve");
             Directory.CreateDirectory(Path.Combine(serverFolder, "BepInEx", "config"));
-            File.WriteAllText(Path.Combine(serverFolder, "BepInEx", "config", "BepInEx.cfg"), "user-edited");
+            File.WriteAllText(
+                Path.Combine(serverFolder, "BepInEx", "config", "BepInEx.cfg"),
+                "[General]\nEnableConsole = true\n\n[Logging.Console]\nEnabled = true\nLogLevels = Fatal,Error");
 
             var zip = CreateZipFromEntries(
                 ("BepInExPack_Valheim/winhttp.dll", "proxy"),
+                ("BepInExPack_Valheim/doorstop_config.ini", "config"),
                 ("BepInExPack_Valheim/BepInEx/core/BepInEx.dll", "core"),
                 ("BepInExPack_Valheim/BepInEx/config/BepInEx.cfg", "default"));
 
             var manager = new BepInExManager(new Mock<IModSourceClient>().Object, Logger);
             await manager.InstallFromFileAsync(serverFolder, zip);
 
-            Assert.Equal("user-edited", File.ReadAllText(Path.Combine(serverFolder, "BepInEx", "config", "BepInEx.cfg")));
+            var config = File.ReadAllText(Path.Combine(serverFolder, "BepInEx", "config", "BepInEx.cfg"));
+            Assert.Contains("EnableConsole = true", config);
+            Assert.Contains("LogLevels = Fatal,Error", config);
+            Assert.Contains("Enabled = false", config);
+        }
+
+        [Fact]
+        public void GetStatusRequiresDoorstopConfig()
+        {
+            var manager = new BepInExManager(new Mock<IModSourceClient>().Object, Logger);
+
+            var serverFolder = Path.Combine(TestFolder, "status-doorstop");
+            Directory.CreateDirectory(Path.Combine(serverFolder, "BepInEx", "core"));
+            File.WriteAllText(Path.Combine(serverFolder, "winhttp.dll"), "proxy");
+            File.WriteAllText(Path.Combine(serverFolder, "BepInEx", "core", "BepInEx.dll"), "core");
+
+            Assert.False(manager.GetStatus(serverFolder).IsInstalled);
+
+            File.WriteAllText(Path.Combine(serverFolder, "doorstop_config.ini"), "config");
+            Assert.True(manager.GetStatus(serverFolder).IsInstalled);
         }
 
         [Fact]
@@ -299,6 +353,7 @@ namespace ValheimServerGUI.Tests.Game.Mods
             Directory.CreateDirectory(Path.Combine(TestFolder, "server-vp", "BepInEx", "core"));
             File.WriteAllText(Path.Combine(TestFolder, "server-vp", "BepInEx", "core", "BepInEx.dll"), "core");
             File.WriteAllText(Path.Combine(TestFolder, "server-vp", "winhttp.dll"), "proxy");
+            File.WriteAllText(Path.Combine(TestFolder, "server-vp", "doorstop_config.ini"), "config");
 
             var zip = CreateZipFromEntries(("BepInEx/plugins/ValheimPlus.dll", "plugin"));
 
@@ -318,6 +373,7 @@ namespace ValheimServerGUI.Tests.Game.Mods
             Directory.CreateDirectory(Path.Combine(serverFolder, "BepInEx", "core"));
             File.WriteAllText(Path.Combine(serverFolder, "BepInEx", "core", "BepInEx.dll"), "core");
             File.WriteAllText(Path.Combine(serverFolder, "winhttp.dll"), "proxy");
+            File.WriteAllText(Path.Combine(serverFolder, "doorstop_config.ini"), "config");
 
             var zip = CreateZipFromEntries(
                 ("ValheimPlus.dll", "plugin"),

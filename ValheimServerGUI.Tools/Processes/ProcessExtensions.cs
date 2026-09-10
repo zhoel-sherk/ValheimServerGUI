@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Text;
 
 namespace ValheimServerGUI.Tools.Processes
@@ -28,6 +29,14 @@ namespace ValheimServerGUI.Tools.Processes
                     StandardErrorEncoding = Encoding.UTF8,
                 },
             };
+
+            // Run the process from its own directory so that anything reading the
+            // current directory (mods, Doorstop) resolves the correct paths.
+            var workingDirectory = Path.GetDirectoryName(command);
+            if (!string.IsNullOrEmpty(workingDirectory))
+            {
+                process.StartInfo.WorkingDirectory = workingDirectory;
+            }
 
             provider.AddProcess(key, process);
 

@@ -25,6 +25,11 @@ namespace ValheimServerGUI.Game.Mods
     {
         private const string PackRootPrefix = "BepInExPack_Valheim/";
         private const string PackVersionMarkerFile = "BepInEx/.vsg-bepinex-pack-version";
+        private const string DoorstopConfigFileName = "doorstop_config.ini";
+
+        // Valheim 1.0.x runs Unity 6; BepInEx 5.4.23.3+ (pack 5.4.2333+) is the first
+        // release that supports it. Older packs can crash the server on startup.
+        private const string MinimumBepInExVersion = "5.4.23.3";
 
         private readonly IModSourceClient ModSourceClient;
         private readonly IApplicationLogger Logger;
@@ -41,8 +46,9 @@ namespace ValheimServerGUI.Game.Mods
             if (string.IsNullOrWhiteSpace(serverFolder)) return status;
 
             var winhttpPath = Path.Join(serverFolder, "winhttp.dll");
+            var doorstopPath = Path.Join(serverFolder, DoorstopConfigFileName);
             var corePath = Path.Join(serverFolder, "BepInEx", "core", "BepInEx.dll");
-            if (!File.Exists(winhttpPath) || !File.Exists(corePath)) return status;
+            if (!File.Exists(winhttpPath) || !File.Exists(doorstopPath) || !File.Exists(corePath)) return status;
 
             status.IsInstalled = true;
             status.Version = ReadFileVersion(corePath);
@@ -78,6 +84,8 @@ namespace ValheimServerGUI.Game.Mods
         {
             onProgress?.Invoke("Extracting BepInEx...");
             InstallFromZip(serverFolder, zipPath, packVersion: null);
+
+            WarnIfPackPredatesUnity6(serverFolder);
 
             Logger.Information("Installed BepInEx from file {zip} into {folder}", zipPath, serverFolder);
             return Task.FromResult(GetStatus(serverFolder));
@@ -116,6 +124,55 @@ namespace ValheimServerGUI.Game.Mods
             if (!string.IsNullOrWhiteSpace(packVersion))
             {
                 WriteInstalledPackVersion(serverFolder, packVersion);
+            }
+
+            // BepInEx enables its console by default, which can take over the stdout pipe
+            // the GUI relies on for log parsing. Force it off after every install/update.
+            ApplyServerLoggingDefaults(serverFolder);
+        }
+
+        /// <summary>
+        /// Warns when a manually installed BepInEx predates Unity 6 support. Best-effort;
+        /// version detection only works for real BepInEx assemblies.
+        /// </summary>
+        private void WarnIfPackPredatesUnity6(string serverFolder)
+        {
+            try
+            {
+                var version = ReadFileVersion(Path.Join(serverFolder, "BepInEx", "core", "BepInEx.dll"));
+                if (string.IsNullOrWhiteSpace(version)) return;
+
+                if (ModVersion.IsNewer(MinimumBepInExVersion, version))
+                {
+                    Logger.Warning(
+                        "The installed BepInEx version {version} predates {minimum} and may not work with Valheim 1.0.x (Unity 6). Consider installing the latest BepInExPack_Valheim.",
+                        version,
+                        MinimumBepInExVersion);
+                }
+            }
+            catch
+            {
+                // Version detection is best-effort
+            }
+        }
+
+        /// <summary>
+        /// Disables the BepInEx console in BepInEx/config/BepInEx.cfg so that server stdout
+        /// is not diverted away from the GUI's redirected pipe. Preserves all other settings.
+        /// </summary>
+        private static void ApplyServerLoggingDefaults(string serverFolder)
+        {
+            try
+            {
+                var configPath = Path.Join(serverFolder, "BepInEx", "config", "BepInEx.cfg");
+                if (!File.Exists(configPath)) return;
+
+                var updated = BepInExConfig.DisableConsoleLogging(File.ReadAllText(configPath));
+                File.WriteAllText(configPath, updated);
+            }
+            catch
+            {
+                // Best-effort: a broken config should never abort the install
             }
         }
 
