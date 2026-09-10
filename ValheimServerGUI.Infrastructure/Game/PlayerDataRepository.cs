@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ValheimServerGUI.Properties;
+using ValheimServerGUI.Infrastructure;
 using ValheimServerGUI.Tools;
 using ValheimServerGUI.Tools.Data;
 using ValheimServerGUI.Tools.Models;
@@ -20,7 +20,7 @@ namespace ValheimServerGUI.Game
         public PlayerDataRepository(
             IDataFileRepositoryContext context,
             IRuneberryApiClient runeberryApiClient)
-            : base(context, Resources.PlayerListFilePath)
+            : base(context, AppSettings.PlayerListFilePath)
         {
             EntityUpdated += OnEntityUpdated;
             RuneberryApiClient = runeberryApiClient;

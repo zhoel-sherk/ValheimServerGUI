@@ -22,6 +22,7 @@ must point to this fork's GitHub Issues (`Resources: UrlIssues`).
 | `ValheimServerGUI` | net10.0-windows | Main WinForms app (forms, game logic, logging) |
 | `ValheimServerGUI.Controls` | net10.0-windows | Custom form-field controls (FormField family) |
 | `ValheimServerGUI.Tools` | net10.0 | Process runner, JSON storage, loggers, HTTP |
+| `ValheimServerGUI.Infrastructure` | net10.0 | Shared services: preferences, player data, mods/backups, software updates, HTTP clients, logging pipeline |
 | `ValheimServerGUI.Tests` | net10.0-windows | xUnit tests for the app |
 | `ValheimServerGUI.Core.Tests` | net10.0 | Cross-platform xUnit tests for Core (log parsing, options, player models) |
 | `ValheimServerGUI.Serverless` (+.Tests) | net10.0 | AWS Lambda backend (bug reports/player info) — legacy, mostly dead upstream API |
@@ -36,7 +37,8 @@ Key files:
 - `ValheimServerGUI.Core/Logging/*` — Core logging contracts (`IApplicationLog`, `IServerLogger`, `IServerLoggerFactory`)
 - `ValheimServerGUI.Core/Platform/IPlatformIntegration.cs` — open directory/URL contract (local impl: `WindowsPlatformIntegration` in the app)
 - `ValheimServerGUI.Tools/Processes/LocalServerProcess.cs` — local process runner (UTF-8 stdout, working directory)
-- `ValheimServerGUI/Tools/Logging/ValheimServerLogger.cs` — server log noise filter + `ValheimServerLoggerFactory`
+- `ValheimServerGUI.Infrastructure/Tools/Logging/ValheimServerLogger.cs` — server log noise filter + `ValheimServerLoggerFactory`
+- `ValheimServerGUI.Infrastructure/AppSettings.cs` — platform-neutral paths/URLs/defaults (was `Resources.resx` string constants)
 - `ValheimServerGUI/Properties/Resources.resx` (+ generated Designer.cs) — app strings & URLs
 
 ## Build / test / run

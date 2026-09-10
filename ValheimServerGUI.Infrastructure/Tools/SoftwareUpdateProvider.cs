@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using ValheimServerGUI.Game;
-using ValheimServerGUI.Properties;
+using ValheimServerGUI.Infrastructure;
 
 namespace ValheimServerGUI.Tools
 {
@@ -48,7 +48,7 @@ namespace ValheimServerGUI.Tools
         private readonly IGitHubClient GitHubClient;
         private readonly IUserPreferencesProvider UserPrefsProvider;
 
-        private readonly TimeSpan UpdateCheckInterval = TimeSpan.Parse(Resources.UpdateCheckInterval);
+        private readonly TimeSpan UpdateCheckInterval = AppSettings.UpdateCheckInterval;
         private DateTime NextAutomaticUpdateCheck = DateTime.MinValue;
 
         public SoftwareUpdateProvider(IGitHubClient gitHubClient, IUserPreferencesProvider userPrefsProvider)

@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using ValheimServerGUI.Properties;
+using ValheimServerGUI.Infrastructure;
 using ValheimServerGUI.Tools.Http;
 
 namespace ValheimServerGUI.Tools
@@ -20,7 +20,7 @@ namespace ValheimServerGUI.Tools
 
         public async Task<GitHubRelease> GetLatestReleaseAsync()
         {
-            var releases = await Get($"{Resources.UrlGithubApi}/releases")
+            var releases = await Get($"{AppSettings.UrlGithubApi}/releases")
                 .WithHeader("User-Agent", "ValheimServerGUI")
                 .SendAsync<GitHubRelease[]>();
 

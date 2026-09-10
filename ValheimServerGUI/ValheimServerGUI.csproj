@@ -28,6 +28,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\ValheimServerGUI.Controls\ValheimServerGUI.Controls.csproj" />
 		<ProjectReference Include="..\ValheimServerGUI.Core\ValheimServerGUI.Core.csproj" />
+		<ProjectReference Include="..\ValheimServerGUI.Infrastructure\ValheimServerGUI.Infrastructure.csproj" />
 		<ProjectReference Include="..\ValheimServerGUI.Tools\ValheimServerGUI.Tools.csproj" />
 	</ItemGroup>
 

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using ValheimServerGUI.Properties;
+using ValheimServerGUI.Infrastructure;
 
 namespace ValheimServerGUI.Game
 {
@@ -9,11 +9,11 @@ namespace ValheimServerGUI.Game
         public static UserPreferences GetDefault() => new();
 
         // (jb, 2/19/23) This field was recorded, but never used.
-        //public string ValheimGamePath { get; set; } = Resources.DefaultGamePath;
+        //public string ValheimGamePath { get; set; } = AppSettings.DefaultGamePath;
 
-        public string ServerExePath { get; set; } = Resources.DefaultServerPath;
+        public string ServerExePath { get; set; } = AppSettings.DefaultServerPath;
 
-        public string SaveDataFolderPath { get; set; } = Resources.DefaultValheimSaveFolder;
+        public string SaveDataFolderPath { get; set; } = AppSettings.DefaultValheimSaveFolder;
 
         public bool CheckForUpdates { get; set; } = true;
 

@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using ValheimServerGUI.Properties;
+using ValheimServerGUI.Infrastructure;
 using ValheimServerGUI.Tools.Http;
 
 namespace ValheimServerGUI.Game.Mods
@@ -75,7 +75,7 @@ namespace ValheimServerGUI.Game.Mods
 
         public async Task<BepInExPackRelease> GetLatestBepInExPackAsync()
         {
-            var response = await Get(Resources.UrlBepInExPackApi)
+            var response = await Get(AppSettings.UrlBepInExPackApi)
                 .WithHeader("User-Agent", UserAgent)
                 .SendAsync<ThunderstorePackageResponse>();
 
@@ -93,7 +93,7 @@ namespace ValheimServerGUI.Game.Mods
 
         public async Task<ValheimPlusRelease> GetLatestValheimPlusAsync()
         {
-            var release = await Get(Resources.UrlValheimPlusApi)
+            var release = await Get(AppSettings.UrlValheimPlusApi)
                 .WithHeader("User-Agent", UserAgent)
                 .SendAsync<ValheimPlusRelease>();
 

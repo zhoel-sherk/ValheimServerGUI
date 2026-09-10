@@ -1,11 +1,11 @@
 ﻿using System;
-using ValheimServerGUI.Properties;
+using ValheimServerGUI.Infrastructure;
 
 namespace ValheimServerGUI.Game
 {
     public class ServerPreferences
     {
-        public string ProfileName { get; set; } = Resources.DefaultServerProfileName;
+        public string ProfileName { get; set; } = AppSettings.DefaultServerProfileName;
 
         public DateTime LastSaved { get; set; } = DateTime.UnixEpoch;
 
@@ -17,17 +17,17 @@ namespace ValheimServerGUI.Game
 
         public bool Public { get; set; }
 
-        public int Port { get; set; } = int.Parse(Resources.DefaultServerPort);
+        public int Port { get; set; } = int.Parse(AppSettings.DefaultServerPort);
 
         public bool Crossplay { get; set; }
 
-        public int SaveInterval { get; set; } = int.Parse(Resources.DefaultSaveInterval);
+        public int SaveInterval { get; set; } = int.Parse(AppSettings.DefaultSaveInterval);
 
-        public int BackupCount { get; set; } = int.Parse(Resources.DefaultBackupCount);
+        public int BackupCount { get; set; } = int.Parse(AppSettings.DefaultBackupCount);
 
-        public int BackupIntervalShort { get; set; } = int.Parse(Resources.DefaultBackupIntervalShort);
+        public int BackupIntervalShort { get; set; } = int.Parse(AppSettings.DefaultBackupIntervalShort);
 
-        public int BackupIntervalLong { get; set; } = int.Parse(Resources.DefaultBackupIntervalLong);
+        public int BackupIntervalLong { get; set; } = int.Parse(AppSettings.DefaultBackupIntervalLong);
 
         public bool AutoStart { get; set; }
 

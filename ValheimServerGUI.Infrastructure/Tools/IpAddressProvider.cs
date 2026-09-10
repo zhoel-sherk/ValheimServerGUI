@@ -5,7 +5,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using ValheimServerGUI.Properties;
+using ValheimServerGUI.Infrastructure;
 using ValheimServerGUI.Tools.Http;
 
 namespace ValheimServerGUI.Tools
@@ -65,7 +65,7 @@ namespace ValheimServerGUI.Tools
 
         public Task LoadExternalIpAddressAsync()
         {
-            return Get(Resources.UrlExternalIpLookup)
+            return Get(AppSettings.UrlExternalIpLookup)
                 .WithCallback<ExternalIpResponse>(OnExternalIpResponse)
                 .SendAsync();
         }
@@ -87,8 +87,9 @@ namespace ValheimServerGUI.Tools
                 return Task.CompletedTask;
             }
 
-            // Prefer addresses from the DHCP server if they're available
-            var eligibleAddresses = addresses.Where(ip => ip.PrefixOrigin == PrefixOrigin.Dhcp);
+            // Prefer addresses from the DHCP server if they're available.
+            // PrefixOrigin is Windows-only; on other platforms accept all eligible addresses.
+            var eligibleAddresses = addresses.Where(ip => !OperatingSystem.IsWindows() || ip.PrefixOrigin == PrefixOrigin.Dhcp);
             if (!eligibleAddresses.Any())
             {
                 eligibleAddresses = addresses;

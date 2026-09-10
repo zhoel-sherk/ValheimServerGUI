@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
-using ValheimServerGUI.Properties;
+using ValheimServerGUI.Infrastructure;
 
 namespace ValheimServerGUI.Game.Mods
 {
@@ -39,7 +39,7 @@ namespace ValheimServerGUI.Game.Mods
         private static readonly Regex ValheimPlusUpdateRegex = new(@"ValheimPlus \[[\d\.]+\]\s+([^\r\n\]]+)", RegexOptions.IgnoreCase);
 
         public static string GetPlayerLogPath()
-            => Environment.ExpandEnvironmentVariables(Resources.PlayerLogFilePath);
+            => Environment.ExpandEnvironmentVariables(AppSettings.PlayerLogFilePath);
 
         /// <summary>
         /// Reads mod information from the player log. Returns an empty result when the log

@@ -2,7 +2,7 @@
 using Serilog.Events;
 using System;
 using System.Collections.Generic;
-using ValheimServerGUI.Properties;
+using ValheimServerGUI.Infrastructure;
 using ValheimServerGUI.Tools.Logging.Components;
 
 namespace ValheimServerGUI.Tools.Logging
@@ -64,7 +64,7 @@ namespace ValheimServerGUI.Tools.Logging
         {
             if (!string.IsNullOrWhiteSpace(fileName))
             {
-                config.WriteToRollingFile(Resources.LogsFolderPath, fileName);
+                config.WriteToRollingFile(AppSettings.LogsFolderPath, fileName);
             }
         }
 

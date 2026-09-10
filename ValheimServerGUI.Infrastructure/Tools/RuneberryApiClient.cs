@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
+using ValheimServerGUI.Infrastructure;
 using ValheimServerGUI.Properties;
 using ValheimServerGUI.Tools.Http;
 using ValheimServerGUI.Tools.Models;
@@ -28,7 +29,7 @@ namespace ValheimServerGUI.Tools
 
         public async Task RequestPlayerInfoAsync(string platform, string playerId)
         {
-            var response = await Get($"{Resources.UrlRuneberryApi}/player-info?platform={platform}&playerId={playerId}")
+            var response = await Get($"{AppSettings.UrlRuneberryApi}/player-info?platform={platform}&playerId={playerId}")
                 .WithHeader(ClientSecrets.RuneberryApiKeyHeader, ClientSecrets.RuneberryClientApiKey)
                 .SendAsync<PlayerInfoResponse>();
 
@@ -43,7 +44,7 @@ namespace ValheimServerGUI.Tools
 
         public async Task SendCrashReportAsync(CrashReport report)
         {
-            var response = await Post($"{Resources.UrlRuneberryApi}/crash-report", report)
+            var response = await Post($"{AppSettings.UrlRuneberryApi}/crash-report", report)
                 .WithHeader(ClientSecrets.RuneberryApiKeyHeader, ClientSecrets.RuneberryClientApiKey)
                 .SendAsync();
 

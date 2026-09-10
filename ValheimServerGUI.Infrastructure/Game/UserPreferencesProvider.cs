@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ValheimServerGUI.Properties;
+using ValheimServerGUI.Infrastructure;
 using ValheimServerGUI.Tools.Data;
 
 namespace ValheimServerGUI.Game
@@ -24,8 +24,8 @@ namespace ValheimServerGUI.Game
 
         public UserPreferencesProvider(ILogger logger) : base(logger)
         {
-            UserPrefsFilePath = Environment.ExpandEnvironmentVariables(Resources.UserPrefsFilePathV2);
-            LegacyPath = Environment.ExpandEnvironmentVariables(Resources.UserPrefsFilePath);
+            UserPrefsFilePath = Environment.ExpandEnvironmentVariables(AppSettings.UserPrefsFilePathV2);
+            LegacyPath = Environment.ExpandEnvironmentVariables(AppSettings.UserPrefsFilePath);
         }
 
         #region IUserPreferencesProvider implementation
@@ -109,7 +109,7 @@ namespace ValheimServerGUI.Game
             { "ServerPassword", (p, v) => p.Servers[0].Password = v },
             { "ServerWorldName", (p, v) => p.Servers[0].WorldName = v },
             { "ServerPublic", (p, v) => p.Servers[0].Public = bool.TryParse(v, out var v2) ? v2 : false },
-            { "ServerPort", (p, v) => p.Servers[0].Port = int.TryParse(v, out var v2) ? v2 : int.Parse(Resources.DefaultServerPort) },
+            { "ServerPort", (p, v) => p.Servers[0].Port = int.TryParse(v, out var v2) ? v2 : int.Parse(AppSettings.DefaultServerPort) },
         };
 
         private bool TryMigrateLegacyPrefs(out UserPreferences prefs)
