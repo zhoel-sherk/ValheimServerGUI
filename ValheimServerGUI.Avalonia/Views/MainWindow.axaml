@@ -16,7 +16,7 @@
   <DockPanel>
     <!-- Top bar: profile selection, status, actions -->
     <Border DockPanel.Dock="Top" Padding="12,8" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
-      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,12,Auto,12,Auto,12,Auto" ColumnSpacing="8">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,12,Auto,12,Auto,12,Auto,24,Auto,8,Auto" ColumnSpacing="8">
         <TextBlock Text="Profile:" VerticalAlignment="Center"/>
         <ComboBox Grid.Column="1"
                   ItemsSource="{Binding Profiles}"
@@ -30,6 +30,9 @@
         <Button Grid.Column="5" Content="Start" Command="{Binding ServerControls.StartCommand}" MinWidth="80"/>
         <Button Grid.Column="7" Content="Restart" Command="{Binding ServerControls.RestartCommand}" MinWidth="80"/>
         <Button Grid.Column="9" Content="Stop" Command="{Binding ServerControls.StopCommand}" MinWidth="80"/>
+
+        <Button Grid.Column="11" Content="Preferences" Command="{Binding ShowPreferencesCommand}"/>
+        <Button Grid.Column="13" Content="About" Command="{Binding ShowAboutCommand}"/>
       </Grid>
     </Border>
 
@@ -46,100 +49,187 @@
       </StackPanel>
     </Border>
 
-    <ScrollViewer>
-      <StackPanel Margin="16" Spacing="16">
+    <TabControl Margin="8">
+      <!-- Server -->
+      <TabItem Header="Server">
+        <ScrollViewer>
+          <StackPanel Margin="8" Spacing="16">
 
-        <!-- Server Controls -->
-        <Border Padding="16" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
-          <StackPanel Spacing="12">
-            <TextBlock Text="Server Controls" FontSize="16" FontWeight="SemiBold"/>
+            <!-- Server Controls -->
+            <Border Padding="16" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+              <StackPanel Spacing="12">
+                <TextBlock Text="Server Controls" FontSize="16" FontWeight="SemiBold"/>
 
-            <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
-              <TextBlock Text="Server Name:" VerticalAlignment="Center"/>
-              <TextBox Grid.Column="1" Text="{Binding ServerControls.ServerName}" IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Enter a server name"/>
+                <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
+                  <TextBlock Text="Server Name:" VerticalAlignment="Center"/>
+                  <TextBox Grid.Column="1" Text="{Binding ServerControls.ServerName}" IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Enter a server name"/>
 
-              <TextBlock Grid.Row="1" Text="Port:" VerticalAlignment="Center"/>
-              <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding ServerControls.Port}" Minimum="1" Maximum="65535" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                  <TextBlock Grid.Row="1" Text="Port:" VerticalAlignment="Center"/>
+                  <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding ServerControls.Port}" Minimum="1" Maximum="65535" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
 
-              <TextBlock Grid.Row="2" Text="Password:" VerticalAlignment="Center"/>
-              <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ServerControls.Password}" PasswordChar="&#x2022;" IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Enter a password"/>
+                  <TextBlock Grid.Row="2" Text="Password:" VerticalAlignment="Center"/>
+                  <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ServerControls.Password}" PasswordChar="&#x2022;" IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Enter a password"/>
 
-              <TextBlock Grid.Row="3" Text="World:" VerticalAlignment="Center"/>
-              <StackPanel Grid.Row="3" Grid.Column="1" Spacing="8">
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                  <RadioButton Content="New World" GroupName="WorldSelect" IsChecked="{Binding ServerControls.IsNewWorld}" IsEnabled="{Binding ServerControls.CanEdit}"/>
-                  <RadioButton Content="Existing World" GroupName="WorldSelect" IsChecked="{Binding ServerControls.IsNewWorld, Converter={StaticResource NegateBool}}" IsEnabled="{Binding ServerControls.CanEdit}"/>
-                  <Button Content="Refresh" Command="{Binding ServerControls.RefreshWorldsCommand}"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                  <TextBox Text="{Binding ServerControls.NewWorldName}" IsVisible="{Binding ServerControls.IsNewWorld}" Width="220" IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Enter new world name"/>
-                  <ComboBox ItemsSource="{Binding ServerControls.WorldNames}" SelectedItem="{Binding ServerControls.ExistingWorldName}" IsVisible="{Binding ServerControls.IsNewWorld, Converter={StaticResource NegateBool}}" Width="220" IsEnabled="{Binding ServerControls.CanEdit}"/>
-                </StackPanel>
+                  <TextBlock Grid.Row="3" Text="World:" VerticalAlignment="Center"/>
+                  <StackPanel Grid.Row="3" Grid.Column="1" Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                      <RadioButton Content="New World" GroupName="WorldSelect" IsChecked="{Binding ServerControls.IsNewWorld}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                      <RadioButton Content="Existing World" GroupName="WorldSelect" IsChecked="{Binding ServerControls.IsNewWorld, Converter={StaticResource NegateBool}}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                      <Button Content="Refresh" Command="{Binding ServerControls.RefreshWorldsCommand}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBox Text="{Binding ServerControls.NewWorldName}" IsVisible="{Binding ServerControls.IsNewWorld}" Width="220" IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Enter new world name"/>
+                      <ComboBox ItemsSource="{Binding ServerControls.WorldNames}" SelectedItem="{Binding ServerControls.ExistingWorldName}" IsVisible="{Binding ServerControls.IsNewWorld, Converter={StaticResource NegateBool}}" Width="220" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                    </StackPanel>
+                  </StackPanel>
+
+                  <TextBlock Grid.Row="4" Text="Join Options:" VerticalAlignment="Center"/>
+                  <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="16">
+                    <CheckBox Content="Community Server (Public)" IsChecked="{Binding ServerControls.IsPublic}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                    <CheckBox Content="Enable Crossplay" IsChecked="{Binding ServerControls.IsCrossplay}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                  </StackPanel>
+                </Grid>
               </StackPanel>
+            </Border>
 
-              <TextBlock Grid.Row="4" Text="Join Options:" VerticalAlignment="Center"/>
-              <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="16">
-                <CheckBox Content="Community Server (Public)" IsChecked="{Binding ServerControls.IsPublic}" IsEnabled="{Binding ServerControls.CanEdit}"/>
-                <CheckBox Content="Enable Crossplay" IsChecked="{Binding ServerControls.IsCrossplay}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+            <!-- Server Details -->
+            <Border Padding="16" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+              <StackPanel Spacing="12">
+                <TextBlock Text="Server Details" FontSize="16" FontWeight="SemiBold"/>
+
+                <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
+                  <TextBlock Text="External IP:" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Column="1" Text="{Binding ExternalIpAddress}"/>
+
+                  <TextBlock Grid.Row="1" Text="Internal IP:" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding InternalIpAddress}"/>
+
+                  <TextBlock Grid.Row="2" Text="Invite Code:" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding InviteCode}"/>
+                </Grid>
               </StackPanel>
-            </Grid>
+            </Border>
+
+            <!-- Advanced Controls -->
+            <Border Padding="16" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+              <StackPanel Spacing="12">
+                <TextBlock Text="Advanced Controls" FontSize="16" FontWeight="SemiBold"/>
+
+                <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
+                  <TextBlock Text="Server Executable:" VerticalAlignment="Center"/>
+                  <TextBox Grid.Column="1" Text="{Binding ServerControls.ServerExePath}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+
+                  <TextBlock Grid.Row="1" Text="Save Data Folder:" VerticalAlignment="Center"/>
+                  <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ServerControls.SaveDataFolderPath}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+
+                  <TextBlock Grid.Row="2" Text="Save Interval (s):" VerticalAlignment="Center"/>
+                  <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding ServerControls.SaveInterval}" Minimum="1" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
+
+                  <TextBlock Grid.Row="3" Text="Backups:" VerticalAlignment="Center"/>
+                  <NumericUpDown Grid.Row="3" Grid.Column="1" Value="{Binding ServerControls.BackupCount}" Minimum="1" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
+
+                  <TextBlock Grid.Row="4" Text="Short Backup (s):" VerticalAlignment="Center"/>
+                  <NumericUpDown Grid.Row="4" Grid.Column="1" Value="{Binding ServerControls.BackupShortInterval}" Minimum="1" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
+
+                  <TextBlock Grid.Row="5" Text="Long Backup (s):" VerticalAlignment="Center"/>
+                  <NumericUpDown Grid.Row="5" Grid.Column="1" Value="{Binding ServerControls.BackupLongInterval}" Minimum="1" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                </Grid>
+
+                <CheckBox Content="Auto-start server on launch" IsChecked="{Binding ServerControls.AutoStart}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                <CheckBox Content="Write server logs to file" IsChecked="{Binding ServerControls.WriteServerLogsToFile}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+
+                <Grid ColumnDefinitions="160,*" ColumnSpacing="8">
+                  <TextBlock Text="Additional Args:" VerticalAlignment="Center"/>
+                  <TextBox Grid.Column="1" Text="{Binding ServerControls.AdditionalArgs}" IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Additional command-line arguments"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+
           </StackPanel>
-        </Border>
+        </ScrollViewer>
+      </TabItem>
 
-        <!-- Server Details -->
-        <Border Padding="16" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
-          <StackPanel Spacing="12">
-            <TextBlock Text="Server Details" FontSize="16" FontWeight="SemiBold"/>
-
-            <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
-              <TextBlock Text="External IP:" VerticalAlignment="Center"/>
-              <TextBlock Grid.Column="1" Text="{Binding ExternalIpAddress}"/>
-
-              <TextBlock Grid.Row="1" Text="Internal IP:" VerticalAlignment="Center"/>
-              <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding InternalIpAddress}"/>
-
-              <TextBlock Grid.Row="2" Text="Invite Code:" VerticalAlignment="Center"/>
-              <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding InviteCode}"/>
-            </Grid>
+      <!-- Players -->
+      <TabItem Header="Players">
+        <Grid RowDefinitions="*,Auto" Margin="8">
+          <ListBox Grid.Row="0"
+                   ItemsSource="{Binding Players.Players}"
+                   SelectedItem="{Binding Players.SelectedPlayer}">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:PlayerRowViewModel">
+                <Grid ColumnDefinitions="*,120,140,80">
+                  <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Column="1" Text="{Binding Platform}" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Column="2" Text="{Binding Status}" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Column="3" Text="{Binding LastUpdated}" VerticalAlignment="Center"/>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+            <Button Content="Remove Player" Command="{Binding Players.RemovePlayerCommand}"/>
+            <Button Content="Refresh" Command="{Binding Players.RefreshCommand}"/>
           </StackPanel>
-        </Border>
+        </Grid>
+      </TabItem>
 
-        <!-- Advanced Controls -->
-        <Border Padding="16" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
-          <StackPanel Spacing="12">
-            <TextBlock Text="Advanced Controls" FontSize="16" FontWeight="SemiBold"/>
+      <!-- Mods & Backups -->
+      <TabItem Header="Mods">
+        <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="8" RowSpacing="12">
+          <Border Padding="12" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+            <StackPanel Spacing="8">
+              <TextBlock Text="BepInEx" FontWeight="SemiBold"/>
+              <TextBlock Text="{Binding Mods.BepInExStatus}"/>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Install / Update" Command="{Binding Mods.InstallBepInExCommand}"/>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          <Border Grid.Row="1" Padding="12" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+            <StackPanel Spacing="8">
+              <TextBlock Text="Valheim Plus" FontWeight="SemiBold"/>
+              <TextBlock Text="{Binding Mods.ValheimPlusStatus}"/>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Install / Update" Command="{Binding Mods.InstallValheimPlusCommand}"/>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          <Grid Grid.Row="2" RowDefinitions="Auto,*" RowSpacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="Backups:" VerticalAlignment="Center"/>
+              <TextBlock Text="{Binding Mods.BackupsStatus}" VerticalAlignment="Center"/>
+              <Button Content="Refresh" Command="{Binding Mods.RefreshCommand}"/>
+            </StackPanel>
+            <ListBox Grid.Row="1" ItemsSource="{Binding Mods.Backups}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:BackupRowViewModel">
+                  <Grid ColumnDefinitions="*,160,90">
+                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Date}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="{Binding Size}" VerticalAlignment="Center"/>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Grid>
+        </Grid>
+      </TabItem>
 
-            <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
-              <TextBlock Text="Server Executable:" VerticalAlignment="Center"/>
-              <TextBox Grid.Column="1" Text="{Binding ServerControls.ServerExePath}" IsEnabled="{Binding ServerControls.CanEdit}"/>
-
-              <TextBlock Grid.Row="1" Text="Save Data Folder:" VerticalAlignment="Center"/>
-              <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ServerControls.SaveDataFolderPath}" IsEnabled="{Binding ServerControls.CanEdit}"/>
-
-              <TextBlock Grid.Row="2" Text="Save Interval (s):" VerticalAlignment="Center"/>
-              <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding ServerControls.SaveInterval}" Minimum="1" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
-
-              <TextBlock Grid.Row="3" Text="Backups:" VerticalAlignment="Center"/>
-              <NumericUpDown Grid.Row="3" Grid.Column="1" Value="{Binding ServerControls.BackupCount}" Minimum="1" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
-
-              <TextBlock Grid.Row="4" Text="Short Backup (s):" VerticalAlignment="Center"/>
-              <NumericUpDown Grid.Row="4" Grid.Column="1" Value="{Binding ServerControls.BackupShortInterval}" Minimum="1" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
-
-              <TextBlock Grid.Row="5" Text="Long Backup (s):" VerticalAlignment="Center"/>
-              <NumericUpDown Grid.Row="5" Grid.Column="1" Value="{Binding ServerControls.BackupLongInterval}" Minimum="1" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
-            </Grid>
-
-            <CheckBox Content="Auto-start server on launch" IsChecked="{Binding ServerControls.AutoStart}" IsEnabled="{Binding ServerControls.CanEdit}"/>
-            <CheckBox Content="Write server logs to file" IsChecked="{Binding ServerControls.WriteServerLogsToFile}" IsEnabled="{Binding ServerControls.CanEdit}"/>
-
-            <Grid ColumnDefinitions="160,*" ColumnSpacing="8">
-              <TextBlock Text="Additional Args:" VerticalAlignment="Center"/>
-              <TextBox Grid.Column="1" Text="{Binding ServerControls.AdditionalArgs}" IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Additional command-line arguments"/>
-            </Grid>
+      <!-- Logs -->
+      <TabItem Header="Logs">
+        <Grid RowDefinitions="*,Auto" Margin="8">
+          <ListBox Grid.Row="0" ItemsSource="{Binding Logs.LogEntries}" FontFamily="Consolas" FontSize="12">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding}"/>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+            <Button Content="Clear Logs" Command="{Binding Logs.ClearCommand}"/>
           </StackPanel>
-        </Border>
-
-      </StackPanel>
-    </ScrollViewer>
+        </Grid>
+      </TabItem>
+    </TabControl>
   </DockPanel>
 </Window>

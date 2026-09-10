@@ -1,12 +1,17 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ValheimServerGUI.Avalonia.Views;
 using ValheimServerGUI.Game;
 using ValheimServerGUI.Tools;
 using ValheimServerGUI.Tools.Logging;
@@ -24,12 +29,19 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private readonly ValheimServer Server;
         private readonly IIpAddressProvider IpAddressProvider;
         private readonly IApplicationLogger Logger;
+        private readonly IServiceProvider ServiceProvider;
 
         private readonly Stopwatch UptimeTimer = new();
 
         public ObservableCollection<string> Profiles { get; } = new();
 
         public ServerControlsViewModel ServerControls { get; }
+
+        public PlayersViewModel Players { get; }
+
+        public LogsViewModel Logs { get; }
+
+        public ModsViewModel Mods { get; }
 
         [ObservableProperty]
         private string? _selectedProfile;
@@ -60,7 +72,11 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             ValheimServer server,
             IIpAddressProvider ipAddressProvider,
             IApplicationLogger logger,
-            ServerControlsViewModel serverControls)
+            ServerControlsViewModel serverControls,
+            PlayersViewModel players,
+            LogsViewModel logs,
+            ModsViewModel mods,
+            IServiceProvider serviceProvider)
         {
             UserPrefsProvider = userPrefsProvider;
             ServerPrefsProvider = serverPrefsProvider;
@@ -68,6 +84,10 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             IpAddressProvider = ipAddressProvider;
             Logger = logger;
             ServerControls = serverControls;
+            Players = players;
+            Logs = logs;
+            Mods = mods;
+            ServiceProvider = serviceProvider;
 
             Server.StatusChanged += OnServerStatusChanged;
             Server.InviteCodeReady += OnInviteCodeReady;
@@ -134,6 +154,33 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         {
             // Software update check is wired up in a later step (Phase 2 step 8).
             Logger.Information("Update check not yet implemented in the Avalonia client");
+        }
+
+        [RelayCommand]
+        private void ShowPreferences()
+        {
+            var window = ServiceProvider.GetRequiredService<PreferencesWindow>();
+            window.DataContext = ServiceProvider.GetRequiredService<PreferencesViewModel>();
+            window.ShowDialog(GetOwnerWindow());
+        }
+
+        [RelayCommand]
+        private void ShowAbout()
+        {
+            var window = ServiceProvider.GetRequiredService<AboutWindow>();
+            window.DataContext = ServiceProvider.GetRequiredService<AboutViewModel>();
+            window.ShowDialog(GetOwnerWindow());
+        }
+
+        private static Window GetOwnerWindow()
+        {
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop
+                && desktop.MainWindow != null)
+            {
+                return desktop.MainWindow;
+            }
+
+            return new Window();
         }
 
         private void OnServerStatusChanged(object? sender, ServerStatus status)

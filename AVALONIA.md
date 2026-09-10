@@ -173,9 +173,16 @@ preserved for a smooth move.
   (status, uptime, external/internal IP, invite code), and the `IUserInteraction` contract
   (`AvaloniaUserInteraction` with code-built dialogs). The `MainWindow` now renders the full control
   surface with compiled bindings; options are editable only while the server is stopped.
+- Implemented Phase 2 steps 5-8: Players tab (`PlayersViewModel` with live status updates from
+  `IPlayerDataRepository` events and remove/refresh), Logs tab (`LogsViewModel` streaming
+  `IApplicationLogger` output with a bounded buffer), Mods &amp; Backups tab (`ModsViewModel` for
+  BepInEx/Valheim Plus install and backup health/summary), and Preferences/About dialogs
+  (`PreferencesViewModel`, `AboutViewModel` with version/build-date). The window is now a
+  `TabControl` shell (Server / Players / Mods / Logs) with top-bar profile/status/actions and a
+  status bar.
 
-Next: Phase 2 step 5+ — players and player details, logs, mods/backups, preferences/update
-checks/About dialogs.
+Next: real-server validation on Windows (start/stop/restart, player join/leave, mods/backups) and
+then WSL/Linux validation (Phase 3).
 
 ## Target architecture
 

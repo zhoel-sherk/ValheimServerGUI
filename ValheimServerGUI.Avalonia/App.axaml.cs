@@ -128,8 +128,15 @@ namespace ValheimServerGUI.Avalonia
             // Views / ViewModels
             services
                 .AddSingleton<ViewModels.ServerControlsViewModel>()
+                .AddSingleton<ViewModels.PlayersViewModel>()
+                .AddSingleton<ViewModels.LogsViewModel>()
+                .AddSingleton<ViewModels.ModsViewModel>()
+                .AddSingleton<ViewModels.PreferencesViewModel>()
+                .AddSingleton<ViewModels.AboutViewModel>()
                 .AddSingleton<ViewModels.ShellViewModel>()
-                .AddSingleton<MainWindow>();
+                .AddSingleton<MainWindow>()
+                .AddTransient<PreferencesWindow>()
+                .AddTransient<AboutWindow>();
 
             return services.BuildServiceProvider();
         }
