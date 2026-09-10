@@ -56,17 +56,17 @@ The old estimate of "~4,300 lines reusable as-is" is too optimistic. A better es
 ### Existing UI and service boundaries
 
 `Program.ConfigureServices` is a useful composition root, but it currently registers UI-specific
-services (`IFormProvider`, WinForms forms) alongside domain services. `ValheimServer` currently
-depends on `IProcessProvider`, whose public API exposes `System.Diagnostics.Process` directly.
-That API cannot be implemented by SSH without changing the abstraction.
+services (`IFormProvider`, WinForms forms) alongside domain services. `ValheimServer` depends on the
+Core `IServerProcessFactory` abstraction, whose local implementation wraps
+`System.Diagnostics.Process`; the SSH implementation will implement the same interface.
 
 The current server lifecycle also:
 
-- creates a local process from an executable path;
+- creates a process from a validated `ServerProcessSpec`;
 - attaches `OutputDataReceived`, `ErrorDataReceived` and `Exited` handlers;
 - starts asynchronous local stdout/stderr reading;
-- terminates the process through `SafelyKillProcess`;
-- parses logs through `ValheimServerLogger` and `LogBasedActions`.
+- terminates the process through `IServerProcess.Stop()`;
+- parses logs through `ValheimServerLogger` and `ServerLogParser`.
 
 The current mod managers are not remote-ready. `BepInExManager`, `ValheimPlusManager`,
 `BackupService`, `PlayerLogReader` and `ZipHelper` directly use `File`, `Directory`, `Path`,
@@ -115,11 +115,17 @@ Completed so far, with the WinForms app still building and all tests green:
     `ValheimServer`). `ValheimServer` now registers its handlers against these patterns.
 - `ValheimServerGUI.Tools` now references Core (for `IPrimaryKeyEntity`); the app references Core and
   Tools.
+- Introduced the process seam: `IServerProcess` / `IServerProcessFactory` / `ServerProcessSpec` in
+  Core (`ValheimServerGUI.Core/Processes/ServerProcess.cs`), with a local implementation
+  (`LocalServerProcess` / `LocalServerProcessFactory` in Tools) that preserves the UTF-8 stdout and
+  working-directory behavior. `ValheimServer` now depends on `IServerProcessFactory` instead of
+  `IProcessProvider`, and the old `IProcessProvider`/`ProcessProvider`/`ProcessExtensions` were
+  removed. `MockServerProcessFactory` replaces the old mock in tests.
 - Fixed a latent null-reference in `ValheimServerOptions.Validate()` (`AdditionalArgs` guard).
 
 Remaining in Phase 1: move server *state transitions* and `PlayerDataRepository`/world discovery into
-Core, introduce the process/filesystem/archive/platform contracts, separate resources from domain
-code, and rename Core namespaces to `ValheimServerGUI.Core.*` (currently preserved for a smooth move).
+Core, introduce the filesystem/archive/platform contracts, separate resources from domain code, and
+rename Core namespaces to `ValheimServerGUI.Core.*` (currently preserved for a smooth move).
 
 ## Target architecture
 

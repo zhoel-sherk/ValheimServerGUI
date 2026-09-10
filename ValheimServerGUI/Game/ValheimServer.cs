@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using ValheimServerGUI.Core.Processes;
 using ValheimServerGUI.Properties;
 using ValheimServerGUI.Tools.Logging;
 using ValheimServerGUI.Tools.Models;
-using ValheimServerGUI.Tools.Processes;
 
 namespace ValheimServerGUI.Game
 {
@@ -35,7 +34,7 @@ namespace ValheimServerGUI.Game
             }
         }
         private ServerStatus _status = ServerStatus.Stopped;
-        private string ProcessKey;
+        private IServerProcess ServerProcess;
         private bool IsRestarting;
         private readonly ServerLogParser LogParser = new();
 
@@ -43,11 +42,11 @@ namespace ValheimServerGUI.Game
         public event EventHandler<decimal> WorldSaved;
         public event EventHandler<string> InviteCodeReady;
 
-        public bool CanStart => IsAnyStatus(ServerStatus.Stopped) && ProcessKey == null;
-        public bool CanStop => IsAnyStatus(ServerStatus.Starting, ServerStatus.Running) && ProcessKey != null;
-        public bool CanRestart => IsAnyStatus(ServerStatus.Running) && ProcessKey != null;
+        public bool CanStart => IsAnyStatus(ServerStatus.Stopped) && ServerProcess == null;
+        public bool CanStop => IsAnyStatus(ServerStatus.Starting, ServerStatus.Running) && ServerProcess != null;
+        public bool CanRestart => IsAnyStatus(ServerStatus.Running) && ServerProcess != null;
 
-        private readonly IProcessProvider ProcessProvider;
+        private readonly IServerProcessFactory ProcessFactory;
         private readonly IPlayerDataRepository PlayerDataRepository;
         private readonly IApplicationLogger ApplicationLogger;
 
@@ -57,11 +56,11 @@ namespace ValheimServerGUI.Game
         private IValheimServerLogger ServerLogger;
 
         public ValheimServer(
-            IProcessProvider processProvider,
+            IServerProcessFactory processFactory,
             IPlayerDataRepository playerDataRepository,
             IApplicationLogger appLogger)
         {
-            ProcessProvider = processProvider;
+            ProcessFactory = processFactory;
             PlayerDataRepository = playerDataRepository;
             ApplicationLogger = appLogger;
 
@@ -139,17 +138,18 @@ namespace ValheimServerGUI.Game
                 exePath,
                 CleanArgsForLogging(processArgs));
 
-            ProcessKey = Guid.NewGuid().ToString();
-            var process = ProcessProvider.AddBackgroundProcess(ProcessKey, exePath, processArgs);
+            var spec = new ServerProcessSpec
+            {
+                ExecutablePath = exePath,
+                Arguments = processArgs,
+                WorkingDirectory = Path.GetDirectoryName(exePath),
+            };
+            spec.EnvironmentVariables["SteamAppId"] = Resources.ValheimSteamAppId;
 
-            process.StartInfo.EnvironmentVariables.Add("SteamAppId", Resources.ValheimSteamAppId);
+            var process = ProcessFactory.Create(spec);
             process.OutputDataReceived += Process_OnDataReceived;
             process.ErrorDataReceived += Process_OnErrorReceived;
-            process.Exited += (obj, e) =>
-            {
-                ProcessKey = null;
-                Status = ServerStatus.Stopped;
-            };
+            process.Exited += OnServerProcessExited;
 
             ServerLogger = new ValheimServerLogger(options);
             ServerLogger.LogReceived += Logger_OnServerLogReceived;
@@ -159,7 +159,8 @@ namespace ValheimServerGUI.Game
                 ServerLogger.LogReceived += options.LogMessageHandler;
             }
 
-            ProcessProvider.StartIO(process);
+            ServerProcess = process;
+            process.Start();
 
             Options = options;
             IsRestarting = false;
@@ -175,7 +176,7 @@ namespace ValheimServerGUI.Game
 
             ApplicationLogger.Information("Stopping server: {name}", Options.Name);
 
-            ProcessProvider.SafelyKillProcess(ProcessKey);
+            ServerProcess.Stop();
 
             IsRestarting = false;
             Status = ServerStatus.Stopping;
@@ -191,7 +192,7 @@ namespace ValheimServerGUI.Game
 
             ApplicationLogger.Information("Restarting server: {name}", Options.Name);
 
-            ProcessProvider.SafelyKillProcess(ProcessKey);
+            ServerProcess.Stop();
 
             Options = options ?? Options;
             IsRestarting = true;
@@ -207,14 +208,20 @@ namespace ValheimServerGUI.Game
 
         #region Event handlers
 
-        private void Process_OnDataReceived(object obj, DataReceivedEventArgs e)
+        private void Process_OnDataReceived(string data)
         {
-            ServerLogger.Information(e.Data);
+            ServerLogger.Information(data);
         }
 
-        private void Process_OnErrorReceived(object obj, DataReceivedEventArgs e)
+        private void Process_OnErrorReceived(string data)
         {
-            ServerLogger.Error(e.Data);
+            ServerLogger.Error(data);
+        }
+
+        private void OnServerProcessExited()
+        {
+            ServerProcess = null;
+            Status = ServerStatus.Stopped;
         }
 
         private void Logger_OnServerLogReceived(string message)

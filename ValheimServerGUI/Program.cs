@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System;
 using System.Windows.Forms;
+using ValheimServerGUI.Core.Processes;
 using ValheimServerGUI.Forms;
 using ValheimServerGUI.Game;
 using ValheimServerGUI.Game.Mods;
@@ -51,7 +52,7 @@ namespace ValheimServerGUI
                 .AddSingleton<IDataFileRepositoryContext, DataFileRepositoryContext>()
                 .AddSingleton<IFileProvider, JsonFileProvider>()
                 .AddSingleton<IFormProvider, FormProvider>()
-                .AddSingleton<IProcessProvider, ProcessProvider>()
+                .AddSingleton<IServerProcessFactory, LocalServerProcessFactory>()
                 .AddSingleton<ApplicationLogger>()
                 .AddSingleton<ILogger>(sp => sp.GetRequiredService<ApplicationLogger>())
                 .AddSingleton<IApplicationLogger>(sp => sp.GetRequiredService<ApplicationLogger>())

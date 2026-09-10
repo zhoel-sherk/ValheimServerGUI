@@ -54,6 +54,64 @@ namespace ValheimServerGUI.Tests.Game
         }
 
         [Fact]
+        public void StartCreatesProcessWithValidatedSpec()
+        {
+            Server.Start(GetTestOptions());
+
+            var process = Assert.Single(MockProcessFactory.CreatedProcesses);
+            Assert.True(process.IsStarted);
+            Assert.Equal(TestServerExe, process.Spec.ExecutablePath);
+            Assert.Equal("892970", process.Spec.EnvironmentVariables["SteamAppId"]);
+            Assert.Contains("-name \"Test Server\"", process.Spec.Arguments);
+            Assert.Contains("-world \"Test World\"", process.Spec.Arguments);
+            Assert.Equal(ServerStatus.Starting, Server.Status);
+        }
+
+        [Fact]
+        public void ExitedEventResetsStateToStopped()
+        {
+            Server.Start(GetTestOptions());
+            var process = Assert.Single(MockProcessFactory.CreatedProcesses);
+
+            ServerStatus? eventStatus = null;
+            Server.StatusChanged += (_, status) => eventStatus = status;
+
+            process.SimulateExit();
+
+            Assert.Equal(ServerStatus.Stopped, Server.Status);
+            Assert.Equal(ServerStatus.Stopped, eventStatus);
+            Assert.True(Server.CanStart);
+        }
+
+        [Fact]
+        public void StopTerminatesProcessAndReportsStopping()
+        {
+            Server.Start(GetTestOptions());
+            var process = Assert.Single(MockProcessFactory.CreatedProcesses);
+            Assert.False(process.IsStopped);
+
+            Server.Stop();
+
+            Assert.True(process.IsStopped);
+            Assert.Equal(ServerStatus.Stopping, Server.Status);
+        }
+
+        [Fact]
+        public void OutputDataIsForwardedToServerLogger()
+        {
+            Server.Start(GetTestOptions());
+            var process = Assert.Single(MockProcessFactory.CreatedProcesses);
+
+            ServerStatus? eventStatus = null;
+            Server.StatusChanged += (_, status) => eventStatus = status;
+
+            process.SimulateOutput("Game server connected");
+
+            Assert.Equal(ServerStatus.Running, Server.Status);
+            Assert.Equal(ServerStatus.Running, eventStatus);
+        }
+
+        [Fact]
         public void CanDetectServerRunning()
         {
             ServerStatus? eventStatus = null;
@@ -373,27 +431,30 @@ namespace ValheimServerGUI.Tests.Game
                 // A new server logger is now instantiated each time the server is started,
                 // so let's pretend to boot one up just for testing the log messages.
                 // Tests use dummy exe & save data paths so that no real Valheim install is required.
-                var options = new ValheimServerOptions
-                {
-                    Name = "Test Server",
-                    Password = "hunter2",
-                    WorldName = "Test World",
-                    Public = false,
-                    Port = 2456,
-                    Crossplay = false,
-                    SaveInterval = 30,
-                    Backups = 1,
-                    BackupShort = 60,
-                    BackupLong = 120,
-                    ServerExePath = TestServerExe,
-                    SaveDataFolderPath = TestSaveFolder,
-                    LogToFile = false,
-                };
-
-                Server.Start(options);
+                Server.Start(GetTestOptions());
             }
 
             Server.Logger.Information(string.Format(message, args));
+        }
+
+        private ValheimServerOptions GetTestOptions()
+        {
+            return new ValheimServerOptions
+            {
+                Name = "Test Server",
+                Password = "hunter2",
+                WorldName = "Test World",
+                Public = false,
+                Port = 2456,
+                Crossplay = false,
+                SaveInterval = 30,
+                Backups = 1,
+                BackupShort = 60,
+                BackupLong = 120,
+                ServerExePath = TestServerExe,
+                SaveDataFolderPath = TestSaveFolder,
+                LogToFile = false,
+            };
         }
 
         private static PlayerInfo CreatePlayer(

@@ -32,6 +32,8 @@ Key files:
 - `ValheimServerGUI/Game/ValheimServer.cs` — server process lifecycle + log handler wiring (`LogParser`)
 - `ValheimServerGUI/Game/ValheimPathExtensions.cs` — world discovery (see World layouts below)
 - `ValheimServerGUI.Core/Game/WorldGen*.cs` — difficulty presets / modifiers / keys
+- `ValheimServerGUI.Core/Processes/ServerProcess.cs` — platform-neutral process contract (`IServerProcess`, `IServerProcessFactory`)
+- `ValheimServerGUI.Tools/Processes/LocalServerProcess.cs` — local process runner (UTF-8 stdout, working directory)
 - `ValheimServerGUI/Tools/Logging/ValheimServerLogger.cs` — server log noise filter
 - `ValheimServerGUI/Properties/Resources.resx` (+ generated Designer.cs) — app strings & URLs
 
@@ -109,7 +111,7 @@ passivemobs|nomap|fire`), the shipped `Valheim Dedicated Server Manual.pdf` (oft
 behind — e.g. it omits `fire`). The GUI's gear-icon dialog (WorldPreferencesForm) currently
 matches 1.0.7 exactly; presets override modifiers/keys, same as in-game.
 
-Server stdout is read as **UTF-8** (`ProcessExtensions.AddBackgroundProcess`) — required for
+Server stdout is read as **UTF-8** (`LocalServerProcess`) — required for
 non-ASCII character names. Do not remove those encoding settings.
 
 ## Local environment notes

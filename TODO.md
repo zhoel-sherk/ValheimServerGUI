@@ -13,7 +13,7 @@ Status legend: `[done]` implemented, `[open]` not yet implemented.
 in `BepInEx/config/BepInEx.cfg`. With it enabled, BepInEx calls `AllocConsole()` and
 `SetStdHandle()`, which diverts Unity/game output away from the GUI's stdout pipe into
 an extra console window and into `BepInEx/LogOutput.log`. `CreateNoWindow = true`
-(`ValheimServerGUI.Tools/Processes/ProcessExtensions.cs:20`) does **not** prevent
+(`ValheimServerGUI.Tools/Processes/LocalServerProcess.cs`) does **not** prevent
 `AllocConsole()`.
 
 **Consequence.** The GUI may never see the `Game server connected` line, so the status
@@ -49,19 +49,20 @@ status transitions and player events when stdout is incomplete. Relates to
 
 ## 3. [done] [medium] WorkingDirectory not set
 
-**Problem.** `ProcessExtensions.AddBackgroundProcess`
-(`ValheimServerGUI.Tools/Processes/ProcessExtensions.cs:11-35`) never sets
-`StartInfo.WorkingDirectory`, so the server inherits the GUI process's CWD. Doorstop's
+**Problem.** The old `ProcessExtensions.AddBackgroundProcess`
+(`ValheimServerGUI.Tools/Processes/ProcessExtensions.cs:11-35`) never set
+`StartInfo.WorkingDirectory`, so the server inherited the GUI process's CWD. Doorstop's
 `fix_cwd()` makes injection work regardless, but any mod reading
 `Environment.CurrentDirectory` gets the wrong path.
 
 **Fix.** Set `WorkingDirectory = Path.GetDirectoryName(exePath)`; requires passing the
 exe path through `AddBackgroundProcess` (called from `ValheimServer.cs:155`).
 
-**Status.** Implemented. `AddBackgroundProcess` now derives the working directory from the
-command path and sets it when present (skipped for pathless commands such as `taskkill`).
-This is a local-process concern and stays inside the local process implementation for the
-Avalonia/SSH split.
+**Status.** Implemented. `LocalServerProcess` sets the working directory from the
+`ServerProcessSpec` (derived from the executable path when not supplied). The old
+`ProcessExtensions` no longer exists; the logic lives in
+`ValheimServerGUI.Tools/Processes/LocalServerProcess.cs`. This is a local-process concern
+and stays inside the local process implementation for the Avalonia/SSH split.
 
 ---
 
@@ -111,8 +112,8 @@ files.
 
 ## 7. [open] [low] Hard kill truncates BepInEx log / risks world save
 
-**Problem.** `SafelyKillProcess` uses `taskkill /pid <id>` with no `/T` and no `/F`
-(`ValheimServerGUI.Tools/Processes/ProcessExtensions.cs:45`). BepInEx spawns no child
+**Problem.** `IServerProcess.Stop()` (`ValheimServerGUI.Tools/Processes/LocalServerProcess.cs`)
+uses `taskkill /pid <id>` with no `/T` and no `/F`. BepInEx spawns no child
 processes, so there are no orphans, but `LogOutput.log` flushes only every ~2 s and a
 hard kill loses the tail and can skip a clean world save. Not BepInEx-specific, but
 relevant when running modded.
