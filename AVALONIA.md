@@ -87,13 +87,14 @@ Other platform-specific points found in the code:
 
 ### Tests today
 
-There are 92 `[Fact]`/`[Theory]` tests across three test projects (the exact executed count can
+There are 108 `[Fact]`/`[Theory]` tests across three test projects (the exact executed count can
 differ because theories expand at runtime):
 
-- `ValheimServerGUI.Core.Tests` (`net10.0`): 41 tests — log parsing (`ServerLogParser`),
-  `ValheimServerOptions` validation, and player models. These run without a Windows desktop and are
-  the primary cross-platform safety net.
-- `ValheimServerGUI.Tests` (`net10.0-windows`): 50 tests — server integration (`ValheimServerTests`),
+- `ValheimServerGUI.Core.Tests` (`net10.0`): 53 tests — log parsing (`ServerLogParser`), the full
+  server state machine (`ValheimServerCoreTests`), `ValheimServerOptions` validation, player models
+  and world discovery. These run without a Windows desktop and are the primary cross-platform
+  safety net.
+- `ValheimServerGUI.Tests` (`net10.0-windows`): 54 tests — server integration (`ValheimServerTests`),
   mods/backups, and WinForms UI tests (`MainWindowTests`, `SplashFormTests`).
 - `ValheimServerGUI.Serverless.Tests` (`net10.0`): 1 test.
 
@@ -123,11 +124,20 @@ Completed so far, with the WinForms app still building and all tests green:
   working-directory behavior. `ValheimServer` now depends on `IServerProcessFactory` instead of
   `IProcessProvider`, and the old `IProcessProvider`/`ProcessProvider`/`ProcessExtensions` were
   removed. `MockServerProcessFactory` replaces the old mock in tests.
+- Moved the server **state machine** into Core: `ValheimServer` now lives in
+  `ValheimServerGUI.Core/Game/ValheimServer.cs`. It depends only on Core contracts
+  (`IServerProcessFactory`, `IApplicationLog`, `IServerLoggerFactory`, `IPlayerDataRepository`,
+  `ValheimConstants.SteamAppId`) plus the Core models/parser. The app-side `ValheimServerLogger`
+  implements Core `IServerLogger`, and `ValheimServerLoggerFactory` implements
+  `IServerLoggerFactory`; `ApplicationLogger` implements `IApplicationLog`. `IPlayerDataRepository`
+  (interface) and `IDataRepository` moved to Core; the concrete `PlayerDataRepository` stays in the
+  app. Core now contains cross-platform tests for the full server lifecycle
+  (`ValheimServerCoreTests`).
 - Fixed a latent null-reference in `ValheimServerOptions.Validate()` (`AdditionalArgs` guard).
 
-Remaining in Phase 1: move server *state transitions* and `PlayerDataRepository` into Core,
-introduce the filesystem/archive/platform contracts, separate resources from domain code, and
-rename Core namespaces to `ValheimServerGUI.Core.*` (currently preserved for a smooth move).
+Remaining in Phase 1: introduce the filesystem/archive/platform contracts, separate resources from
+domain code, replace `IFormProvider`/MessageBox with UI-facing interfaces, and rename Core
+namespaces to `ValheimServerGUI.Core.*` (currently preserved for a smooth move).
 
 ## Target architecture
 

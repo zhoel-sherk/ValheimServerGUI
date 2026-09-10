@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System;
 using System.Windows.Forms;
+using ValheimServerGUI.Core.Logging;
 using ValheimServerGUI.Core.Processes;
 using ValheimServerGUI.Forms;
 using ValheimServerGUI.Game;
@@ -56,6 +57,8 @@ namespace ValheimServerGUI
                 .AddSingleton<ApplicationLogger>()
                 .AddSingleton<ILogger>(sp => sp.GetRequiredService<ApplicationLogger>())
                 .AddSingleton<IApplicationLogger>(sp => sp.GetRequiredService<ApplicationLogger>())
+                .AddSingleton<IApplicationLog>(sp => sp.GetRequiredService<ApplicationLogger>())
+                .AddSingleton<IServerLoggerFactory, ValheimServerLoggerFactory>()
                 .AddSingleton<IHttpClientProvider, HttpClientProvider>()
                 .AddSingleton<IRestClientContext, RestClientContext>()
                 .AddSingleton<IIpAddressProvider, IpAddressProvider>()

@@ -29,12 +29,13 @@ must point to this fork's GitHub Issues (`Resources: UrlIssues`).
 Key files:
 - `ValheimServerGUI.Core/Game/ServerLogParser.cs` + `ServerLogPatterns.cs` — server stdout regexes & dispatch (platform-neutral)
 - `ValheimServerGUI.Core/Game/ValheimServerOptions.cs` — options model & validation (platform-neutral)
-- `ValheimServerGUI/Game/ValheimServer.cs` — server process lifecycle + log handler wiring (`LogParser`)
+- `ValheimServerGUI.Core/Game/ValheimServer.cs` — server lifecycle + state transitions + log handler wiring (`ServerLogParser`)
 - `ValheimServerGUI.Core/Game/ValheimPathExtensions.cs` — world discovery (see World layouts below)
 - `ValheimServerGUI.Core/Game/WorldGen*.cs` — difficulty presets / modifiers / keys
 - `ValheimServerGUI.Core/Processes/ServerProcess.cs` — platform-neutral process contract (`IServerProcess`, `IServerProcessFactory`)
+- `ValheimServerGUI.Core/Logging/*` — Core logging contracts (`IApplicationLog`, `IServerLogger`, `IServerLoggerFactory`)
 - `ValheimServerGUI.Tools/Processes/LocalServerProcess.cs` — local process runner (UTF-8 stdout, working directory)
-- `ValheimServerGUI/Tools/Logging/ValheimServerLogger.cs` — server log noise filter
+- `ValheimServerGUI/Tools/Logging/ValheimServerLogger.cs` — server log noise filter + `ValheimServerLoggerFactory`
 - `ValheimServerGUI/Properties/Resources.resx` (+ generated Designer.cs) — app strings & URLs
 
 ## Build / test / run
@@ -43,7 +44,7 @@ Requires **.NET SDK 10** (`dotnet --list-sdks`). GUI targets `net10.0-windows`.
 
 ```pwsh
 dotnet build ValheimServerGUI.sln -c Debug
-dotnet test ValheimServerGUI.sln --nologo            # 92 tests, must be green
+dotnet test ValheimServerGUI.sln --nologo            # 108 tests, must be green
 dotnet run --project ValheimServerGUI                # or run bin\Debug\net10.0-windows\ValheimServerGUI.exe
 ```
 

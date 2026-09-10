@@ -1,14 +1,11 @@
 ﻿using Serilog;
+using ValheimServerGUI.Core.Logging;
 using ValheimServerGUI.Game;
 using ValheimServerGUI.Tools.Logging.Components;
 
 namespace ValheimServerGUI.Tools.Logging
 {
-    public interface IValheimServerLogger : IBaseLogger
-    {
-    }
-
-    public class ValheimServerLogger : BaseLogger, IValheimServerLogger
+    public class ValheimServerLogger : BaseLogger, IServerLogger
     {
         private readonly IValheimServerOptions Options;
 
@@ -55,6 +52,20 @@ namespace ValheimServerGUI.Tools.Logging
             // Add a timestamp after filtering
             AddRule(TimestampTransformer.Default);
         }
+
+        #region IServerLogger implementation
+
+        public void Information(string message)
+        {
+            ((ILogger)this).Write(Serilog.Events.LogEventLevel.Information, message);
+        }
+
+        public void Error(string message)
+        {
+            ((ILogger)this).Write(Serilog.Events.LogEventLevel.Error, message);
+        }
+
+        #endregion
 
         #region BaseLogger overrides
 

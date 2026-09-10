@@ -9,23 +9,6 @@ using ValheimServerGUI.Tools.Models;
 
 namespace ValheimServerGUI.Game
 {
-    public interface IPlayerDataRepository : IDataRepository<PlayerInfo>
-    {
-        event EventHandler<PlayerInfo> PlayerStatusChanged;
-
-        IEnumerable<PlayerInfo> FindPlayersByQuery(PlayerDataQuery query);
-
-        PlayerInfo SetPlayerJoining(PlayerDataQuery query);
-
-        PlayerInfo SetPlayerOnline(string characterName, string zdoId);
-
-        void SetPlayerLeaving(PlayerDataQuery query);
-
-        void SetPlayerOffline(PlayerDataQuery query);
-
-        Task LoadAsync(); // todo: find a way to automatically load data without exposing this
-    }
-
     public class PlayerDataRepository : DataFileRepository<PlayerInfo>, IPlayerDataRepository
     {
         public event EventHandler<PlayerInfo> PlayerStatusChanged;

@@ -4,9 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using ValheimServerGUI.Core.Logging;
 using ValheimServerGUI.Core.Processes;
-using ValheimServerGUI.Properties;
-using ValheimServerGUI.Tools.Logging;
 using ValheimServerGUI.Tools.Models;
 
 namespace ValheimServerGUI.Game
@@ -21,7 +20,7 @@ namespace ValheimServerGUI.Game
         /// <summary>
         /// Exposed for testing.
         /// </summary>
-        public IValheimServerLogger Logger => ServerLogger;
+        public IServerLogger Logger => ServerLogger;
 
         public ServerStatus Status
         {
@@ -48,21 +47,24 @@ namespace ValheimServerGUI.Game
 
         private readonly IServerProcessFactory ProcessFactory;
         private readonly IPlayerDataRepository PlayerDataRepository;
-        private readonly IApplicationLogger ApplicationLogger;
+        private readonly IApplicationLog ApplicationLogger;
+        private readonly IServerLoggerFactory ServerLoggerFactory;
 
         /// <summary>
         /// This logger is instantiated each time a new server is started.
         /// </summary>
-        private IValheimServerLogger ServerLogger;
+        private IServerLogger ServerLogger;
 
         public ValheimServer(
             IServerProcessFactory processFactory,
             IPlayerDataRepository playerDataRepository,
-            IApplicationLogger appLogger)
+            IApplicationLog appLogger,
+            IServerLoggerFactory serverLoggerFactory)
         {
             ProcessFactory = processFactory;
             PlayerDataRepository = playerDataRepository;
             ApplicationLogger = appLogger;
+            ServerLoggerFactory = serverLoggerFactory;
 
             InitializeLogBasedActions();
             InitializeStatusBasedActions();
@@ -144,14 +146,14 @@ namespace ValheimServerGUI.Game
                 Arguments = processArgs,
                 WorkingDirectory = Path.GetDirectoryName(exePath),
             };
-            spec.EnvironmentVariables["SteamAppId"] = Resources.ValheimSteamAppId;
+            spec.EnvironmentVariables["SteamAppId"] = ValheimConstants.SteamAppId;
 
             var process = ProcessFactory.Create(spec);
             process.OutputDataReceived += Process_OnDataReceived;
             process.ErrorDataReceived += Process_OnErrorReceived;
             process.Exited += OnServerProcessExited;
 
-            ServerLogger = new ValheimServerLogger(options);
+            ServerLogger = ServerLoggerFactory.Create(options);
             ServerLogger.LogReceived += Logger_OnServerLogReceived;
             if (options.LogMessageHandler != null)
             {

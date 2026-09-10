@@ -18,7 +18,7 @@ an extra console window and into `BepInEx/LogOutput.log`. `CreateNoWindow = true
 
 **Consequence.** The GUI may never see the `Game server connected` line, so the status
 stays `Starting` forever; player join/leave events (parsed from stdout in
-`ValheimServerGUI/Game/ValheimServer.cs:222-250`) can be lost entirely.
+`ValheimServerGUI.Core/Game/ValheimServer.cs:222-250`) can be lost entirely.
 
 **Fix.** After install/update, write `[Logging.Console] Enabled = false` into
 `BepInEx/config/BepInEx.cfg` as a merge (do not clobber other settings) inside
@@ -41,7 +41,7 @@ currently no secondary source of server events.
 
 **Fix (optional).** Tail/read `BepInEx/LogOutput.log` as a supplementary event source for
 status transitions and player events when stdout is incomplete. Relates to
-`ValheimServer.cs:222-250` and `ValheimServerGUI/Tools/Logging/ValheimServerLogger.cs`.
+`ValheimServerGUI.Core/Game/ValheimServer.cs:222-250` and `ValheimServerGUI/Tools/Logging/ValheimServerLogger.cs`.
 
 **Avalonia note.** Keep the parser shared; only the file-watch source is platform-facing.
 
