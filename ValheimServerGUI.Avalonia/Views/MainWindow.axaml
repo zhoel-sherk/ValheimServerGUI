@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:ValheimServerGUI.Avalonia.ViewModels"
         xmlns:conv="using:ValheimServerGUI.Avalonia.Converters"
+        xmlns:sys="using:System"
         x:Class="ValheimServerGUI.Avalonia.Views.MainWindow"
         x:DataType="vm:ShellViewModel"
         Title="Valheim Server GUI (Avalonia)"
@@ -16,7 +17,7 @@
   <DockPanel>
     <!-- Top bar: profile selection, status, actions -->
     <Border DockPanel.Dock="Top" Padding="12,8" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
-      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,12,Auto,12,Auto,12,Auto,24,Auto,8,Auto" ColumnSpacing="8">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
         <TextBlock Text="Profile:" VerticalAlignment="Center"/>
         <ComboBox Grid.Column="1"
                   ItemsSource="{Binding Profiles}"
@@ -27,12 +28,12 @@
         <TextBlock Grid.Column="2" Text="Status:" VerticalAlignment="Center"/>
         <TextBlock Grid.Column="3" Text="{Binding StatusText}" VerticalAlignment="Center" FontWeight="SemiBold"/>
 
-        <Button Grid.Column="5" Content="Start" Command="{Binding ServerControls.StartCommand}" MinWidth="80"/>
-        <Button Grid.Column="7" Content="Restart" Command="{Binding ServerControls.RestartCommand}" MinWidth="80"/>
-        <Button Grid.Column="9" Content="Stop" Command="{Binding ServerControls.StopCommand}" MinWidth="80"/>
+        <Button Grid.Column="4" Content="Start" Command="{Binding ServerControls.StartCommand}" MinWidth="80"/>
+        <Button Grid.Column="5" Content="Restart" Command="{Binding ServerControls.RestartCommand}" MinWidth="80"/>
+        <Button Grid.Column="6" Content="Stop" Command="{Binding ServerControls.StopCommand}" MinWidth="80"/>
 
-        <Button Grid.Column="11" Content="Preferences" Command="{Binding ShowPreferencesCommand}"/>
-        <Button Grid.Column="13" Content="About" Command="{Binding ShowAboutCommand}"/>
+        <Button Grid.Column="7" Content="Preferences" Command="{Binding ShowPreferencesCommand}"/>
+        <Button Grid.Column="8" Content="About" Command="{Binding ShowAboutCommand}"/>
       </Grid>
     </Border>
 
@@ -220,7 +221,7 @@
         <Grid RowDefinitions="*,Auto" Margin="8">
           <ListBox Grid.Row="0" ItemsSource="{Binding Logs.LogEntries}" FontFamily="Consolas" FontSize="12">
             <ListBox.ItemTemplate>
-              <DataTemplate>
+              <DataTemplate x:DataType="sys:String">
                 <TextBlock Text="{Binding}"/>
               </DataTemplate>
             </ListBox.ItemTemplate>

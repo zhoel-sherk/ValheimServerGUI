@@ -17,24 +17,20 @@ namespace ValheimServerGUI.Avalonia.Services
     {
         public void ShowError(string title, string message)
         {
-            Dispatcher.UIThread.Post(() => ShowDialog(title, message, isConfirm: false));
+            _ = ShowDialogAsync(title, message, isConfirm: false);
         }
 
         public Task<bool> ConfirmAsync(string title, string message)
         {
-            var tcs = new TaskCompletionSource<bool>();
-            Dispatcher.UIThread.Post(() =>
-            {
-                var result = ShowDialog(title, message, isConfirm: true);
-                tcs.SetResult(result);
-            });
-            return tcs.Task;
+            return ShowDialogAsync(title, message, isConfirm: true);
         }
 
-        private static bool ShowDialog(string title, string message, bool isConfirm)
+        private static async Task<bool> ShowDialogAsync(string title, string message, bool isConfirm)
         {
             var owner = GetMainWindow();
             if (owner == null) return false;
+
+            var result = false;
 
             var dialog = new Window
             {
@@ -46,60 +42,43 @@ namespace ValheimServerGUI.Avalonia.Services
                 ShowInTaskbar = false,
             };
 
-            var result = false;
+            var yesButton = new Button { Content = "Yes", Width = 90, IsDefault = true };
+            yesButton.Click += (_, _) => { result = true; dialog.Close(); };
+
+            var noButton = new Button { Content = "No", Width = 90, IsCancel = true };
+            noButton.Click += (_, _) => dialog.Close();
+
             var okButton = new Button { Content = "OK", Width = 90, IsDefault = true };
             okButton.Click += (_, _) => { result = true; dialog.Close(); };
 
-            if (isConfirm)
+            var confirmButtons = new StackPanel
             {
-                var yesButton = new Button { Content = "Yes", Width = 90, IsDefault = true };
-                yesButton.Click += (_, _) => { result = true; dialog.Close(); };
-                var noButton = new Button { Content = "No", Width = 90, IsCancel = true };
-                noButton.Click += (_, _) => dialog.Close();
-                okButton = yesButton;
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Spacing = 8,
+                Children = { yesButton, noButton },
+            };
 
-                var buttons = new StackPanel
-                {
-                    Orientation = Orientation.Horizontal,
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    Spacing = 8,
-                    Children = { yesButton, noButton },
-                };
-
-                dialog.Content = new StackPanel
-                {
-                    Margin = new Thickness(16),
-                    Spacing = 16,
-                    Children =
-                    {
-                        new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
-                        buttons,
-                    },
-                };
-            }
-            else
+            var okButtons = new StackPanel
             {
-                var buttons = new StackPanel
-                {
-                    Orientation = Orientation.Horizontal,
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    Spacing = 8,
-                    Children = { okButton },
-                };
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Spacing = 8,
+                Children = { okButton },
+            };
 
-                dialog.Content = new StackPanel
+            dialog.Content = new StackPanel
+            {
+                Margin = new Thickness(16),
+                Spacing = 16,
+                Children =
                 {
-                    Margin = new Thickness(16),
-                    Spacing = 16,
-                    Children =
-                    {
-                        new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
-                        buttons,
-                    },
-                };
-            }
+                    new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
+                    isConfirm ? confirmButtons : okButtons,
+                },
+            };
 
-            dialog.ShowDialog(owner);
+            await dialog.ShowDialog(owner);
             return result;
         }
 

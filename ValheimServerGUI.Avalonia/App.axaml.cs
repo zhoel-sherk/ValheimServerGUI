@@ -39,7 +39,12 @@ namespace ValheimServerGUI.Avalonia
 
                 RegisterUnhandledExceptionHandlers();
 
-                desktop.MainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+                var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+                desktop.MainWindow = mainWindow;
+
+                // Kick off the initial async load (IP addresses, player cache) once the window is shown.
+                mainWindow.Opened += (_, _) =>
+                    _ = _serviceProvider.GetRequiredService<ViewModels.ShellViewModel>().LoadCommand.ExecuteAsync(null);
             }
 
             base.OnFrameworkInitializationCompleted();
@@ -107,6 +112,7 @@ namespace ValheimServerGUI.Avalonia
                 .AddSingleton<ISoftwareUpdateProvider, SoftwareUpdateProvider>()
                 .AddSingleton<IExceptionHandler, AvaloniaExceptionHandler>()
                 .AddSingleton<IUserInteraction, AvaloniaUserInteraction>()
+                .AddSingleton<IPlatformIntegration, WindowsPlatformIntegration>()
                 .AddSingleton<IRuneberryApiClient, RuneberryApiClient>();
 
             // Mods & backups
@@ -123,7 +129,7 @@ namespace ValheimServerGUI.Avalonia
                 .AddSingleton<IServerPreferencesProvider, ServerPreferencesProvider>()
                 .AddSingleton<IWorldPreferencesProvider, WorldPreferencesProvider>()
                 .AddSingleton<IStartupArgsProvider>(startupArgsProvider)
-                .AddTransient<ValheimServer>();
+                .AddSingleton<ValheimServer>();
 
             // Views / ViewModels
             services

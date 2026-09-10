@@ -12,6 +12,8 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
         public string BuildDateText { get; }
 
+        public string IssueUrl { get; } = "https://github.com/zhoel-sherk/ValheimServerGUI/issues";
+
         public AboutViewModel()
         {
             try

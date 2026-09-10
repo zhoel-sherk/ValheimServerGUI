@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 
 namespace ValheimServerGUI.Avalonia.Views
 {
@@ -7,6 +8,11 @@ namespace ValheimServerGUI.Avalonia.Views
         public PreferencesWindow()
         {
             InitializeComponent();
+        }
+
+        private void OnOkClick(object? sender, RoutedEventArgs e)
+        {
+            Close();
         }
     }
 }

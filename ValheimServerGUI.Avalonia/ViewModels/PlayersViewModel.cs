@@ -69,6 +69,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
         private void LoadPlayers()
         {
+            Players.Clear();
             foreach (var player in PlayerDataProvider.Data.OrderBy(p => p.PlayerName))
             {
                 Players.Add(new PlayerRowViewModel(player));

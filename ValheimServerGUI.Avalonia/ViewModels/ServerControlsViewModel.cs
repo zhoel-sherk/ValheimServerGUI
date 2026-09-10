@@ -249,7 +249,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             }
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanExecuteStart))]
         private async Task StartAsync()
         {
             if (IsBusy) return;
@@ -329,13 +329,13 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             }
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanExecuteStop))]
         private void Stop()
         {
             Server.Stop();
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanExecuteRestart))]
         private void Restart()
         {
             Server.Restart();

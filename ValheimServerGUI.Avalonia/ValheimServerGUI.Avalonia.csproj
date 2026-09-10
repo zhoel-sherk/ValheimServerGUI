@@ -5,9 +5,14 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>ValheimServerGUI.Avalonia</RootNamespace>
     <Nullable>enable</Nullable>
+    <!-- Build date adapted from: https://rmauro.dev/add-build-time-to-your-csharp-assembly/ -->
+    <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"))</SourceRevisionId>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- MainWindow is constructed via DI (parameterized ctor); suppress the designer-only
+         AVLN3001 warning about the missing public parameterless constructor. -->
+    <NoWarn>$(NoWarn);AVLN3001</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <SignAssembly>true</SignAssembly>

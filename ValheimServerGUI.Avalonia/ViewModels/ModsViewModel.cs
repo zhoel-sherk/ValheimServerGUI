@@ -51,7 +51,15 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             ServerControls = serverControls;
             Logger = logger;
 
-            ServerControls.PropertyChanged += (_, _) => Refresh();
+            // Refresh only when the paths that determine the server/mods folder change.
+            ServerControls.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(ServerControls.ServerExePath)
+                    || e.PropertyName == nameof(ServerControls.SaveDataFolderPath))
+                {
+                    Refresh();
+                }
+            };
         }
 
         private string? GetServerFolder()
@@ -127,7 +135,8 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             await RunModOperationAsync(
                 "Installing BepInEx...",
                 (folder, onProgress) => BepInExManager.InstallAsync(folder, onProgress),
-                "BepInEx install failed: {message}");
+                "BepInEx install failed: {message}",
+                setStatus: s => BepInExStatus = s);
         }
 
         [RelayCommand]
@@ -136,34 +145,36 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             await RunModOperationAsync(
                 "Installing Valheim Plus...",
                 (folder, onProgress) => ValheimPlusManager.InstallAsync(folder, onProgress),
-                "Valheim Plus install failed: {message}");
+                "Valheim Plus install failed: {message}",
+                setStatus: s => ValheimPlusStatus = s);
         }
 
         private async Task RunModOperationAsync(
             string progressMessage,
             Func<string, Action<string>, Task<ModStatus>> operation,
-            string errorTemplate)
+            string errorTemplate,
+            Action<string> setStatus)
         {
             if (IsBusy) return;
 
             var serverFolder = GetServerFolder();
             if (string.IsNullOrWhiteSpace(serverFolder) || !Directory.Exists(serverFolder))
             {
-                BepInExStatus = "Server folder not available";
+                setStatus("Server folder not available");
                 return;
             }
 
             IsBusy = true;
             try
             {
-                BepInExStatus = progressMessage;
-                await operation(serverFolder, message => BepInExStatus = message);
+                setStatus(progressMessage);
+                await operation(serverFolder, setStatus);
                 Refresh();
             }
             catch (Exception e)
             {
                 Logger.Error(errorTemplate, e.Message);
-                BepInExStatus = $"Error: {e.Message}";
+                setStatus($"Error: {e.Message}");
             }
             finally
             {

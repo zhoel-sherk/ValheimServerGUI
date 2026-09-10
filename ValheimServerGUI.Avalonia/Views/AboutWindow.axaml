@@ -4,7 +4,7 @@
         x:Class="ValheimServerGUI.Avalonia.Views.AboutWindow"
         x:DataType="vm:AboutViewModel"
         Title="About"
-        Width="420" Height="280"
+        Width="420" Height="300"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
         ShowInTaskbar="False">
@@ -15,6 +15,7 @@
     <TextBlock Text="{Binding VersionText}" HorizontalAlignment="Center"/>
     <TextBlock Text="{Binding BuildDateText}" HorizontalAlignment="Center"/>
     <TextBlock Text="Licensed under GNU GPLv3" HorizontalAlignment="Center" Opacity="0.7"/>
+    <Button Content="Report an Issue" Click="OnReportIssueClick" HorizontalAlignment="Center"/>
     <Button Content="Close" IsCancel="True" MinWidth="100" HorizontalAlignment="Center"/>
   </StackPanel>
 </Window>

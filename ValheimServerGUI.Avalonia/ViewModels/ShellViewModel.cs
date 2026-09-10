@@ -28,6 +28,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private readonly IServerPreferencesProvider ServerPrefsProvider;
         private readonly ValheimServer Server;
         private readonly IIpAddressProvider IpAddressProvider;
+        private readonly IPlayerDataRepository PlayerDataProvider;
         private readonly IApplicationLogger Logger;
         private readonly IServiceProvider ServiceProvider;
 
@@ -71,6 +72,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             IServerPreferencesProvider serverPrefsProvider,
             ValheimServer server,
             IIpAddressProvider ipAddressProvider,
+            IPlayerDataRepository playerDataProvider,
             IApplicationLogger logger,
             ServerControlsViewModel serverControls,
             PlayersViewModel players,
@@ -82,6 +84,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             ServerPrefsProvider = serverPrefsProvider;
             Server = server;
             IpAddressProvider = ipAddressProvider;
+            PlayerDataProvider = playerDataProvider;
             Logger = logger;
             ServerControls = serverControls;
             Players = players;
@@ -107,10 +110,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             }
 
             SelectedProfile = Profiles.FirstOrDefault();
-            if (SelectedProfile != null)
-            {
-                SelectProfile(SelectedProfile);
-            }
+            // OnSelectedProfileChanged fires on assignment and calls SelectProfile.
         }
 
         partial void OnSelectedProfileChanged(string? value)
@@ -139,6 +139,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                 {
                     IpAddressProvider.LoadExternalIpAddressAsync(),
                     IpAddressProvider.LoadInternalIpAddressAsync(),
+                    PlayerDataProvider.LoadAsync(),
                 };
 
                 await Task.WhenAll(tasks);

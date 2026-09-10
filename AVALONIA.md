@@ -180,9 +180,23 @@ preserved for a smooth move.
   (`PreferencesViewModel`, `AboutViewModel` with version/build-date). The window is now a
   `TabControl` shell (Server / Players / Mods / Logs) with top-bar profile/status/actions and a
   status bar.
-
-Next: real-server validation on Windows (start/stop/restart, player join/leave, mods/backups) and
-then WSL/Linux validation (Phase 3).
+- Final audit fixes (4 parallel review agents, cross-checked against Avalonia 12.1.2 docs/source):
+  - `ValheimServer` registered as **singleton** (was transient -> two independent instances meant
+    the shell status/uptime/invite code never updated).
+  - `MainWindow` now takes `ShellViewModel` via DI and sets `DataContext` (the shell previously
+    never resolved a ViewModel, so the whole UI was inert).
+  - Top-bar grid buttons moved onto `Auto` columns (they sat on fixed-width spacer columns and
+    would clip).
+  - `AvaloniaUserInteraction` now `await`s `ShowDialog` (Avalonia's `ShowDialog` is async; the
+    previous code read the result before the dialog closed, so `ConfirmAsync` always returned
+    false).
+  - `Start/Stop/Restart` commands wired to `CanExecute`; Preferences OK now closes the window;
+    Logs DataTemplate annotated with `x:DataType`; Mods install writes to the correct status field
+    and only refreshes when server paths change; player cache is loaded on startup and cleared
+    before reload; `IPlatformIntegration` registered in the Avalonia container; About links to the
+    fork's GitHub Issues; Avalonia csproj gains `SourceRevisionId` for a truthful build date.
+- Windows real-server validation (start/stop/restart, player join/leave, mods/backups) is the
+  remaining Phase 2 exit-criteria gate before WSL/Linux (Phase 3).
 
 ## Target architecture
 
