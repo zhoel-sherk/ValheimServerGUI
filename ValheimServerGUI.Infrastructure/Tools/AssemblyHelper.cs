@@ -2,6 +2,7 @@
 using Semver;
 using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -19,7 +20,9 @@ namespace ValheimServerGUI.Tools
 
         public static string GetApplicationVersion()
         {
-            return AppVersion[..AppVersion.IndexOf(BuildPrefix)];
+            var appVersion = AppVersion;
+            var index = appVersion.IndexOf(BuildPrefix);
+            return index >= 0 ? appVersion[..index] : appVersion;
         }
 
 
@@ -29,8 +32,18 @@ namespace ValheimServerGUI.Tools
         /// </remarks>
         public static DateTime GetApplicationBuildDate()
         {
-            var index = AppVersion.IndexOf(BuildPrefix) + BuildPrefix.Length;
-            return DateTime.Parse(AppVersion[index..], CultureInfo.InvariantCulture);
+            var appVersion = AppVersion;
+            var index = appVersion.IndexOf(BuildPrefix);
+            if (index >= 0)
+            {
+                return DateTime.Parse(appVersion[(index + BuildPrefix.Length)..], CultureInfo.InvariantCulture);
+            }
+
+            // No +build suffix (e.g. when hosted from a library rather than the app exe): fall back to
+            // the entry assembly's file timestamp so the About dialog still shows something meaningful.
+            var entryAssembly = Assembly.GetEntryAssembly();
+            var location = entryAssembly?.Location ?? Assembly.GetExecutingAssembly().Location;
+            return !string.IsNullOrEmpty(location) ? File.GetLastWriteTimeUtc(location) : DateTime.MinValue;
         }
 
         /// <summary>
@@ -98,7 +111,8 @@ namespace ValheimServerGUI.Tools
 
         private static string GetInformationalVersion()
         {
-            var attribute = Assembly.GetExecutingAssembly()
+            var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+            var attribute = assembly
                 .GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false)
                 .FirstOrDefault() as AssemblyInformationalVersionAttribute;
 

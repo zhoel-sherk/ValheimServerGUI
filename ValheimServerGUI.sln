@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ValheimServerGUI.Core.Tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ValheimServerGUI.Infrastructure", "ValheimServerGUI.Infrastructure\ValheimServerGUI.Infrastructure.csproj", "{32971312-DA33-4A1B-8603-081464812B61}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ValheimServerGUI.Avalonia", "ValheimServerGUI.Avalonia\ValheimServerGUI.Avalonia.csproj", "{77225DA2-20C2-4994-888E-3FC01FFF0E3C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -139,6 +141,18 @@ Global
 		{32971312-DA33-4A1B-8603-081464812B61}.Release|x64.Build.0 = Release|Any CPU
 		{32971312-DA33-4A1B-8603-081464812B61}.Release|x86.ActiveCfg = Release|Any CPU
 		{32971312-DA33-4A1B-8603-081464812B61}.Release|x86.Build.0 = Release|Any CPU
+		{77225DA2-20C2-4994-888E-3FC01FFF0E3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77225DA2-20C2-4994-888E-3FC01FFF0E3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77225DA2-20C2-4994-888E-3FC01FFF0E3C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{77225DA2-20C2-4994-888E-3FC01FFF0E3C}.Debug|x64.Build.0 = Debug|Any CPU
+		{77225DA2-20C2-4994-888E-3FC01FFF0E3C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{77225DA2-20C2-4994-888E-3FC01FFF0E3C}.Debug|x86.Build.0 = Debug|Any CPU
+		{77225DA2-20C2-4994-888E-3FC01FFF0E3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77225DA2-20C2-4994-888E-3FC01FFF0E3C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77225DA2-20C2-4994-888E-3FC01FFF0E3C}.Release|x64.ActiveCfg = Release|Any CPU
+		{77225DA2-20C2-4994-888E-3FC01FFF0E3C}.Release|x64.Build.0 = Release|Any CPU
+		{77225DA2-20C2-4994-888E-3FC01FFF0E3C}.Release|x86.ActiveCfg = Release|Any CPU
+		{77225DA2-20C2-4994-888E-3FC01FFF0E3C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

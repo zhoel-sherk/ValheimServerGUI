@@ -8,6 +8,7 @@ using ValheimServerGUI.Core.Processes;
 using ValheimServerGUI.Forms;
 using ValheimServerGUI.Game;
 using ValheimServerGUI.Game.Mods;
+using ValheimServerGUI.Infrastructure.Diagnostics;
 using ValheimServerGUI.Tools;
 using ValheimServerGUI.Tools.Data;
 using ValheimServerGUI.Tools.Http;

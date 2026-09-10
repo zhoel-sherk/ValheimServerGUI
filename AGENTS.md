@@ -23,6 +23,7 @@ must point to this fork's GitHub Issues (`Resources: UrlIssues`).
 | `ValheimServerGUI.Controls` | net10.0-windows | Custom form-field controls (FormField family) |
 | `ValheimServerGUI.Tools` | net10.0 | Process runner, JSON storage, loggers, HTTP |
 | `ValheimServerGUI.Infrastructure` | net10.0 | Shared services: preferences, player data, mods/backups, software updates, HTTP clients, logging pipeline |
+| `ValheimServerGUI.Avalonia` | net10.0 | Avalonia client (Phase 2): app shell, ViewModels, DI composition root |
 | `ValheimServerGUI.Tests` | net10.0-windows | xUnit tests for the app |
 | `ValheimServerGUI.Core.Tests` | net10.0 | Cross-platform xUnit tests for Core (log parsing, options, player models) |
 | `ValheimServerGUI.Serverless` (+.Tests) | net10.0 | AWS Lambda backend (bug reports/player info) — legacy, mostly dead upstream API |
@@ -39,6 +40,9 @@ Key files:
 - `ValheimServerGUI.Tools/Processes/LocalServerProcess.cs` — local process runner (UTF-8 stdout, working directory)
 - `ValheimServerGUI.Infrastructure/Tools/Logging/ValheimServerLogger.cs` — server log noise filter + `ValheimServerLoggerFactory`
 - `ValheimServerGUI.Infrastructure/AppSettings.cs` — platform-neutral paths/URLs/defaults (was `Resources.resx` string constants)
+- `ValheimServerGUI.Infrastructure/Tools/AssemblyHelper.cs` — app version/build-date helpers (reads from entry assembly)
+- `ValheimServerGUI.Avalonia/App.axaml.cs` — Avalonia composition root (`AppServices`), exception boundary
+- `ValheimServerGUI.Avalonia/Views/MainWindow.axaml` + `ViewModels/ShellViewModel.cs` — Phase 2 shell (compiled bindings)
 - `ValheimServerGUI/Properties/Resources.resx` (+ generated Designer.cs) — app strings & URLs
 
 ## Build / test / run

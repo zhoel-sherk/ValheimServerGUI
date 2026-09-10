@@ -4,19 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json;
+using ValheimServerGUI.Infrastructure.Diagnostics;
 using ValheimServerGUI.Properties;
 using ValheimServerGUI.Tools.Logging;
 using ValheimServerGUI.Tools.Models;
 
 namespace ValheimServerGUI.Tools
 {
-    public interface IExceptionHandler
-    {
-        event EventHandler ExceptionHandled;
-
-        void HandleException(Exception e, string contextMessage = null);
-    }
-
     public class ExceptionHandler : IExceptionHandler
     {
         private readonly IApplicationLogger Logger;

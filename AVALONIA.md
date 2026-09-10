@@ -145,6 +145,34 @@ APIs or a concrete local process. Remaining niceties (filesystem/archive contrac
 separation, `IUserInteraction`) can be introduced as Phase 2 needs them; Core namespaces are still
 preserved for a smooth move.
 
+### Phase 2 progress (2026)
+
+- Extracted `ValheimServerGUI.Infrastructure` (`net10.0`): all platform-neutral services previously
+  inside the WinForms app moved out, preserving namespaces (`ValheimServerGUI.Game`,
+  `ValheimServerGUI.Tools`, `ValheimServerGUI.Tools.Logging`). This includes preferences providers,
+  `PlayerDataRepository`, mods/backups, software-update/IP/HTTP clients, path/time helpers, the
+  platform integration and the Serilog logging pipeline. `Resources.*` access was replaced by
+  `AppSettings` (paths/URLs/defaults) so `Resources.resx` stays WinForms-only; `ClientSecrets`
+  compile-include was carried over for Release. `IExceptionHandler` contract moved to
+  `ValheimServerGUI.Infrastructure.Diagnostics` (the WinForms `ExceptionHandler` implementation
+  stays in the app). The WinForms app now references Infrastructure.
+- Created `ValheimServerGUI.Avalonia` (`net10.0`) with Avalonia 12.1.2 (Avalonia, Avalonia.Desktop,
+  Avalonia.Themes.Fluent, Avalonia.Controls.DataGrid), `Microsoft.Extensions.DependencyInjection`
+  and `CommunityToolkit.Mvvm`. It references Core + Infrastructure + Tools only (no WinForms).
+- Implemented Phase 2 step 1: app startup (`Program`/`AppBuilder`), DI composition root
+  (`AppServices`, mirroring the WinForms registrations minus forms), exception boundary
+  (AppDomain/TaskScheduler/Dispatcher handlers routed to `AvaloniaExceptionHandler`), `ViewLocator`,
+  and a compiled-binding smoke test (`ShellViewModel` + `MainWindow.axaml` with profile selection
+  and server status). The window renders and stays stable.
+- Fixed a regression from moving `AssemblyHelper` to Infrastructure: `GetExecutingAssembly()`
+  returned the Infrastructure assembly (informational version without the `+build` suffix), so
+  `GetApplicationVersion()`/`GetApplicationBuildDate()` threw `ArgumentOutOfRangeException`. Now
+  they read from `Assembly.GetEntryAssembly()` and tolerate a missing `+build` prefix.
+
+Next: Phase 2 step 2+ — main shell with profile selection and server status wired to `ValheimServer`
+(start/stop/restart), then options/world preferences, server details, players, logs, mods/backups,
+preferences/About dialogs.
+
 ## Target architecture
 
 Do not begin by copying `Game/` into a new project. First introduce seams that can be implemented by

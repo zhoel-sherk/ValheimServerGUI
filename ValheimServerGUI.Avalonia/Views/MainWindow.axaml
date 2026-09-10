@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ValheimServerGUI.Avalonia.ViewModels"
+        x:Class="ValheimServerGUI.Avalonia.Views.MainWindow"
+        x:DataType="vm:ShellViewModel"
+        Title="Valheim Server GUI (Avalonia)"
+        Width="1024" Height="700"
+        MinWidth="800" MinHeight="500"
+        WindowStartupLocation="CenterScreen">
+
+  <DockPanel>
+    <!-- Top bar: profile selection + server status -->
+    <Border DockPanel.Dock="Top" Padding="12,8">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,12,Auto" ColumnSpacing="12">
+        <TextBlock Text="Profile:" VerticalAlignment="Center"/>
+        <ComboBox Grid.Column="1"
+                  ItemsSource="{Binding Profiles}"
+                  SelectedItem="{Binding SelectedProfile}"
+                  MinWidth="180"
+                  HorizontalAlignment="Left"/>
+        <TextBlock Grid.Column="2" Text="Status:" VerticalAlignment="Center"/>
+        <TextBlock Grid.Column="3" Text="{Binding ServerStatus}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+        <Button Grid.Column="5" Content="Refresh" Command="{Binding RefreshCommand}"/>
+      </Grid>
+    </Border>
+
+    <!-- Placeholder content area -->
+    <Grid>
+      <TextBlock Text="Server controls coming in the next Phase 2 step."
+                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                 Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                 FontSize="16"/>
+    </Grid>
+  </DockPanel>
+</Window>
