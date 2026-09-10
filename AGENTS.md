@@ -18,16 +18,20 @@ must point to this fork's GitHub Issues (`Resources: UrlIssues`).
 
 | Project | TFM | Purpose |
 |---|---|---|
+| `ValheimServerGUI.Core` | net10.0 | Platform-neutral domain: options & validation, player models, log parsing, world-gen data |
 | `ValheimServerGUI` | net10.0-windows | Main WinForms app (forms, game logic, logging) |
 | `ValheimServerGUI.Controls` | net10.0-windows | Custom form-field controls (FormField family) |
 | `ValheimServerGUI.Tools` | net10.0 | Process runner, JSON storage, loggers, HTTP |
 | `ValheimServerGUI.Tests` | net10.0-windows | xUnit tests for the app |
+| `ValheimServerGUI.Core.Tests` | net10.0 | Cross-platform xUnit tests for Core (log parsing, options, player models) |
 | `ValheimServerGUI.Serverless` (+.Tests) | net10.0 | AWS Lambda backend (bug reports/player info) — legacy, mostly dead upstream API |
 
 Key files:
-- `ValheimServerGUI/Game/ValheimServer.cs` — server process lifecycle + **log-parsing regexes** (`LogBasedActions`)
+- `ValheimServerGUI.Core/Game/ServerLogParser.cs` + `ServerLogPatterns.cs` — server stdout regexes & dispatch (platform-neutral)
+- `ValheimServerGUI.Core/Game/ValheimServerOptions.cs` — options model & validation (platform-neutral)
+- `ValheimServerGUI/Game/ValheimServer.cs` — server process lifecycle + log handler wiring (`LogParser`)
 - `ValheimServerGUI/Game/ValheimPathExtensions.cs` — world discovery (see World layouts below)
-- `ValheimServerGUI/Game/WorldGen*.cs` — difficulty presets / modifiers / keys
+- `ValheimServerGUI.Core/Game/WorldGen*.cs` — difficulty presets / modifiers / keys
 - `ValheimServerGUI/Tools/Logging/ValheimServerLogger.cs` — server log noise filter
 - `ValheimServerGUI/Properties/Resources.resx` (+ generated Designer.cs) — app strings & URLs
 
@@ -37,7 +41,7 @@ Requires **.NET SDK 10** (`dotnet --list-sdks`). GUI targets `net10.0-windows`.
 
 ```pwsh
 dotnet build ValheimServerGUI.sln -c Debug
-dotnet test ValheimServerGUI.sln --nologo            # 22 tests, must be green
+dotnet test ValheimServerGUI.sln --nologo            # 92 tests, must be green
 dotnet run --project ValheimServerGUI                # or run bin\Debug\net10.0-windows\ValheimServerGUI.exe
 ```
 
@@ -84,7 +88,7 @@ anchor with `^` unless they account for the prefix. When server builds change lo
 2. Cross-check with decompilation: `ilspycmd -t <TypeName>` on
    `valheim_server_Data/Managed/assembly_valheim.dll` (literals are UTF-16 in the binary — naive
    string search there is unreliable, decompile instead).
-3. Update `LogBasedActions` + tests in `ValheimServerTests` (message constants at the top).
+3. Update `ServerLogPatterns` + tests in `ValheimServerGUI.Core.Tests` (message constants at the top).
 
 Known formats (1.0.7): `Game server connected` (Running; do not match `Game server connected
 failed`), `World save (5/5) done. Total time [Xms]` (may contain digit group separators),

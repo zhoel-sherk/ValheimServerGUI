@@ -20,15 +20,16 @@ client until the Avalonia client reaches feature parity and has passed the same 
 
 | Project | TFM | Role | Migration relevance |
 |---|---|---|---|
+| `ValheimServerGUI.Core` | `net10.0` | Platform-neutral domain: server options & validation, player models, log parsing (regexes), world-gen data, primary-key contract | New shared project; must stay free of WinForms, System.Drawing, registry and local-process APIs |
 | `ValheimServerGUI` | `net10.0-windows` | WinForms executable, game logic, logging and platform helpers | Must be split or referenced by a new client only after dependencies are isolated |
 | `ValheimServerGUI.Tools` | `net10.0` | Process, JSON, HTTP, logging and data helpers | Good starting point for shared code, but JSON and file APIs still need AOT/remote review |
 | `ValheimServerGUI.Controls` | `net10.0-windows` | Reusable WinForms controls | WinForms-only; do not carry into Avalonia |
 | `ValheimServerGUI.Tests` | `net10.0-windows` | xUnit tests for game logic and UI | Logic tests should become cross-platform; UI tests should be replaced |
 | `ValheimServerGUI.Serverless` | `net10.0` | Legacy Lambda backend | Not part of the desktop UI migration |
 
-There is no Avalonia project, shared `Game` project, SSH project, or remote file abstraction in the
-solution yet. The solution currently contains six projects and only the WinForms executable is a
-desktop client.
+There is no Avalonia project or SSH project in the solution yet. The solution currently contains seven
+projects: the WinForms executable, `ValheimServerGUI.Core`, `ValheimServerGUI.Tools`, the WinForms
+controls library, the two test projects and the legacy Serverless backend.
 
 ### Measured code size
 
@@ -86,15 +87,39 @@ Other platform-specific points found in the code:
 
 ### Tests today
 
-There are 35 `[Fact]`/`[Theory]` method declarations in `ValheimServerGUI.Tests`:
+There are 92 `[Fact]`/`[Theory]` tests across three test projects (the exact executed count can
+differ because theories expand at runtime):
 
-- `ValheimServerTests` and `ModsTests` are the core migration safety net.
-- `MainWindowTests` and `SplashFormTests` depend on WinForms and should not be ported literally.
-- Theory cases can make the executed test count higher than the declaration count; report the actual
-  test-run result rather than hard-coding a total in the roadmap.
+- `ValheimServerGUI.Core.Tests` (`net10.0`): 41 tests — log parsing (`ServerLogParser`),
+  `ValheimServerOptions` validation, and player models. These run without a Windows desktop and are
+  the primary cross-platform safety net.
+- `ValheimServerGUI.Tests` (`net10.0-windows`): 50 tests — server integration (`ValheimServerTests`),
+  mods/backups, and WinForms UI tests (`MainWindowTests`, `SplashFormTests`).
+- `ValheimServerGUI.Serverless.Tests` (`net10.0`): 1 test.
 
 Before changing architecture, add tests around process events, path resolution, JSON migration,
 archive extraction, and log parsing. These tests should target a TFM-neutral project where possible.
+
+### Phase 1 progress (2026)
+
+Completed so far, with the WinForms app still building and all tests green:
+
+- Added `ValheimServerGUI.Core` (`net10.0`) and `ValheimServerGUI.Core.Tests` (`net10.0`).
+- Moved into Core (namespaces preserved for a smooth transition):
+  - `ServerStatus`, `PlayerStatus`, `PlayerInfo`, `PlayerDataQuery`, `PlayerPlatforms`,
+    `IPrimaryKeyEntity`.
+  - `WorldGenPresets`, `WorldGenModifiers`, `WorldGenKeys`.
+  - `ValheimServerOptions` + `IValheimServerOptions` with validation, and the
+    `GetValidatedServerExe`/`GetValidatedSaveDataFolder` path helpers.
+  - Log parsing: `ServerLogParser` + `ServerLogPatterns` (the regex table that used to live inline in
+    `ValheimServer`). `ValheimServer` now registers its handlers against these patterns.
+- `ValheimServerGUI.Tools` now references Core (for `IPrimaryKeyEntity`); the app references Core and
+  Tools.
+- Fixed a latent null-reference in `ValheimServerOptions.Validate()` (`AdditionalArgs` guard).
+
+Remaining in Phase 1: move server *state transitions* and `PlayerDataRepository`/world discovery into
+Core, introduce the process/filesystem/archive/platform contracts, separate resources from domain
+code, and rename Core namespaces to `ValheimServerGUI.Core.*` (currently preserved for a smooth move).
 
 ## Target architecture
 

@@ -14,8 +14,6 @@ namespace ValheimServerGUI.Game
 {
     public class ValheimServer : IDisposable
     {
-        private delegate void LogEventHandler(string[] captures);
-
         /// <summary>
         /// Options for the currently running server.
         /// </summary>        
@@ -39,7 +37,7 @@ namespace ValheimServerGUI.Game
         private ServerStatus _status = ServerStatus.Stopped;
         private string ProcessKey;
         private bool IsRestarting;
-        private readonly Dictionary<string, LogEventHandler> LogBasedActions = new();
+        private readonly ServerLogParser LogParser = new();
 
         public event EventHandler<ServerStatus> StatusChanged;
         public event EventHandler<decimal> WorldSaved;
@@ -75,31 +73,18 @@ namespace ValheimServerGUI.Game
 
         private void InitializeLogBasedActions()
         {
-            // NOTE: Newer server builds also log "Game server connected failed" on
-            // startup errors, so this pattern must not match that message
-            LogBasedActions.Add(@"Game server connected\s*$", OnServerConnected);
-
-            // NOTE: Older server builds log "World saved (x ms)", newer builds (1.0.x+) log
-            // "World save (5/5) done. Total time [x ms]" - the time may include group separators
-            LogBasedActions.Add(@"World saved \(\s*?([[\d\.]+?)\s*?ms\s*?\)\s*?$", OnWorldSaved);
-            LogBasedActions.Add(@"World save \(5/5\) done\. Total time \[([\d\.,\s]+?)ms\]", OnWorldSaved);
-            LogBasedActions.Add(@"Session "".*?"" with join code (.*?) ", OnCrossplayJoinCodeAvailable);
-            LogBasedActions.Add(@"Session "".*?"" registered with join code (\S+?)\s*$", OnCrossplayJoinCodeAvailable);
-
-            // Connecting
-            LogBasedActions.Add(@"Got connection SteamID (\d+?)\D*?$", OnPlayerConnecting);
-            LogBasedActions.Add(@"PlayFab socket with remote ID .*? received local Platform ID (\w+?)_(\d+?)$", OnPlayerConnectingCrossplay); // Crossplay
-
-            // Connected - NOTE: ZDOID can be a negative number, account for that w/ regex!
-            LogBasedActions.Add(@"Got character ZDOID from (.+?) : ([\d-]+?)\D*?:(\d+?)\D*?$", OnPlayerConnected);
-
-            // Disconnecting
-            LogBasedActions.Add(@"Peer (\d+?) has wrong password", OnPlayerDisconnecting);
-            LogBasedActions.Add(@"Peer (\d+?) has incompatible version", OnPlayerDisconnecting);
-
-            // Disconnected
-            LogBasedActions.Add(@"Closing socket (\d+?)\D*?$", OnPlayerDisconnected); // This is technically "disconnecting" but it's the best terminator I can find
-            LogBasedActions.Add(@"Destroying abandoned non persistent zdo ([\d-]+?):.*$", OnPlayerDisconnected); // Crossplay
+            LogParser.AddAction(ServerLogPatterns.ServerConnected, OnServerConnected);
+            LogParser.AddAction(ServerLogPatterns.WorldSavedLegacy, OnWorldSaved);
+            LogParser.AddAction(ServerLogPatterns.WorldSaved, OnWorldSaved);
+            LogParser.AddAction(ServerLogPatterns.CrossplayJoinCodeActive, OnCrossplayJoinCodeAvailable);
+            LogParser.AddAction(ServerLogPatterns.CrossplayJoinCodeRegistered, OnCrossplayJoinCodeAvailable);
+            LogParser.AddAction(ServerLogPatterns.PlayerConnecting, OnPlayerConnecting);
+            LogParser.AddAction(ServerLogPatterns.PlayerConnectingCrossplay, OnPlayerConnectingCrossplay);
+            LogParser.AddAction(ServerLogPatterns.PlayerConnected, OnPlayerConnected);
+            LogParser.AddAction(ServerLogPatterns.PlayerDisconnectingWrongPassword, OnPlayerDisconnecting);
+            LogParser.AddAction(ServerLogPatterns.PlayerDisconnectingIncompatibleVersion, OnPlayerDisconnecting);
+            LogParser.AddAction(ServerLogPatterns.PlayerDisconnected, OnPlayerDisconnected);
+            LogParser.AddAction(ServerLogPatterns.PlayerDisconnectedCrossplay, OnPlayerDisconnected);
         }
 
         private void InitializeStatusBasedActions()
@@ -234,22 +219,8 @@ namespace ValheimServerGUI.Game
 
         private void Logger_OnServerLogReceived(string message)
         {
-            foreach (var kvp in LogBasedActions)
-            {
-                var match = Regex.Match(message, kvp.Key, RegexOptions.IgnoreCase);
-                if (!match.Success) continue;
-
-                try
-                {
-                    // The first capture group is the whole string, so skip that
-                    var captures = (match.Groups as IEnumerable<Group>).Skip(1).Select(g => g.ToString()).ToArray();
-                    kvp.Value(captures);
-                }
-                catch (Exception e)
-                {
-                    ApplicationLogger.Error(e, "Error parsing server log: {message}", message);
-                }
-            }
+            LogParser.HandleMessage(message, (e, msg) =>
+                ApplicationLogger.Error(e, "Error parsing server log: {message}", msg));
         }
 
         #endregion

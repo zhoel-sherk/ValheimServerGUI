@@ -16,16 +16,6 @@ namespace ValheimServerGUI.Game
         /// </summary>
         private static readonly Regex AutoBackupRegex = new(@"^.*?_backup_(auto-)?\d+?-\d+?");
 
-        public static FileInfo GetValidatedServerExe(this IValheimServerOptions options)
-        {
-            return PathExtensions.GetFileInfo(options.ServerExePath, ".exe");
-        }
-
-        public static DirectoryInfo GetValidatedSaveDataFolder(this IValheimServerOptions options)
-        {
-            return PathExtensions.GetDirectoryInfo(options.SaveDataFolderPath, true);
-        }
-
         public static List<string> GetWorldNames(this DirectoryInfo saveDataFolder)
         {
             try
