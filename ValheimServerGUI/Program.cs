@@ -3,6 +3,7 @@ using Serilog;
 using System;
 using System.Windows.Forms;
 using ValheimServerGUI.Core.Logging;
+using ValheimServerGUI.Core.Platform;
 using ValheimServerGUI.Core.Processes;
 using ValheimServerGUI.Forms;
 using ValheimServerGUI.Game;
@@ -65,6 +66,7 @@ namespace ValheimServerGUI
                 .AddSingleton<IGitHubClient, GitHubClient>()
                 .AddSingleton<ISoftwareUpdateProvider, SoftwareUpdateProvider>()
                 .AddSingleton<IExceptionHandler, ExceptionHandler>()
+                .AddSingleton<IPlatformIntegration, WindowsPlatformIntegration>()
                 .AddSingleton<IRuneberryApiClient, RuneberryApiClient>();
 
             // Mods & backups

@@ -34,6 +34,7 @@ Key files:
 - `ValheimServerGUI.Core/Game/WorldGen*.cs` — difficulty presets / modifiers / keys
 - `ValheimServerGUI.Core/Processes/ServerProcess.cs` — platform-neutral process contract (`IServerProcess`, `IServerProcessFactory`)
 - `ValheimServerGUI.Core/Logging/*` — Core logging contracts (`IApplicationLog`, `IServerLogger`, `IServerLoggerFactory`)
+- `ValheimServerGUI.Core/Platform/IPlatformIntegration.cs` — open directory/URL contract (local impl: `WindowsPlatformIntegration` in the app)
 - `ValheimServerGUI.Tools/Processes/LocalServerProcess.cs` — local process runner (UTF-8 stdout, working directory)
 - `ValheimServerGUI/Tools/Logging/ValheimServerLogger.cs` — server log noise filter + `ValheimServerLoggerFactory`
 - `ValheimServerGUI/Properties/Resources.resx` (+ generated Designer.cs) — app strings & URLs

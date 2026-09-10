@@ -133,11 +133,17 @@ Completed so far, with the WinForms app still building and all tests green:
   (interface) and `IDataRepository` moved to Core; the concrete `PlayerDataRepository` stays in the
   app. Core now contains cross-platform tests for the full server lifecycle
   (`ValheimServerCoreTests`).
+- Added the platform contract `IPlatformIntegration` (open directory/URL) in Core, with
+  `WindowsPlatformIntegration` as the local implementation (registered in DI). The legacy static
+  `OpenHelper` now delegates to it, so existing call sites are unaffected while the Avalonia client
+  can depend on the contract directly.
 - Fixed a latent null-reference in `ValheimServerOptions.Validate()` (`AdditionalArgs` guard).
 
-Remaining in Phase 1: introduce the filesystem/archive/platform contracts, separate resources from
-domain code, replace `IFormProvider`/MessageBox with UI-facing interfaces, and rename Core
-namespaces to `ValheimServerGUI.Core.*` (currently preserved for a smooth move).
+Phase 1 exit criteria are met: the WinForms app builds and runs, Core tests run without a Windows
+desktop (53 tests), and no Core source references `System.Windows.Forms`, `System.Drawing`, registry
+APIs or a concrete local process. Remaining niceties (filesystem/archive contracts, resource
+separation, `IUserInteraction`) can be introduced as Phase 2 needs them; Core namespaces are still
+preserved for a smooth move.
 
 ## Target architecture
 
