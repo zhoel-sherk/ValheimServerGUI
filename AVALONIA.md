@@ -113,6 +113,8 @@ Completed so far, with the WinForms app still building and all tests green:
     `GetValidatedServerExe`/`GetValidatedSaveDataFolder` path helpers.
   - Log parsing: `ServerLogParser` + `ServerLogPatterns` (the regex table that used to live inline in
     `ValheimServer`). `ValheimServer` now registers its handlers against these patterns.
+  - World discovery: `ValheimPathExtensions` (`GetWorldNames`/`IsWorldNameAvailable`) now lives in
+    Core and scans both the legacy `worlds/*.fwl` and modern `worlds_local/<World>/` layouts.
 - `ValheimServerGUI.Tools` now references Core (for `IPrimaryKeyEntity`); the app references Core and
   Tools.
 - Introduced the process seam: `IServerProcess` / `IServerProcessFactory` / `ServerProcessSpec` in
@@ -123,8 +125,8 @@ Completed so far, with the WinForms app still building and all tests green:
   removed. `MockServerProcessFactory` replaces the old mock in tests.
 - Fixed a latent null-reference in `ValheimServerOptions.Validate()` (`AdditionalArgs` guard).
 
-Remaining in Phase 1: move server *state transitions* and `PlayerDataRepository`/world discovery into
-Core, introduce the filesystem/archive/platform contracts, separate resources from domain code, and
+Remaining in Phase 1: move server *state transitions* and `PlayerDataRepository` into Core,
+introduce the filesystem/archive/platform contracts, separate resources from domain code, and
 rename Core namespaces to `ValheimServerGUI.Core.*` (currently preserved for a smooth move).
 
 ## Target architecture

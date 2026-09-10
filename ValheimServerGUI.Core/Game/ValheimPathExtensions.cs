@@ -1,11 +1,15 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using ValheimServerGUI.Tools;
 
 namespace ValheimServerGUI.Game
 {
+    /// <summary>
+    /// Discovers world names and availability from the Valheim save-data folder. Handles both
+    /// the legacy <c>worlds/&lt;World&gt;.fwl|db</c> layout and the modern 1.0.x+
+    /// <c>worlds_local/&lt;World&gt;/_main.*.fwl2|db2</c> layout.
+    /// </summary>
     public static class ValheimPathExtensions
     {
         /// <summary>
@@ -81,8 +85,8 @@ namespace ValheimServerGUI.Game
 
         private static IEnumerable<DirectoryInfo> GetWorldsFolders(this DirectoryInfo saveDataFolder)
         {
-            yield return PathExtensions.GetDirectoryInfo(Path.Join(saveDataFolder.FullName, "worlds"));
-            yield return PathExtensions.GetDirectoryInfo(Path.Join(saveDataFolder.FullName, "worlds_local"));
+            yield return new DirectoryInfo(Path.Join(saveDataFolder.FullName, "worlds"));
+            yield return new DirectoryInfo(Path.Join(saveDataFolder.FullName, "worlds_local"));
         }
 
         #endregion

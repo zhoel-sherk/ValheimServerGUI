@@ -30,7 +30,7 @@ Key files:
 - `ValheimServerGUI.Core/Game/ServerLogParser.cs` + `ServerLogPatterns.cs` — server stdout regexes & dispatch (platform-neutral)
 - `ValheimServerGUI.Core/Game/ValheimServerOptions.cs` — options model & validation (platform-neutral)
 - `ValheimServerGUI/Game/ValheimServer.cs` — server process lifecycle + log handler wiring (`LogParser`)
-- `ValheimServerGUI/Game/ValheimPathExtensions.cs` — world discovery (see World layouts below)
+- `ValheimServerGUI.Core/Game/ValheimPathExtensions.cs` — world discovery (see World layouts below)
 - `ValheimServerGUI.Core/Game/WorldGen*.cs` — difficulty presets / modifiers / keys
 - `ValheimServerGUI.Core/Processes/ServerProcess.cs` — platform-neutral process contract (`IServerProcess`, `IServerProcessFactory`)
 - `ValheimServerGUI.Tools/Processes/LocalServerProcess.cs` — local process runner (UTF-8 stdout, working directory)
@@ -102,7 +102,7 @@ Steam_<id>`, `Got character ZDOID from <name> : <user>:<obj>` (name is UTF-8),
 
 **World storage (1.0.7+)**: worlds live in `worlds_local/<WorldName>/_main.<n>.fwl2|db2`
 (a directory per world). Legacy `worlds*/<Name>.fwl` is still supported by the GUI —
-`ValheimPathExtensions` scans both.
+`ValheimPathExtensions` (Core) scans both.
 
 **Difficulty data sources (authoritative, in priority order):** game enums
 (`WorldPresets`/`WorldModifiers`/`WorldModifierOption` — decompile `assembly_valheim.dll`),
