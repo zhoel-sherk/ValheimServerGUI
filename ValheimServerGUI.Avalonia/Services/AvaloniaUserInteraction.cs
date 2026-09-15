@@ -6,6 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -67,6 +68,27 @@ namespace ValheimServerGUI.Avalonia.Services
             }
         }
 
+        public async Task<string?> PickFolderAsync(string title)
+        {
+            var owner = GetMainWindow();
+            if (owner == null) return null;
+
+            try
+            {
+                var folders = await owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+                {
+                    Title = title,
+                    AllowMultiple = false,
+                });
+
+                return folders.Count > 0 ? folders[0].TryGetLocalPath() : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         public async Task<string?> SaveTextFileAsync(string title, string suggestedFileName, string content)
         {
             var owner = GetMainWindow();
@@ -111,6 +133,79 @@ namespace ValheimServerGUI.Avalonia.Services
             {
                 // Clipboard access is best-effort
             }
+        }
+
+        public Task<string?> PromptForTextAsync(string title, string message, string? initialValue = null, Func<string, string?>? validate = null)
+        {
+            return ShowTextPromptAsync(title, message, initialValue, validate);
+        }
+
+        private static async Task<string?> ShowTextPromptAsync(string title, string message, string? initialValue, Func<string, string?>? validate)
+        {
+            var owner = GetMainWindow();
+            if (owner == null) return null;
+
+            string? result = null;
+
+            var textBox = new TextBox { Text = initialValue ?? string.Empty };
+            var errorText = new TextBlock
+            {
+                Foreground = Brushes.OrangeRed,
+                TextWrapping = TextWrapping.Wrap,
+                IsVisible = false,
+            };
+
+            var dialog = new Window
+            {
+                Title = title,
+                Width = 460,
+                Height = 240,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                CanResize = false,
+                ShowInTaskbar = false,
+            };
+
+            var okButton = new Button { Content = "OK", Width = 90, IsDefault = true };
+            okButton.Click += (_, _) =>
+            {
+                var value = textBox.Text ?? string.Empty;
+                var error = validate?.Invoke(value);
+                if (error != null)
+                {
+                    errorText.Text = error;
+                    errorText.IsVisible = true;
+                    return;
+                }
+
+                result = value;
+                dialog.Close();
+            };
+
+            var cancelButton = new Button { Content = "Cancel", Width = 90, IsCancel = true };
+            cancelButton.Click += (_, _) => dialog.Close();
+
+            dialog.Content = new StackPanel
+            {
+                Margin = new Thickness(16),
+                Spacing = 12,
+                Children =
+                {
+                    new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
+                    textBox,
+                    errorText,
+                    new StackPanel
+                    {
+                        Orientation = Orientation.Horizontal,
+                        HorizontalAlignment = HorizontalAlignment.Right,
+                        Spacing = 8,
+                        Children = { okButton, cancelButton },
+                    },
+                },
+            };
+
+            dialog.Opened += (_, _) => textBox.Focus();
+            await dialog.ShowDialog(owner);
+            return result;
         }
 
         private static async Task<string?> ShowChoiceDialogAsync(string title, string message, IReadOnlyList<string> options, string? defaultOption)

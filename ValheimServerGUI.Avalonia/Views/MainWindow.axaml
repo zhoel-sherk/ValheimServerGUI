@@ -16,6 +16,27 @@
   </Window.Resources>
 
   <DockPanel>
+    <!-- Menu bar -->
+    <Menu DockPanel.Dock="Top">
+      <MenuItem Header="_File">
+        <MenuItem Header="New Profile..." Command="{Binding NewProfileCommand}"/>
+        <MenuItem Header="Save Profile" Command="{Binding SaveProfileCommand}"/>
+        <MenuItem Header="Save Profile As..." Command="{Binding SaveProfileAsCommand}"/>
+        <MenuItem Header="Remove Profile" Command="{Binding RemoveProfileCommand}"/>
+        <Separator/>
+        <MenuItem Header="Preferences..." Command="{Binding ShowPreferencesCommand}"/>
+        <MenuItem Header="Open Settings Directory..." Command="{Binding OpenSettingsDirectoryCommand}"/>
+      </MenuItem>
+      <MenuItem Header="_Help">
+        <MenuItem Header="Online Manual" Command="{Binding OpenManualCommand}"/>
+        <MenuItem Header="Port Forwarding" Command="{Binding ShowPortForwardingCommand}"/>
+        <MenuItem Header="GitHub Issues" Command="{Binding OpenIssuesCommand}"/>
+        <MenuItem Header="Check for Updates" Command="{Binding CheckForUpdatesCommand}"/>
+        <Separator/>
+        <MenuItem Header="About..." Command="{Binding ShowAboutCommand}"/>
+      </MenuItem>
+    </Menu>
+
     <!-- Top bar: profile selection, status, actions -->
     <Border DockPanel.Dock="Top" Padding="12,8" Background="{DynamicResource VsgPanelBrush}">
       <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
@@ -147,10 +168,16 @@
 
                 <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
                   <TextBlock Text="Server Executable:" VerticalAlignment="Center"/>
-                  <TextBox Grid.Column="1" Text="{Binding ServerControls.ServerExePath}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                  <Grid Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <TextBox Text="{Binding ServerControls.ServerExePath}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                    <Button Grid.Column="1" Content="Browse..." Command="{Binding ServerControls.BrowseServerExeCommand}"/>
+                  </Grid>
 
                   <TextBlock Grid.Row="1" Text="Save Data Folder:" VerticalAlignment="Center"/>
-                  <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ServerControls.SaveDataFolderPath}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                  <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <TextBox Text="{Binding ServerControls.SaveDataFolderPath}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                    <Button Grid.Column="1" Content="Browse..." Command="{Binding ServerControls.BrowseSaveFolderCommand}"/>
+                  </Grid>
 
                   <TextBlock Grid.Row="2" Text="Save Interval (s):" VerticalAlignment="Center"/>
                   <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding ServerControls.SaveInterval}" Minimum="1" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>

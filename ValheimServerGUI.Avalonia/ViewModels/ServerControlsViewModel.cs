@@ -467,6 +467,26 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             }
         }
 
+        [RelayCommand]
+        private async Task BrowseServerExeAsync()
+        {
+            var path = await UserInteraction.PickFileAsync("Select valheim_server.exe", "Applications", new[] { ".exe" });
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                ServerExePath = path;
+            }
+        }
+
+        [RelayCommand]
+        private async Task BrowseSaveFolderAsync()
+        {
+            var path = await UserInteraction.PickFolderAsync("Select the Valheim save folder");
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                SaveDataFolderPath = path;
+            }
+        }
+
         private void OnWorldSaved(object? sender, decimal duration)
         {
             // Raised on a background thread; no-op here (server details tab handles it).

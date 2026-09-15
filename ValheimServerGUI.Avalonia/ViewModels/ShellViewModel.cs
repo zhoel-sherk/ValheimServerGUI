@@ -136,7 +136,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
         private void LoadProfiles()
         {
-            foreach (var profile in ServerPrefsProvider.LoadPreferences())
+            foreach (var profile in ServerPrefsProvider.LoadPreferences().OrderByDescending(p => p.LastSaved))
             {
                 Profiles.Add(profile.ProfileName);
             }
@@ -314,6 +314,104 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             viewModel.Load(worldName);
 
             ShowDialog(() => ServiceProvider.GetRequiredService<WorldSettingsWindow>(), () => viewModel);
+        }
+
+        [RelayCommand]
+        private async Task NewProfileAsync()
+        {
+            var name = await PromptForProfileNameAsync();
+            if (name == null) return;
+
+            var prefs = new ServerPreferences { ProfileName = name, Name = name };
+            ServerPrefsProvider.SavePreferences(prefs);
+            ReloadProfiles(name);
+        }
+
+        [RelayCommand]
+        private void SaveProfile()
+        {
+            ServerControls.SaveCurrentProfile();
+            ReloadProfiles(ServerControls.ProfileName);
+        }
+
+        [RelayCommand]
+        private async Task SaveProfileAsAsync()
+        {
+            var startingText = string.IsNullOrWhiteSpace(ServerControls.ProfileName)
+                ? "Copy of Profile"
+                : $"Copy of {ServerControls.ProfileName}";
+
+            var name = await PromptForProfileNameAsync(startingText);
+            if (name == null) return;
+
+            ServerControls.ProfileName = name;
+            ServerControls.SaveCurrentProfile();
+            ReloadProfiles(name);
+        }
+
+        [RelayCommand]
+        private async Task RemoveProfileAsync()
+        {
+            var name = ServerControls.ProfileName;
+            if (string.IsNullOrWhiteSpace(name)) return;
+
+            var confirmed = await UserInteraction.ConfirmAsync("Remove Profile", $"Remove server profile '{name}'?");
+            if (!confirmed) return;
+
+            ServerPrefsProvider.RemovePreferences(name);
+            ReloadProfiles(null);
+        }
+
+        [RelayCommand]
+        private void OpenSettingsDirectory()
+        {
+            var directory = System.IO.Path.GetDirectoryName(Environment.ExpandEnvironmentVariables(AppSettings.UserPrefsFilePathV2));
+            PlatformIntegration.OpenDirectory(directory);
+        }
+
+        [RelayCommand]
+        private void OpenManual()
+        {
+            PlatformIntegration.OpenWebAddress(AppSettings.UrlHelp);
+        }
+
+        [RelayCommand]
+        private void OpenIssues()
+        {
+            PlatformIntegration.OpenWebAddress(AppSettings.UrlIssues);
+        }
+
+        private Task<string?> PromptForProfileNameAsync(string? startingText = null)
+        {
+            return UserInteraction.PromptForTextAsync(
+                "Server Profile Name",
+                "Enter a server profile name:",
+                startingText,
+                input =>
+                {
+                    if (string.IsNullOrWhiteSpace(input) || input.Length > 30)
+                    {
+                        return "Profile name must be 1-30 characters.";
+                    }
+
+                    return ServerPrefsProvider.LoadPreferences(input) == null
+                        ? null
+                        : "A profile with this name already exists.";
+                });
+        }
+
+        private void ReloadProfiles(string? selectProfile)
+        {
+            Profiles.Clear();
+
+            foreach (var profile in ServerPrefsProvider.LoadPreferences().OrderByDescending(p => p.LastSaved))
+            {
+                Profiles.Add(profile.ProfileName);
+            }
+
+            SelectedProfile = selectProfile != null && Profiles.Contains(selectProfile)
+                ? selectProfile
+                : Profiles.FirstOrDefault();
         }
 
         private void ShowDialog(Func<Window> windowFactory, Func<object> viewModelFactory)
