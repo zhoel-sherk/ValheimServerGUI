@@ -4,9 +4,9 @@ Context for AI agents working in this repository. Read this before making change
 
 ## Project
 
-WinForms (.NET 10) desktop app that manages a Valheim dedicated server on Windows:
+WinForms + Avalonia (.NET 10) desktop app that manages a Valheim dedicated server on Windows:
 starts/stops `valheim_server.exe`, parses its stdout for status & player events,
-manages server profiles, worlds, and difficulty settings.
+manages server profiles, worlds, difficulty settings and mods.
 
 This is a **community fork** of [runeberry/ValheimServerGUI](https://github.com/runeberry/ValheimServerGUI)
 (upstream is dormant since 2024). Licensed **GNU GPLv3** — keep the `LICENSE` file and the
@@ -36,13 +36,19 @@ Key files:
 - `ValheimServerGUI.Core/Game/WorldGen*.cs` — difficulty presets / modifiers / keys
 - `ValheimServerGUI.Core/Processes/ServerProcess.cs` — platform-neutral process contract (`IServerProcess`, `IServerProcessFactory`)
 - `ValheimServerGUI.Core/Logging/*` — Core logging contracts (`IApplicationLog`, `IServerLogger`, `IServerLoggerFactory`)
-- `ValheimServerGUI.Core/Platform/IPlatformIntegration.cs` — open directory/URL contract (local impl: `WindowsPlatformIntegration` in the app)
+- `ValheimServerGUI.Core/Platform/IPlatformIntegration.cs` — open directory/file/URL contract (local impl: `WindowsPlatformIntegration` in Infrastructure)
+- `ValheimServerGUI.Infrastructure/Game/SteamCloudWorldProvider.cs` — Steam Cloud world discovery + import (Move/Copy) into `worlds_local`
+- `ValheimServerGUI.Infrastructure/Tools/DiscordWebhookClient.cs` — Discord webhook sender (System.Text.Json)
+- `ValheimServerGUI.Infrastructure/Game/Mods/BepInExManager.cs` — BepInEx install/status + plugins/config/log paths & config listing
 - `ValheimServerGUI.Tools/Processes/LocalServerProcess.cs` — local process runner (UTF-8 stdout, working directory)
 - `ValheimServerGUI.Infrastructure/Tools/Logging/ValheimServerLogger.cs` — server log noise filter + `ValheimServerLoggerFactory`
 - `ValheimServerGUI.Infrastructure/AppSettings.cs` — platform-neutral paths/URLs/defaults (was `Resources.resx` string constants)
-- `ValheimServerGUI.Infrastructure/Tools/AssemblyHelper.cs` — app version/build-date helpers (reads from entry assembly)
+- `ValheimServerGUI.Infrastructure/Tools/AssemblyHelper.cs` — app version/build-date helpers + pure `CompareVersions` (reads from entry assembly)
+- `ValheimServerGUI.Infrastructure/Tools/GitHubClient.cs` — release lookup + pure `SelectLatestRelease`
 - `ValheimServerGUI.Avalonia/App.axaml.cs` — Avalonia composition root (`AppServices`), exception boundary
+- `ValheimServerGUI.Avalonia/Services/DiscordStatusService.cs` — Discord server/player event notifications (Avalonia)
 - `ValheimServerGUI.Avalonia/Views/MainWindow.axaml` + `ViewModels/ShellViewModel.cs` — Phase 2 shell (compiled bindings)
+- `ValheimServerGUI.Avalonia/ViewModels/ModsViewModel.cs` — mods/backups tab incl. open plugins/config/log + mod config files
 - `ValheimServerGUI/Properties/Resources.resx` (+ generated Designer.cs) — app strings & URLs
 
 ## Build / test / run
@@ -51,8 +57,9 @@ Requires **.NET SDK 10** (`dotnet --list-sdks`). GUI targets `net10.0-windows`.
 
 ```pwsh
 dotnet build ValheimServerGUI.sln -c Debug
-dotnet test ValheimServerGUI.sln --nologo            # 108 tests, must be green
-dotnet run --project ValheimServerGUI                # or run bin\Debug\net10.0-windows\ValheimServerGUI.exe
+dotnet test ValheimServerGUI.sln --nologo            # 128 tests, must be green
+dotnet run --project ValheimServerGUI                # WinForms client
+dotnet run --project ValheimServerGUI.Avalonia       # Avalonia client
 ```
 
 Gotchas:
@@ -105,6 +112,7 @@ failed`), `World save (5/5) done. Total time [Xms]` (may contain digit group sep
 `Session "..." registered with join code X` / `Session "..." with join code X and IP ... is active`,
 `Got connection SteamID X`, `PlayFab socket with remote ID playfab/X received local Platform ID
 Steam_<id>`, `Got character ZDOID from <name> : <user>:<obj>` (name is UTF-8),
+`Got character ZDOID from <name> : 0:0` (character death; must not be treated as a login),
 `Peer <id> has wrong password`, `Peer <id> has incompatible version`, `Closing socket <id>`,
 `Destroying abandoned non persistent zdo <user>:<obj> owner <uid>`.
 
@@ -138,5 +146,8 @@ non-ASCII character names. Do not remove those encoding settings.
 - Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`), tag releases `vX.Y.Z`.
 - Version lives only in `ValheimServerGUI.csproj` `<Version>`.
 - The repo uses XML-doc comments in code — keep existing style; do not strip comments.
-- Roadmap (do not implement without asking): BepInEx install/version, mod list, mod config
-  (on/off), mod presets — see README "Roadmap".
+- Roadmap (do not implement without asking): mod list, mod config (on/off), mod presets — see README
+  "Roadmap". BepInEx + Valheim Plus install/update, Steam Cloud world import, Discord webhook
+  notifications and mod folder/config actions have shipped.
+- `ValheimServerGUI.Infrastructure` targets `net10.0` (platform-neutral) but `SteamCloudWorldProvider`
+  reads the Windows registry — keep such calls behind `OperatingSystem.IsWindows()` guards.

@@ -122,7 +122,7 @@ relevant when running modded.
 
 ---
 
-## 8. [open] [low] Stale docs
+## 8. [done] [low] Stale docs
 
 **Problem.** `AGENTS.md` (roadmap) still lists "BepInEx install/version" as unimplemented,
 but BepInEx + Valheim Plus support shipped in commits `d447161` / `caf9fc3`. `README.md`
@@ -130,3 +130,7 @@ roadmap has the same gap.
 
 **Fix.** Update `AGENTS.md` and `README.md` to reflect shipped BepInEx support; remaining
 roadmap is mod list / mod config (on/off) / mod presets.
+
+**Status.** Implemented. `AGENTS.md` and `README.md` now list BepInEx/Valheim Plus,
+Steam Cloud world import, Discord webhook notifications and mod folder/config actions as
+shipped; the remaining roadmap is mod list / mod config / mod presets.

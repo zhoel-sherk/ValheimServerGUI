@@ -198,6 +198,22 @@ preserved for a smooth move.
 - Windows real-server validation (start/stop/restart, player join/leave, mods/backups) is the
   remaining Phase 2 exit-criteria gate before WSL/Linux (Phase 3).
 
+### Post-audit feature work (2026)
+
+- Cherry-picked upstream features onto the fork's structure: `Directory.Build.props`
+  (`EnableWindowsTargeting`), pure `AssemblyHelper.CompareVersions` + `GitHubClient.SelectLatestRelease`
+  with tests, and the case-correct `DiscordLogo` resource path (fixes Linux/CI builds).
+- **Steam Cloud world import** (`Infrastructure/Game/SteamCloudWorldProvider`): cloud worlds appear
+  in the Avalonia world dropdown with a ` (cloud)` suffix; starting one prompts Move/Copy/Cancel and
+  imports the folder into `worlds_local` before launch. Registry access is Windows-guarded.
+- **Discord webhook notifications** (ported from upstream PR #83 to Core/Infrastructure/Avalonia):
+  `Server.PlayerDied` + the `0:0` death log pattern in Core, `DiscordWebhookClient` and Discord
+  preferences in Infrastructure, and a `DiscordStatusService` + `DiscordSettingsWindow` in Avalonia.
+- **Mods open-folder actions**: `IPlatformIntegration.OpenFile`, BepInEx plugins/config/log paths and
+  config-file listing, surfaced in the Avalonia Mods tab (open server/plugins/config folders, open the
+  BepInEx log, and open a selected `*.cfg`).
+- **`LastStatusServer`**: player records now carry the last server a status change was seen on.
+
 ## Target architecture
 
 Do not begin by copying `Game/` into a new project. First introduce seams that can be implemented by

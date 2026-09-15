@@ -43,16 +43,20 @@ In order to run ValheimServerGUI, you will need the following:
 * **Minimize to tray** - Minimize this app and control your server entirely from the Windows system tray
 * **Multi-server support** - Run multiple servers at once by creating separate server profiles (see [FAQs](https://github.com/runeberry/ValheimServerGUI/wiki/Frequently-Asked-Questions) for details)
 * **Difficulty presets** - Apply world difficulty presets (Easy, Hard, Hardcore, Casual, etc.) via the world settings dialog (the gear icon next to the world selector)
-* **Works with mods!** - Tested and working with server-side mods such as [Valheim Plus](https://www.nexusmods.com/valheim/mods/2323).
+* **Works with mods!** - Tested and working with server-side mods such as [Valheim Plus](https://www.nexusmods.com/valheim/mods/2323). Install/update BepInEx and Valheim Plus from the app, and open the plugins/config folders or a mod's config file directly
+* **Steam Cloud worlds** - Worlds saved to Steam Cloud appear in the world list; import them (Move/Copy) into the server's local save folder to host them
+* **Discord notifications** - Optional webhook notifications for server online/offline, player join/leave/death and join-code changes
 
 ## Roadmap
 
 Ideas for future releases (no timelines, contributions welcome):
 
-* **BepInEx support** - Install & update BepInEx for the dedicated server right from the app
 * **Mod list** - Browse & install server-side mods
 * **Mod config** - Enable/disable installed mods (on/off)
 * **Mod presets** - Save & apply whole mod loadouts (presets)
+
+BepInEx + Valheim Plus install/update, Steam Cloud world import and Discord webhook notifications
+have shipped.
 
 ## Quick guide
 
