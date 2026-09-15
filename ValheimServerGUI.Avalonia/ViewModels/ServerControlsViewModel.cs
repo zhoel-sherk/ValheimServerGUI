@@ -334,14 +334,14 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                 return;
             }
 
+            // Port-in-use detection is best-effort and can report false positives (e.g. a UDP
+            // listener bound to another interface). Never block the start on it: log a warning and
+            // let the server bind and report its own error if the ports are truly unavailable.
             if (!IpAddressProvider.IsLocalUdpPortAvailable(options.Port, options.Port + 1))
             {
-                UserInteraction.ShowError(
-                    "Error starting server",
-                    $"Port {options.Port} or {options.Port + 1} is already in use.{NL}" +
-                    "Valheim requires two adjacent ports to run a dedicated server.{NL}" +
-                    "Please shut down any UDP applications using these ports, or choose a different port for your server.");
-                return;
+                Logger.Warning(
+                    "Port {port} or {nextPort} appears to be in use; starting the server anyway",
+                    options.Port, options.Port + 1);
             }
 
             var worldName = options.WorldName;
