@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using ValheimServerGUI.Tools.Logging;
 
@@ -15,6 +17,18 @@ namespace ValheimServerGUI.Game.Mods
         Task<ModStatus> InstallFromFileAsync(string serverFolder, string zipPath, Action<string> onProgress = null);
 
         Task<ModStatus> CheckForUpdateAsync(string serverFolder);
+
+        /// <summary>Full path to the BepInEx plugins folder (may not exist yet).</summary>
+        string GetPluginsFolder(string serverFolder);
+
+        /// <summary>Full path to the BepInEx config folder (may not exist yet).</summary>
+        string GetConfigFolder(string serverFolder);
+
+        /// <summary>Full path to the BepInEx log file.</summary>
+        string GetLogFilePath(string serverFolder);
+
+        /// <summary>Full paths of the installed mod config files (*.cfg) in the config folder.</summary>
+        IReadOnlyList<string> GetConfigFiles(string serverFolder);
     }
 
     /// <summary>
@@ -100,6 +114,39 @@ namespace ValheimServerGUI.Game.Mods
             status.UpdateAvailable = ModVersion.IsNewer(release.Version, status.PackageVersion);
 
             return status;
+        }
+
+        public string GetPluginsFolder(string serverFolder)
+        {
+            return string.IsNullOrWhiteSpace(serverFolder) ? null : Path.Join(serverFolder, "BepInEx", "plugins");
+        }
+
+        public string GetConfigFolder(string serverFolder)
+        {
+            return string.IsNullOrWhiteSpace(serverFolder) ? null : Path.Join(serverFolder, "BepInEx", "config");
+        }
+
+        public string GetLogFilePath(string serverFolder)
+        {
+            return string.IsNullOrWhiteSpace(serverFolder) ? null : Path.Join(serverFolder, "BepInEx", "LogOutput.log");
+        }
+
+        public IReadOnlyList<string> GetConfigFiles(string serverFolder)
+        {
+            var configFolder = GetConfigFolder(serverFolder);
+            if (configFolder == null || !Directory.Exists(configFolder)) return Array.Empty<string>();
+
+            try
+            {
+                return Directory
+                    .GetFiles(configFolder, "*.cfg")
+                    .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+            }
+            catch
+            {
+                return Array.Empty<string>();
+            }
         }
 
         private void InstallFromZip(string serverFolder, string zipPath, string packVersion)

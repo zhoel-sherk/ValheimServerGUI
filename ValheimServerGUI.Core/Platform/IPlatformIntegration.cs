@@ -13,6 +13,11 @@ namespace ValheimServerGUI.Core.Platform
         void OpenDirectory(string path);
 
         /// <summary>
+        /// Opens a file with the OS default application (e.g. a mod config file in its editor).
+        /// </summary>
+        void OpenFile(string path);
+
+        /// <summary>
         /// Opens a URL in the default web browser.
         /// </summary>
         void OpenWebAddress(string url);

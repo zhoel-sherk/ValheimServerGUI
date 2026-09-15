@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ValheimServerGUI.Core.Platform;
 using ValheimServerGUI.Game;
 using ValheimServerGUI.Game.Mods;
 using ValheimServerGUI.Infrastructure;
@@ -14,7 +15,8 @@ using ValheimServerGUI.Tools.Logging;
 namespace ValheimServerGUI.Avalonia.ViewModels
 {
     /// <summary>
-    /// Mods &amp; backups tab (Phase 2 step 7): BepInEx, Valheim Plus and world backup status.
+    /// Mods &amp; backups tab (Phase 2 step 7): BepInEx, Valheim Plus and world backup status,
+    /// plus open-folder/open-config actions for installed mods.
     /// </summary>
     public partial class ModsViewModel : ObservableObject
     {
@@ -22,9 +24,15 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private readonly IValheimPlusManager ValheimPlusManager;
         private readonly IBackupService BackupService;
         private readonly ServerControlsViewModel ServerControls;
+        private readonly IPlatformIntegration PlatformIntegration;
         private readonly IApplicationLogger Logger;
 
         public ObservableCollection<BackupRowViewModel> Backups { get; } = new();
+
+        public ObservableCollection<ModConfigFileViewModel> ConfigFiles { get; } = new();
+
+        [ObservableProperty]
+        private ModConfigFileViewModel? _selectedConfigFile;
 
         [ObservableProperty]
         private string? _bepInExStatus;
@@ -43,12 +51,14 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             IValheimPlusManager valheimPlusManager,
             IBackupService backupService,
             ServerControlsViewModel serverControls,
+            IPlatformIntegration platformIntegration,
             IApplicationLogger logger)
         {
             BepInExManager = bepInExManager;
             ValheimPlusManager = valheimPlusManager;
             BackupService = backupService;
             ServerControls = serverControls;
+            PlatformIntegration = platformIntegration;
             Logger = logger;
 
             // Refresh only when the paths that determine the server/mods folder change.
@@ -82,6 +92,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                 ValheimPlusStatus = "Server folder not available";
                 BackupsStatus = "No server folder selected";
                 Backups.Clear();
+                ConfigFiles.Clear();
                 return;
             }
 
@@ -92,7 +103,58 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             ValheimPlusStatus = FormatModStatus("Valheim Plus", valheimPlus);
 
             RefreshBackups(serverFolder);
+            RefreshConfigFiles(serverFolder);
         }
+
+        private void RefreshConfigFiles(string serverFolder)
+        {
+            ConfigFiles.Clear();
+            SelectedConfigFile = null;
+
+            foreach (var path in BepInExManager.GetConfigFiles(serverFolder))
+            {
+                ConfigFiles.Add(new ModConfigFileViewModel(path));
+            }
+        }
+
+        #region Open folder / config actions
+
+        [RelayCommand]
+        private void OpenServerFolder()
+        {
+            var serverFolder = GetServerFolder();
+            if (!string.IsNullOrWhiteSpace(serverFolder)) PlatformIntegration.OpenDirectory(serverFolder);
+        }
+
+        [RelayCommand]
+        private void OpenPluginsFolder()
+        {
+            var serverFolder = GetServerFolder();
+            if (!string.IsNullOrWhiteSpace(serverFolder)) PlatformIntegration.OpenDirectory(BepInExManager.GetPluginsFolder(serverFolder));
+        }
+
+        [RelayCommand]
+        private void OpenConfigFolder()
+        {
+            var serverFolder = GetServerFolder();
+            if (!string.IsNullOrWhiteSpace(serverFolder)) PlatformIntegration.OpenDirectory(BepInExManager.GetConfigFolder(serverFolder));
+        }
+
+        [RelayCommand]
+        private void OpenLogFile()
+        {
+            var serverFolder = GetServerFolder();
+            if (!string.IsNullOrWhiteSpace(serverFolder)) PlatformIntegration.OpenFile(BepInExManager.GetLogFilePath(serverFolder));
+        }
+
+        [RelayCommand]
+        private void OpenConfigFile(ModConfigFileViewModel file)
+        {
+            if (file == null || string.IsNullOrWhiteSpace(file.FullPath)) return;
+            PlatformIntegration.OpenFile(file.FullPath);
+        }
+
+        #endregion
 
         private void RefreshBackups(string serverFolder)
         {
@@ -180,6 +242,18 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             {
                 IsBusy = false;
             }
+        }
+    }
+
+    public class ModConfigFileViewModel
+    {
+        public string Name { get; }
+        public string FullPath { get; }
+
+        public ModConfigFileViewModel(string fullPath)
+        {
+            FullPath = fullPath;
+            Name = Path.GetFileName(fullPath);
         }
     }
 

@@ -42,5 +42,22 @@ namespace ValheimServerGUI.Tools
             if (string.IsNullOrWhiteSpace(url)) return;
             Process.Start("explorer.exe", url);
         }
+
+        public void OpenFile(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return;
+
+            path = Environment.ExpandEnvironmentVariables(path);
+
+            try
+            {
+                // Use the OS shell so the file opens with its registered default application.
+                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            }
+            catch
+            {
+                // A missing file or no registered handler should never crash the app
+            }
+        }
     }
 }

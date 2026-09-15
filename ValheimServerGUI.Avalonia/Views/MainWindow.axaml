@@ -17,7 +17,7 @@
   <DockPanel>
     <!-- Top bar: profile selection, status, actions -->
     <Border DockPanel.Dock="Top" Padding="12,8" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
-      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
         <TextBlock Text="Profile:" VerticalAlignment="Center"/>
         <ComboBox Grid.Column="1"
                   ItemsSource="{Binding Profiles}"
@@ -32,8 +32,9 @@
         <Button Grid.Column="5" Content="Restart" Command="{Binding ServerControls.RestartCommand}" MinWidth="80"/>
         <Button Grid.Column="6" Content="Stop" Command="{Binding ServerControls.StopCommand}" MinWidth="80"/>
 
-        <Button Grid.Column="7" Content="Preferences" Command="{Binding ShowPreferencesCommand}"/>
-        <Button Grid.Column="8" Content="About" Command="{Binding ShowAboutCommand}"/>
+        <Button Grid.Column="7" Content="Discord" Command="{Binding ShowDiscordCommand}"/>
+        <Button Grid.Column="8" Content="Preferences" Command="{Binding ShowPreferencesCommand}"/>
+        <Button Grid.Column="9" Content="About" Command="{Binding ShowAboutCommand}"/>
       </Grid>
     </Border>
 
@@ -176,7 +177,7 @@
 
       <!-- Mods & Backups -->
       <TabItem Header="Mods">
-        <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="8" RowSpacing="12">
+        <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="8" RowSpacing="12">
           <Border Padding="12" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
             <StackPanel Spacing="8">
               <TextBlock Text="BepInEx" FontWeight="SemiBold"/>
@@ -195,7 +196,33 @@
               </StackPanel>
             </StackPanel>
           </Border>
-          <Grid Grid.Row="2" RowDefinitions="Auto,*" RowSpacing="8">
+          <Border Grid.Row="2" Padding="12" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+            <StackPanel Spacing="8">
+              <TextBlock Text="Mod folders &amp; config" FontWeight="SemiBold"/>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Open server folder" Command="{Binding Mods.OpenServerFolderCommand}"/>
+                <Button Content="Open plugins" Command="{Binding Mods.OpenPluginsFolderCommand}"/>
+                <Button Content="Open config" Command="{Binding Mods.OpenConfigFolderCommand}"/>
+                <Button Content="Open BepInEx log" Command="{Binding Mods.OpenLogFileCommand}"/>
+              </StackPanel>
+              <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="6" ColumnSpacing="8">
+                <TextBlock Text="Mod config files:" VerticalAlignment="Center"/>
+                <Button Grid.Column="1" Content="Open selected config"
+                        Command="{Binding Mods.OpenConfigFileCommand}"
+                        CommandParameter="{Binding Mods.SelectedConfigFile}"/>
+                <ListBox Grid.Row="1" Grid.ColumnSpan="2" Height="120"
+                         ItemsSource="{Binding Mods.ConfigFiles}"
+                         SelectedItem="{Binding Mods.SelectedConfigFile}">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ModConfigFileViewModel">
+                      <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Grid Grid.Row="3" RowDefinitions="Auto,*" RowSpacing="8">
             <StackPanel Orientation="Horizontal" Spacing="8">
               <TextBlock Text="Backups:" VerticalAlignment="Center"/>
               <TextBlock Text="{Binding Mods.BackupsStatus}" VerticalAlignment="Center"/>
