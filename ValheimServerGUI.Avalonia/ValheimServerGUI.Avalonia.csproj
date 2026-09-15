@@ -10,6 +10,7 @@
     <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"))</SourceRevisionId>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\ApplicationIcon.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <!-- MainWindow is constructed via DI (parameterized ctor); suppress the designer-only
          AVLN3001 warning about the missing public parameterless constructor. -->
@@ -21,7 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="..\ValheimServerGUI\Resources\ApplicationIcon.ico" Link="Assets\ApplicationIcon.ico" />
+    <AvaloniaResource Include="Assets\ApplicationIcon.ico" />
   </ItemGroup>
 
   <ItemGroup>

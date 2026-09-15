@@ -17,6 +17,7 @@ using ValheimServerGUI.Core.Processes;
 using ValheimServerGUI.Game;
 using ValheimServerGUI.Game.Mods;
 using ValheimServerGUI.Infrastructure.Diagnostics;
+using ValheimServerGUI.Infrastructure.DependencyInjection;
 using ValheimServerGUI.Infrastructure.Network;
 using ValheimServerGUI.Tools;
 using ValheimServerGUI.Tools.Data;
@@ -187,55 +188,23 @@ namespace ValheimServerGUI.Avalonia
     }
 
     /// <summary>
-    /// Composition root for the Avalonia client. Mirrors the WinForms registrations minus the
-    /// WinForms-only services (forms, IFormProvider).
+    /// Composition root for the Avalonia client: the shared platform-neutral services plus the
+    /// Avalonia-specific UI/platform implementations and views.
     /// </summary>
     public static class AppServices
     {
         public static ServiceProvider BuildServiceProvider(string[]? args = null)
         {
-            var startupArgsProvider = new StartupArgsProvider(args ?? Array.Empty<string>());
-
             var services = new ServiceCollection();
 
-            // Tools / Infrastructure
+            // Shared platform-neutral services (Infrastructure + Tools + Game)
+            services.AddValheimServerServices(args);
+
+            // Avalonia-specific
             services
-                .AddSingleton<IDataFileRepositoryContext, DataFileRepositoryContext>()
-                .AddSingleton<IFileProvider, JsonFileProvider>()
-                .AddSingleton<IServerProcessFactory, LocalServerProcessFactory>()
-                .AddSingleton<ApplicationLogger>()
-                .AddSingleton<ILogger>(sp => sp.GetRequiredService<ApplicationLogger>())
-                .AddSingleton<IApplicationLogger>(sp => sp.GetRequiredService<ApplicationLogger>())
-                .AddSingleton<IApplicationLog>(sp => sp.GetRequiredService<ApplicationLogger>())
-                .AddSingleton<IServerLoggerFactory, ValheimServerLoggerFactory>()
-                .AddSingleton<IHttpClientProvider, HttpClientProvider>()
-                .AddSingleton<IRestClientContext, RestClientContext>()
-                .AddSingleton<IIpAddressProvider, IpAddressProvider>()
-                .AddSingleton<IGitHubClient, GitHubClient>()
-                .AddSingleton<ISoftwareUpdateProvider, SoftwareUpdateProvider>()
                 .AddSingleton<IExceptionHandler, AvaloniaExceptionHandler>()
                 .AddSingleton<IUserInteraction, AvaloniaUserInteraction>()
-                .AddSingleton<IPlatformIntegration, WindowsPlatformIntegration>()
-                .AddSingleton<ISteamCloudWorldProvider, SteamCloudWorldProvider>()
-                .AddSingleton<IRuneberryApiClient, RuneberryApiClient>()
-                .AddSingleton<IPortForwarder, UpnpPortForwarder>()
                 .AddSingleton<Services.DiscordStatusService>();
-
-            // Mods & backups
-            services
-                .AddSingleton<IModSourceClient, ModSourceClient>()
-                .AddSingleton<IBepInExManager, BepInExManager>()
-                .AddSingleton<IValheimPlusManager, ValheimPlusManager>()
-                .AddSingleton<IBackupService, BackupService>();
-
-            // Game & server data
-            services
-                .AddSingleton<IPlayerDataRepository, PlayerDataRepository>()
-                .AddSingleton<IUserPreferencesProvider, UserPreferencesProvider>()
-                .AddSingleton<IServerPreferencesProvider, ServerPreferencesProvider>()
-                .AddSingleton<IWorldPreferencesProvider, WorldPreferencesProvider>()
-                .AddSingleton<IStartupArgsProvider>(startupArgsProvider)
-                .AddSingleton<ValheimServer>();
 
             // Views / ViewModels
             services
