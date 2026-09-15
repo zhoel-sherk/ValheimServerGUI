@@ -11,13 +11,13 @@ namespace ValheimServerGUI.Game
 
         IEnumerable<PlayerInfo> FindPlayersByQuery(PlayerDataQuery query);
 
-        PlayerInfo SetPlayerJoining(PlayerDataQuery query);
+        PlayerInfo SetPlayerJoining(string serverName, PlayerDataQuery query);
 
-        PlayerInfo SetPlayerOnline(string characterName, string zdoId);
+        PlayerInfo SetPlayerOnline(string serverName, string characterName, string zdoId);
 
-        void SetPlayerLeaving(PlayerDataQuery query);
+        void SetPlayerLeaving(string serverName, PlayerDataQuery query);
 
-        void SetPlayerOffline(PlayerDataQuery query);
+        void SetPlayerOffline(string serverName, PlayerDataQuery query);
 
         Task LoadAsync();
     }

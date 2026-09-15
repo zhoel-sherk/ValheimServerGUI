@@ -70,7 +70,7 @@ namespace ValheimServerGUI.Game
             return results;
         }
 
-        public PlayerInfo SetPlayerJoining(PlayerDataQuery query)
+        public PlayerInfo SetPlayerJoining(string serverName, PlayerDataQuery query)
         {
             if (!query.HasParameters()) return null;
 
@@ -94,6 +94,7 @@ namespace ValheimServerGUI.Game
             player.PlayerStatus = PlayerStatus.Joining;
             player.LastStatusChange = DateTime.UtcNow;
             player.LastStatusCharacter = !string.IsNullOrWhiteSpace(query.CharacterName) ? query.CharacterName : null;
+            player.LastStatusServer = serverName;
             Upsert(player);
 
             if (string.IsNullOrWhiteSpace(player.PlayerName))
@@ -104,7 +105,7 @@ namespace ValheimServerGUI.Game
             return player;
         }
 
-        public PlayerInfo SetPlayerOnline(string characterName, string zdoId)
+        public PlayerInfo SetPlayerOnline(string serverName, string characterName, string zdoId)
         {
             PlayerInfo player = null;
             var playersToSave = new List<PlayerInfo>();
@@ -190,6 +191,7 @@ namespace ValheimServerGUI.Game
                 player.PlayerStatus = PlayerStatus.Online;
                 player.LastStatusChange = DateTime.UtcNow;
                 player.LastStatusCharacter = characterName;
+                player.LastStatusServer = serverName;
                 player.ZdoId = zdoId;
                 player.AddCharacter(characterName, matchConfident);
                 playersToSave.Add(player);
@@ -204,7 +206,7 @@ namespace ValheimServerGUI.Game
             return player;
         }
 
-        public void SetPlayerLeaving(PlayerDataQuery query)
+        public void SetPlayerLeaving(string serverName, PlayerDataQuery query)
         {
             var players = FindPlayersByQuery(query)
                 .Where(p => p.PlayerStatus.IsAnyValue(PlayerStatus.Joining, PlayerStatus.Online))
@@ -216,6 +218,7 @@ namespace ValheimServerGUI.Game
                 {
                     player.PlayerStatus = PlayerStatus.Leaving;
                     player.LastStatusChange = DateTime.UtcNow;
+                    player.LastStatusServer = serverName;
                     player.ZdoId = null;
                 }
 
@@ -225,7 +228,7 @@ namespace ValheimServerGUI.Game
             }
         }
 
-        public void SetPlayerOffline(PlayerDataQuery query)
+        public void SetPlayerOffline(string serverName, PlayerDataQuery query)
         {
             var players = FindPlayersByQuery(query)
                 .Where(p => p.PlayerStatus != PlayerStatus.Offline)
@@ -237,6 +240,7 @@ namespace ValheimServerGUI.Game
                 {
                     player.PlayerStatus = PlayerStatus.Offline;
                     player.LastStatusChange = DateTime.UtcNow;
+                    player.LastStatusServer = serverName;
                     player.ZdoId = null;
                 }
 

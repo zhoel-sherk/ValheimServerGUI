@@ -123,6 +123,32 @@ namespace ValheimServerGUI.Core.Tests.Game
         }
 
         [Fact]
+        public void PlayerDeathRaisesPlayerDiedAndDoesNotLogIn()
+        {
+            var (server, factory, repo) = CreateServer();
+            StartServer(server);
+
+            string died = null;
+            server.PlayerDied += (_, name) => died = name;
+
+            factory.Last.SimulateOutput("Got character ZDOID from Broheim : 0:0");
+
+            Assert.Equal("Broheim", died);
+            Assert.Null(repo.OnlineCharacter);
+        }
+
+        [Fact]
+        public void PlayerStatusChangesRecordServerName()
+        {
+            var (server, factory, repo) = CreateServer();
+            StartServer(server);
+
+            factory.Last.SimulateOutput("Got character ZDOID from Broheim : -56789123:1");
+
+            Assert.Equal("Test Server", repo.LastServerName);
+        }
+
+        [Fact]
         public void StopTerminatesProcess()
         {
             var (server, factory, _) = CreateServer();
@@ -216,6 +242,7 @@ namespace ValheimServerGUI.Core.Tests.Game
         public List<string> JoiningSteamIds { get; } = new();
         public string OnlineCharacter { get; private set; }
         public string OnlineZdoId { get; private set; }
+        public string LastServerName { get; private set; }
 
         public event EventHandler DataReady;
         public event EventHandler DataUpdated;
@@ -230,21 +257,23 @@ namespace ValheimServerGUI.Core.Tests.Game
 
         public IEnumerable<PlayerInfo> FindPlayersByQuery(PlayerDataQuery query) => Array.Empty<PlayerInfo>();
 
-        public PlayerInfo SetPlayerJoining(PlayerDataQuery query)
+        public PlayerInfo SetPlayerJoining(string serverName, PlayerDataQuery query)
         {
+            LastServerName = serverName;
             if (!string.IsNullOrWhiteSpace(query.PlayerId)) JoiningSteamIds.Add(query.PlayerId);
             return null;
         }
 
-        public PlayerInfo SetPlayerOnline(string characterName, string zdoId)
+        public PlayerInfo SetPlayerOnline(string serverName, string characterName, string zdoId)
         {
+            LastServerName = serverName;
             OnlineCharacter = characterName;
             OnlineZdoId = zdoId;
             return null;
         }
 
-        public void SetPlayerLeaving(PlayerDataQuery query) { }
-        public void SetPlayerOffline(PlayerDataQuery query) { }
+        public void SetPlayerLeaving(string serverName, PlayerDataQuery query) { LastServerName = serverName; }
+        public void SetPlayerOffline(string serverName, PlayerDataQuery query) { LastServerName = serverName; }
         public void Upsert(PlayerInfo entity) { }
         public void UpsertBulk(IEnumerable<PlayerInfo> entities) { }
         public void Remove(string key) { }

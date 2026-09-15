@@ -25,6 +25,11 @@ namespace ValheimServerGUI.Game
         // NOTE: ZDOID can be a negative number, account for that w/ regex!
         public const string PlayerConnected = @"Got character ZDOID from (.+?) : ([\d-]+?)\D*?:(\d+?)\D*?$";
 
+        // NOTE: Valheim emits character ZDOID 0:0 when a player dies. This must be registered
+        // alongside PlayerConnected; the connected handler ignores the 0 zdo id so a death is
+        // never treated as a fresh login.
+        public const string PlayerDied = @"Got character ZDOID from (.+?) : 0:0\s*$";
+
         public const string PlayerDisconnectingWrongPassword = @"Peer (\d+?) has wrong password";
         public const string PlayerDisconnectingIncompatibleVersion = @"Peer (\d+?) has incompatible version";
 

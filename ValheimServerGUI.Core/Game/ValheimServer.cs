@@ -40,6 +40,7 @@ namespace ValheimServerGUI.Game
         public event EventHandler<ServerStatus> StatusChanged;
         public event EventHandler<decimal> WorldSaved;
         public event EventHandler<string> InviteCodeReady;
+        public event EventHandler<string> PlayerDied;
 
         public bool CanStart => IsAnyStatus(ServerStatus.Stopped) && ServerProcess == null;
         public bool CanStop => IsAnyStatus(ServerStatus.Starting, ServerStatus.Running) && ServerProcess != null;
@@ -82,6 +83,7 @@ namespace ValheimServerGUI.Game
             LogParser.AddAction(ServerLogPatterns.PlayerConnecting, OnPlayerConnecting);
             LogParser.AddAction(ServerLogPatterns.PlayerConnectingCrossplay, OnPlayerConnectingCrossplay);
             LogParser.AddAction(ServerLogPatterns.PlayerConnected, OnPlayerConnected);
+            LogParser.AddAction(ServerLogPatterns.PlayerDied, OnPlayerDied);
             LogParser.AddAction(ServerLogPatterns.PlayerDisconnectingWrongPassword, OnPlayerDisconnecting);
             LogParser.AddAction(ServerLogPatterns.PlayerDisconnectingIncompatibleVersion, OnPlayerDisconnecting);
             LogParser.AddAction(ServerLogPatterns.PlayerDisconnected, OnPlayerDisconnected);
@@ -251,7 +253,7 @@ namespace ValheimServerGUI.Game
             var steamId = captures[0];
             if (string.IsNullOrWhiteSpace(steamId)) return;
 
-            PlayerDataRepository.SetPlayerJoining(new() { Platform = PlayerPlatforms.Steam, PlayerId = steamId });
+            PlayerDataRepository.SetPlayerJoining(Options?.Name, new() { Platform = PlayerPlatforms.Steam, PlayerId = steamId });
         }
 
         private void OnPlayerConnectingCrossplay(params string[] captures)
@@ -260,7 +262,7 @@ namespace ValheimServerGUI.Game
             var playerId = captures[1];
             if (!hasValidPlatform || string.IsNullOrWhiteSpace(playerId)) return;
 
-            PlayerDataRepository.SetPlayerJoining(new() { Platform = platform, PlayerId = playerId });
+            PlayerDataRepository.SetPlayerJoining(Options?.Name, new() { Platform = platform, PlayerId = playerId });
         }
 
         private void OnPlayerConnected(params string[] captures)
@@ -269,9 +271,18 @@ namespace ValheimServerGUI.Game
             var zdoid = captures[1]; // Seems to be a unique object id for the game session
             //var otherNumber = captures[2]; // Not sure what this is for?
 
+            // Valheim emits 0:0 when the character dies. Do not mark that as a new login.
+            if (string.IsNullOrWhiteSpace(playerName) || zdoid == "0") return;
+
+            PlayerDataRepository.SetPlayerOnline(Options?.Name, playerName, zdoid);
+        }
+
+        private void OnPlayerDied(params string[] captures)
+        {
+            var playerName = captures[0];
             if (string.IsNullOrWhiteSpace(playerName)) return;
 
-            PlayerDataRepository.SetPlayerOnline(playerName, zdoid);
+            PlayerDied?.Invoke(this, playerName);
         }
 
         private void OnPlayerDisconnecting(params string[] captures)
@@ -288,7 +299,7 @@ namespace ValheimServerGUI.Game
                 }
             };
 
-            PlayerDataRepository.SetPlayerLeaving(query);
+            PlayerDataRepository.SetPlayerLeaving(Options?.Name, query);
         }
 
         private void OnPlayerDisconnected(params string[] captures)
@@ -305,7 +316,7 @@ namespace ValheimServerGUI.Game
                 }
             };
 
-            PlayerDataRepository.SetPlayerOffline(query);
+            PlayerDataRepository.SetPlayerOffline(Options?.Name, query);
         }
 
         private void OnWorldSaved(params string[] captures)

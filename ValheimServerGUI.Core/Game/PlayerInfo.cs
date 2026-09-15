@@ -40,6 +40,12 @@ namespace ValheimServerGUI.Game
         public string LastStatusCharacter { get; set; }
 
         /// <summary>
+        /// The last server where a status change was seen for this player.
+        /// </summary>
+        [JsonProperty("lastStatusServer")]
+        public string LastStatusServer { get; set; }
+
+        /// <summary>
         /// A list of characters that this player has played in Valheim.
         /// </summary>
         [JsonProperty("characters")]
