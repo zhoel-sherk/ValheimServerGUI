@@ -44,7 +44,7 @@ namespace ValheimServerGUI.Infrastructure.Network
                 }
 
                 var externalIp = await TryGetExternalIpAsync(device).ConfigureAwait(false);
-                var mappings = await TryGetAllMappingsAsync(device).ConfigureAwait(false);
+                var (mappings, mappingsFailed) = await TryGetAllMappingsAsync(device).ConfigureAwait(false);
 
                 return new PortForwardingStatus
                 {
@@ -52,7 +52,8 @@ namespace ValheimServerGUI.Infrastructure.Network
                     GatewayEndpoint = device.DeviceEndpoint?.ToString(),
                     ExternalIpAddress = externalIp,
                     IsExternalAddressPrivate = ValheimPorts.IsPrivateAddress(externalIp),
-                    Ports = ports.Select(p => BuildState(p, mappings)).ToList(),
+                    MappingsReadFailed = mappingsFailed,
+                    Ports = ports.Select(p => BuildState(p, mappings, mappingsFailed)).ToList(),
                 };
             }
             catch (Exception e)
@@ -115,13 +116,13 @@ namespace ValheimServerGUI.Infrastructure.Network
                     }
                 }
 
-                var mappings = await TryGetAllMappingsAsync(device).ConfigureAwait(false);
+                var (mappings, mappingsFailed) = await TryGetAllMappingsAsync(device).ConfigureAwait(false);
 
                 return new PortMappingResult
                 {
                     Success = errors.Count == 0,
                     Error = errors.Count == 0 ? null : string.Join(Environment.NewLine, errors),
-                    Ports = ports.Select(p => BuildState(p, mappings)).ToList(),
+                    Ports = ports.Select(p => BuildState(p, mappings, mappingsFailed)).ToList(),
                 };
             }
             catch (Exception e)
@@ -141,8 +142,24 @@ namespace ValheimServerGUI.Infrastructure.Network
                 if (Device != null) return Device;
 
                 var tcs = new TaskCompletionSource<INatDevice>(TaskCreationOptions.RunContinuationsAsynchronously);
+                INatDevice fallback = null;
 
-                void OnDeviceFound(object sender, DeviceEventArgs e) => tcs.TrySetResult(e.Device);
+                void OnDeviceFound(object sender, DeviceEventArgs e)
+                {
+                    var found = e.Device;
+                    if (found == null) return;
+
+                    // Only UPnP/IGD can enumerate existing mappings, so prefer it over NAT-PMP.
+                    // Many routers (e.g. Keenetic) advertise both and NAT-PMP is seen first.
+                    if (found.NatProtocol == NatProtocol.Upnp)
+                    {
+                        tcs.TrySetResult(found);
+                    }
+                    else
+                    {
+                        fallback ??= found;
+                    }
+                }
 
                 NatUtility.DeviceFound += OnDeviceFound;
                 try
@@ -159,7 +176,8 @@ namespace ValheimServerGUI.Infrastructure.Network
                         }
                         catch (TaskCanceledException)
                         {
-                            Device = null;
+                            // No UPnP/IGD device within the timeout — use NAT-PMP if one was seen.
+                            Device = fallback;
                         }
                     }
                 }
@@ -191,20 +209,21 @@ namespace ValheimServerGUI.Infrastructure.Network
             }
         }
 
-        private async Task<IReadOnlyList<Mapping>> TryGetAllMappingsAsync(INatDevice device)
+        private async Task<(IReadOnlyList<Mapping> Mappings, bool Failed)> TryGetAllMappingsAsync(INatDevice device)
         {
             try
             {
-                return await device.GetAllMappingsAsync().ConfigureAwait(false) ?? Array.Empty<Mapping>();
+                var mappings = await device.GetAllMappingsAsync().ConfigureAwait(false);
+                return (mappings ?? Array.Empty<Mapping>(), false);
             }
             catch (Exception e)
             {
                 Logger.Warning("UPnP: could not read the existing mappings: {message}", e.Message);
-                return Array.Empty<Mapping>();
+                return (Array.Empty<Mapping>(), true);
             }
         }
 
-        private static PortMappingState BuildState(PortMappingRequest request, IReadOnlyList<Mapping> mappings)
+        private static PortMappingState BuildState(PortMappingRequest request, IReadOnlyList<Mapping> mappings, bool mappingsFailed)
         {
             var protocol = ToProtocol(request.Protocol);
             var mapped = mappings?.FirstOrDefault(m => m.Protocol == protocol && m.PublicPort == request.ExternalPort);
@@ -215,6 +234,7 @@ namespace ValheimServerGUI.Infrastructure.Network
                 ExternalPort = request.ExternalPort,
                 Protocol = request.Protocol,
                 IsMapped = mapped != null,
+                MappingKnown = !mappingsFailed,
                 Description = mapped?.Description,
             };
         }
@@ -238,6 +258,7 @@ namespace ValheimServerGUI.Infrastructure.Network
                 ExternalPort = p.ExternalPort,
                 Protocol = p.Protocol,
                 IsMapped = false,
+                MappingKnown = false,
             }).ToList();
         }
 

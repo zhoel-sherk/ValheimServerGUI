@@ -11,6 +11,17 @@ using ValheimServerGUI.Tools.Logging;
 namespace ValheimServerGUI.Avalonia.ViewModels
 {
     /// <summary>
+    /// Per-row forwarding state, used by the dialog to pick a colour: green when forwarded,
+    /// amber when the port is known to be missing, grey when the gateway could not be read.
+    /// </summary>
+    public enum PortMappingRowState
+    {
+        Unknown,
+        Mapped,
+        NotMapped,
+    }
+
+    /// <summary>
     /// One UDP port row in the port-forwarding dialog.
     /// </summary>
     public partial class PortRowViewModel : ObservableObject
@@ -18,24 +29,49 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         [ObservableProperty]
         private bool _isMapped;
 
-        public PortRowViewModel(int port, bool isMapped)
+        [ObservableProperty]
+        private bool _mappingKnown;
+
+        public PortRowViewModel(int port, bool isMapped, bool mappingKnown)
         {
             Port = port;
             IsMapped = isMapped;
+            MappingKnown = mappingKnown;
         }
 
         public int Port { get; }
 
         public string Protocol => "UDP";
 
-        public string StatusText => IsMapped ? "Mapped" : "Not mapped";
+        public PortMappingRowState State => !MappingKnown
+            ? PortMappingRowState.Unknown
+            : IsMapped
+                ? PortMappingRowState.Mapped
+                : PortMappingRowState.NotMapped;
 
-        partial void OnIsMappedChanged(bool value) => OnPropertyChanged(nameof(StatusText));
+        public string StatusText => State switch
+        {
+            PortMappingRowState.Mapped => "Mapped",
+            PortMappingRowState.NotMapped => "Not mapped",
+            _ => "Unknown",
+        };
+
+        partial void OnIsMappedChanged(bool value) => OnStateChanged();
+
+        partial void OnMappingKnownChanged(bool value) => OnStateChanged();
+
+        private void OnStateChanged()
+        {
+            OnPropertyChanged(nameof(State));
+            OnPropertyChanged(nameof(StatusText));
+        }
     }
 
     /// <summary>
     /// Port forwarding dialog (UPnP / NAT-PMP): discovers the gateway and maps/removes the three
     /// adjacent UDP ports the Valheim server needs. Manual only — nothing is changed automatically.
+    /// A check runs automatically when the dialog opens so the state is never shown as "not mapped"
+    /// before it has actually been read.
     /// </summary>
     public partial class PortForwardingViewModel : ObservableObject
     {
@@ -49,7 +85,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private bool _isBusy;
 
         [ObservableProperty]
-        private string? _statusText = "Not checked yet";
+        private PortForwardingSummary _summary = PortForwardingSummary.NotChecked;
 
         [ObservableProperty]
         private string? _gatewayText;
@@ -65,6 +101,18 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
         public int BasePort => ServerControls.Port;
 
+        /// <summary>Glyph shown next to the summary: a green check when all ports are forwarded.</summary>
+        public string SummaryIcon => Summary.State switch
+        {
+            PortForwardingState.AllMapped => "✓",
+            PortForwardingState.PartiallyMapped => "!",
+            PortForwardingState.NoneMapped => "!",
+            PortForwardingState.NoGateway => "✕",
+            _ => string.Empty,
+        };
+
+        public bool HasSummaryIcon => SummaryIcon.Length > 0;
+
         public PortForwardingViewModel(
             IPortForwarder portForwarder,
             ServerControlsViewModel serverControls,
@@ -77,6 +125,12 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             ResetPorts();
         }
 
+        /// <summary>
+        /// Runs a gateway check. Called automatically when the dialog opens; also bound to the
+        /// "Check ports" button.
+        /// </summary>
+        public Task CheckAsync() => DiscoverCommand.ExecuteAsync(null);
+
         [RelayCommand]
         private async Task DiscoverAsync()
         {
@@ -84,7 +138,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
             IsBusy = true;
             ErrorMessage = null;
-            StatusText = "Searching for a gateway...";
+            Summary = new PortForwardingSummary { State = PortForwardingState.NotChecked, Text = "Searching for a gateway..." };
 
             try
             {
@@ -92,26 +146,26 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
                 if (!status.GatewayFound)
                 {
-                    StatusText = "No UPnP gateway found";
                     GatewayText = null;
                     ExternalIpText = null;
                     ShowPrivateAddressWarning = false;
                     ErrorMessage = status.Error ?? "Make sure UPnP is enabled on your router.";
                     ResetPorts();
+                    Summary = PortForwardingSummary.From(status);
                     return;
                 }
 
-                StatusText = "Gateway found";
                 GatewayText = status.GatewayEndpoint;
                 ExternalIpText = string.IsNullOrWhiteSpace(status.ExternalIpAddress) ? "Unknown" : status.ExternalIpAddress;
                 ShowPrivateAddressWarning = status.IsExternalAddressPrivate;
                 ApplyStates(status.Ports);
+                Summary = PortForwardingSummary.From(status);
             }
             catch (Exception e)
             {
                 Logger.Error(e, "Port forwarding discovery failed");
-                StatusText = "Discovery failed";
                 ErrorMessage = e.Message;
+                Summary = PortForwardingSummary.Error("Port check failed");
             }
             finally
             {
@@ -119,7 +173,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             }
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanMap))]
         private async Task MapAsync()
         {
             if (IsBusy) return;
@@ -131,8 +185,8 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             {
                 var result = await PortForwarder.MapAsync(GetRequests());
                 ApplyStates(result.Ports);
+                Summary = PortForwardingSummary.FromPorts(result.Ports);
                 ErrorMessage = result.Success ? null : result.Error;
-                StatusText = result.Success ? "Ports mapped" : "Some ports could not be mapped";
             }
             catch (Exception e)
             {
@@ -145,7 +199,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             }
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanRemove))]
         private async Task RemoveAsync()
         {
             if (IsBusy) return;
@@ -157,8 +211,8 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             {
                 var result = await PortForwarder.RemoveAsync(GetRequests());
                 ApplyStates(result.Ports);
+                Summary = PortForwardingSummary.FromPorts(result.Ports);
                 ErrorMessage = result.Success ? null : result.Error;
-                StatusText = result.Success ? "Ports removed" : "Some ports could not be removed";
             }
             catch (Exception e)
             {
@@ -171,6 +225,29 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             }
         }
 
+        private bool CanMap()
+        {
+            return !IsBusy && Summary.State is PortForwardingState.PartiallyMapped
+                or PortForwardingState.NoneMapped
+                or PortForwardingState.Unknown;
+        }
+
+        private bool CanRemove() => !IsBusy && Summary.HasMapped;
+
+        partial void OnSummaryChanged(PortForwardingSummary value)
+        {
+            OnPropertyChanged(nameof(SummaryIcon));
+            OnPropertyChanged(nameof(HasSummaryIcon));
+            MapCommand.NotifyCanExecuteChanged();
+            RemoveCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsBusyChanged(bool value)
+        {
+            MapCommand.NotifyCanExecuteChanged();
+            RemoveCommand.NotifyCanExecuteChanged();
+        }
+
         private IReadOnlyList<PortMappingRequest> GetRequests() => ValheimPorts.GetRequiredMappings(BasePort);
 
         private void ResetPorts()
@@ -181,6 +258,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                 ExternalPort = r.ExternalPort,
                 Protocol = r.Protocol,
                 IsMapped = false,
+                MappingKnown = false,
             }).ToList());
         }
 
@@ -192,7 +270,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             {
                 foreach (var request in GetRequests())
                 {
-                    Ports.Add(new PortRowViewModel(request.Port, false));
+                    Ports.Add(new PortRowViewModel(request.Port, false, false));
                 }
 
                 return;
@@ -200,7 +278,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
             foreach (var state in states.OrderBy(s => s.Port))
             {
-                Ports.Add(new PortRowViewModel(state.Port, state.IsMapped));
+                Ports.Add(new PortRowViewModel(state.Port, state.IsMapped, state.MappingKnown));
             }
         }
     }

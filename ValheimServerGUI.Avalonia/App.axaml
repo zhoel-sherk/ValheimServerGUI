@@ -31,6 +31,7 @@
           <SolidColorBrush x:Key="VsgAccentHoverBrush" Color="#A855F7"/>
           <SolidColorBrush x:Key="VsgAccentPressedBrush" Color="#7E22CE"/>
           <SolidColorBrush x:Key="VsgSuccessBrush" Color="#06B6D4"/>
+          <SolidColorBrush x:Key="VsgGreenBrush" Color="#22C55E"/>
           <SolidColorBrush x:Key="VsgWarningBrush" Color="#F59E0B"/>
           <SolidColorBrush x:Key="VsgDangerBrush" Color="#EF4444"/>
 

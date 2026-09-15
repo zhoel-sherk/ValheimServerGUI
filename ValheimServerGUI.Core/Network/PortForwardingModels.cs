@@ -45,6 +45,13 @@ namespace ValheimServerGUI.Core.Network
 
         public bool IsMapped { get; init; }
 
+        /// <summary>
+        /// True when <see cref="IsMapped"/> reflects the gateway's real state. False when the
+        /// gateway was reached but its mapping list could not be read — the UI then shows an
+        /// "unknown" state instead of a misleading "not mapped".
+        /// </summary>
+        public bool MappingKnown { get; init; } = true;
+
         public string Description { get; init; }
     }
 
@@ -65,6 +72,12 @@ namespace ValheimServerGUI.Core.Network
         /// unlikely to make the server reachable from the internet.
         /// </summary>
         public bool IsExternalAddressPrivate { get; init; }
+
+        /// <summary>
+        /// True when the gateway was reached but its existing mappings could not be read, so the
+        /// per-port states are unknown rather than "not mapped".
+        /// </summary>
+        public bool MappingsReadFailed { get; init; }
 
         public IReadOnlyList<PortMappingState> Ports { get; init; } = Array.Empty<PortMappingState>();
 
