@@ -13,10 +13,13 @@ This project was developed using Visual Studio 2019 on Windows 10. The instructi
 
 ## Solution Projects
 
-* **ValheimServerGUI** - The main desktop client application
-* **ValheimServerGUI.Controls** - Common user controls used in the desktop client. These contain no Valheim-specific code.
-* **ValheimServerGUI.Tools** - Common utilities used in the desktop client. These contain no Valheim-specific code and no references to Windows Forms.
-* **ValheimServerGUI.Serverless** - A small REST API built specifically for the desktop client using the [AWS Serverless Application Model](https://aws.amazon.com/serverless/sam/).
+* **ValheimServerGUI.Avalonia** - The Avalonia desktop client (the only UI)
+* **ValheimServerGUI.Core** - Platform-neutral domain: options & validation, player models, log parsing, world-gen data, contracts
+* **ValheimServerGUI.Infrastructure** - Shared services: preferences, player data, mods/backups, Steam Cloud, Discord, UPnP, updates, logging, DI composition root
+* **ValheimServerGUI.Tools** - Common utilities used by the clients. These contain no Valheim-specific code.
+* **ValheimServerGUI.Core.Tests** / **ValheimServerGUI.Infrastructure.Tests** - Cross-platform xUnit tests
+
+The original WinForms client has been retired; see tag `legacy-winforms` for its source.
 
 ## Solution Resources (Secrets)
 

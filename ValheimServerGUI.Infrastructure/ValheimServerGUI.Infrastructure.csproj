@@ -15,7 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DeviceId" Version="6.11.0" />
     <PackageReference Include="Humanizer" Version="3.0.10" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
     <PackageReference Include="Mono.Nat" Version="3.0.4" />
@@ -23,11 +22,6 @@
     <PackageReference Include="Semver" Version="3.0.0" />
     <PackageReference Include="Serilog" Version="4.4.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\SolutionResources\ClientSecrets.cs" Link="Properties\ClientSecrets.cs" Condition="'$(Configuration)'=='Release' Or Exists('..\SolutionResources\ClientSecrets.cs')" />
-    <Compile Include="..\SolutionResources\ClientSecrets.Values.cs" Link="Properties\ClientSecrets.Values.cs" Condition="'$(Configuration)'=='Release' Or Exists('..\SolutionResources\ClientSecrets.Values.cs')" />
   </ItemGroup>
 
 </Project>

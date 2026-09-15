@@ -13,18 +13,13 @@ namespace ValheimServerGUI.Game
     {
         public event EventHandler<PlayerInfo> PlayerStatusChanged;
 
-        private readonly IRuneberryApiClient RuneberryApiClient;
         private readonly Dictionary<string, PlayerStatus> PlayerStatusMap = new();
         private readonly Dictionary<string, DateTimeOffset> LastOfflineCache = new();
 
-        public PlayerDataRepository(
-            IDataFileRepositoryContext context,
-            IRuneberryApiClient runeberryApiClient)
+        public PlayerDataRepository(IDataFileRepositoryContext context)
             : base(context, AppSettings.PlayerListFilePath)
         {
             EntityUpdated += OnEntityUpdated;
-            RuneberryApiClient = runeberryApiClient;
-            RuneberryApiClient.PlayerInfoAvailable += OnPlayerInfoAvailable;
         }
 
         #region IPlayerDataRepository implementation
@@ -96,11 +91,6 @@ namespace ValheimServerGUI.Game
             player.LastStatusCharacter = !string.IsNullOrWhiteSpace(query.CharacterName) ? query.CharacterName : null;
             player.LastStatusServer = serverName;
             Upsert(player);
-
-            if (string.IsNullOrWhiteSpace(player.PlayerName))
-            {
-                RuneberryApiClient.RequestPlayerInfoAsync(player.Platform, player.PlayerId);
-            }
 
             return player;
         }
@@ -332,34 +322,6 @@ namespace ValheimServerGUI.Game
             {
                 PlayerStatusChanged?.Invoke(this, player);
             }
-        }
-
-        private void OnPlayerInfoAvailable(object sender, PlayerInfoResponse response)
-        {
-            if (string.IsNullOrWhiteSpace(response.Id)
-                || string.IsNullOrWhiteSpace(response.Name)
-                || string.IsNullOrWhiteSpace(response.Platform))
-            {
-                return;
-            }
-
-            var query = new PlayerDataQuery
-            {
-                Platform = response.Platform,
-                PlayerId = response.Id,
-            };
-
-            var players = FindPlayersByQuery(query);
-            foreach (var player in players)
-            {
-                if (player.PlayerName == response.Name) continue;
-
-                player.PlayerName = response.Name;
-                Logger.Information($"Player lookup successful: {player.Key}, {player.PlayerName}");
-                PlayerStatusChanged?.Invoke(this, player);
-            }
-
-            UpsertBulk(players);
         }
 
         #endregion

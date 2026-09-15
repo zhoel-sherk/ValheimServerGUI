@@ -44,8 +44,7 @@ namespace ValheimServerGUI.Infrastructure.DependencyInjection
                 .AddSingleton<IPlatformIntegration, WindowsPlatformIntegration>()
                 .AddSingleton<IStartupHelper, StartupHelper>()
                 .AddSingleton<ISteamCloudWorldProvider, SteamCloudWorldProvider>()
-                .AddSingleton<IPortForwarder, UpnpPortForwarder>()
-                .AddSingleton<IRuneberryApiClient, RuneberryApiClient>();
+                .AddSingleton<IPortForwarder, UpnpPortForwarder>();
 
             // Mods & backups
             services

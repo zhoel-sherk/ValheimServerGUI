@@ -1,14 +1,12 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
-using System.Windows.Forms;
 using ValheimServerGUI.Core.Processes;
 using ValheimServerGUI.Game;
+using ValheimServerGUI.Infrastructure.DependencyInjection;
 using ValheimServerGUI.Tests.Tools;
-using ValheimServerGUI.Tools;
 using ValheimServerGUI.Tools.Data;
 using ValheimServerGUI.Tools.Http;
-using ValheimServerGUI.Tools.Processes;
 
 namespace ValheimServerGUI.Tests
 {
@@ -29,7 +27,7 @@ namespace ValheimServerGUI.Tests
         public BaseTest()
         {
             ServiceCollection = new ServiceCollection();
-            Program.ConfigureServices(ServiceCollection, Array.Empty<string>());
+            ServiceCollection.AddValheimServerServices(Array.Empty<string>());
 
             MockDataFileProvider = new();
             MockProcessFactory = new();
@@ -47,12 +45,6 @@ namespace ValheimServerGUI.Tests
         protected TService GetService<TService>()
         {
             return ServiceProvider.GetRequiredService<TService>();
-        }
-
-        protected TForm GetForm<TForm>() where TForm : Form
-        {
-            var formProvider = ServiceProvider.GetRequiredService<IFormProvider>();
-            return formProvider.GetForm<TForm>();
         }
     }
 }

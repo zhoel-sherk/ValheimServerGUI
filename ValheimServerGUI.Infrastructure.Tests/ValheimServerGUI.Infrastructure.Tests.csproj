@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0-windows</TargetFramework>
-
+    <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -21,8 +20,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ValheimServerGUI.Controls\ValheimServerGUI.Controls.csproj" />
-    <ProjectReference Include="..\ValheimServerGUI\ValheimServerGUI.csproj" />
+    <ProjectReference Include="..\ValheimServerGUI.Core\ValheimServerGUI.Core.csproj" />
+    <ProjectReference Include="..\ValheimServerGUI.Infrastructure\ValheimServerGUI.Infrastructure.csproj" />
+    <ProjectReference Include="..\ValheimServerGUI.Tools\ValheimServerGUI.Tools.csproj" />
   </ItemGroup>
 
 </Project>

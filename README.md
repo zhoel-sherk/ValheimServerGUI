@@ -26,7 +26,7 @@ Need help? Create a [GitHub issue](https://github.com/zhoel-sherk/ValheimServerG
 In order to run ValheimServerGUI, you will need the following:
 
 * **Windows 10 or 11 x64-based PC** - Other Windows configurations may or may not work. 🤷‍♀
-* **.NET 10 Desktop Runtime** - If you don't have it, you should be prompted to install it when you first run this app. Otherwise, you can install the latest release [here](https://dotnet.microsoft.com/download/dotnet/10.0) (under ".NET Desktop Runtime 10.X.X").
+* **.NET 10 Runtime** - If you don't have it, you should be prompted to install it when you first run this app. Otherwise, you can install the latest release [here](https://dotnet.microsoft.com/download/dotnet/10.0) (under ".NET Runtime 10.X.X").
 * **Valheim Dedicated Server** - Comes free with your purchase of Valheim. See the installation guide [here](https://github.com/runeberry/ValheimServerGUI/wiki/Installing-Valheim-Dedicated-Server).
 
 ## Features

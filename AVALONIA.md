@@ -1,5 +1,11 @@
 # Avalonia Migration Roadmap
 
+> **Status: migration complete.** The Avalonia client is the only UI; the WinForms client
+> (`ValheimServerGUI` + `ValheimServerGUI.Controls`), the WinForms test project and the legacy
+> `ValheimServerGUI.Serverless` backend have been **removed** (preserved in tag `legacy-winforms`).
+> The sections below are kept as the historical plan; where they describe "today" they refer to
+> the repository before the migration.
+
 This document is the implementation plan for moving ValheimServerGUI from WinForms to Avalonia.
 It is intentionally based on the repository as it exists today, not on an assumed future project
 layout.
