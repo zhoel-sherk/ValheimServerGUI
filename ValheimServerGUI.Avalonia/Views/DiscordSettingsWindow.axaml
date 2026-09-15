@@ -1,0 +1,46 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ValheimServerGUI.Avalonia.ViewModels"
+        x:Class="ValheimServerGUI.Avalonia.Views.DiscordSettingsWindow"
+        x:DataType="vm:DiscordSettingsViewModel"
+        Title="Discord Status Notifications"
+        Width="640" Height="520"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+
+  <StackPanel Margin="16" Spacing="12">
+    <CheckBox Content="Enable Discord notifications" IsChecked="{Binding EnableNotifications}"/>
+
+    <StackPanel Spacing="4">
+      <TextBlock Text="Discord webhook URL:"/>
+      <TextBox Text="{Binding WebhookUrl}" PasswordChar="&#x2022;" RevealPassword="{Binding ShowWebhook}"/>
+      <CheckBox Content="Show webhook URL" IsChecked="{Binding ShowWebhook}"/>
+    </StackPanel>
+
+    <Border Padding="12" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+      <StackPanel Spacing="8" IsEnabled="{Binding EnableNotifications}">
+        <TextBlock Text="Notifications" FontWeight="SemiBold"/>
+        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="24" RowSpacing="4">
+          <CheckBox Content="Server online" IsChecked="{Binding NotifyServerOnline}"/>
+          <CheckBox Grid.Column="1" Content="Player left" IsChecked="{Binding NotifyPlayerLeft}"/>
+          <CheckBox Grid.Row="1" Content="Server offline" IsChecked="{Binding NotifyServerOffline}"/>
+          <CheckBox Grid.Row="1" Grid.Column="1" Content="Player died (RIP)" IsChecked="{Binding NotifyPlayerDied}"/>
+          <CheckBox Grid.Row="2" Content="Player joined" IsChecked="{Binding NotifyPlayerJoined}"/>
+          <CheckBox Grid.Row="2" Grid.Column="1" Content="Join code ready / changed" IsChecked="{Binding NotifyJoinCode}"/>
+        </Grid>
+        <TextBlock TextWrapping="Wrap" Foreground="Gray"
+                   Text="The join code may also appear inside the Server Online message; this option controls the separate join-code alert."/>
+      </StackPanel>
+    </Border>
+
+    <TextBlock TextWrapping="Wrap" Foreground="Gray"
+               Text="The webhook is stored locally in userprefs.json. Treat it like a password."/>
+
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,8,0,0">
+      <Button Content="Test Webhook" Command="{Binding TestWebhookCommand}" MinWidth="120" HorizontalAlignment="Left"/>
+      <Button Content="Cancel" IsCancel="True" MinWidth="80"/>
+      <Button Content="OK" Command="{Binding SaveCommand}" IsDefault="True" MinWidth="80" Click="OnOkClick"/>
+    </StackPanel>
+  </StackPanel>
+</Window>

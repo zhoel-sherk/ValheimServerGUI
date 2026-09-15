@@ -39,6 +39,9 @@ namespace ValheimServerGUI.Avalonia
 
                 RegisterUnhandledExceptionHandlers();
 
+                // Instantiate the Discord notification service so it starts listening to server events.
+                _serviceProvider.GetRequiredService<Services.DiscordStatusService>();
+
                 var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
                 desktop.MainWindow = mainWindow;
 
@@ -113,7 +116,9 @@ namespace ValheimServerGUI.Avalonia
                 .AddSingleton<IExceptionHandler, AvaloniaExceptionHandler>()
                 .AddSingleton<IUserInteraction, AvaloniaUserInteraction>()
                 .AddSingleton<IPlatformIntegration, WindowsPlatformIntegration>()
-                .AddSingleton<IRuneberryApiClient, RuneberryApiClient>();
+                .AddSingleton<ISteamCloudWorldProvider, SteamCloudWorldProvider>()
+                .AddSingleton<IRuneberryApiClient, RuneberryApiClient>()
+                .AddSingleton<Services.DiscordStatusService>();
 
             // Mods & backups
             services
@@ -139,10 +144,12 @@ namespace ValheimServerGUI.Avalonia
                 .AddSingleton<ViewModels.ModsViewModel>()
                 .AddSingleton<ViewModels.PreferencesViewModel>()
                 .AddSingleton<ViewModels.AboutViewModel>()
+                .AddTransient<ViewModels.DiscordSettingsViewModel>()
                 .AddSingleton<ViewModels.ShellViewModel>()
                 .AddSingleton<MainWindow>()
                 .AddTransient<PreferencesWindow>()
-                .AddTransient<AboutWindow>();
+                .AddTransient<AboutWindow>()
+                .AddTransient<DiscordSettingsWindow>();
 
             return services.BuildServiceProvider();
         }

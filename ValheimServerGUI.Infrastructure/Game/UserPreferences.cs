@@ -27,6 +27,19 @@ namespace ValheimServerGUI.Game
 
         public bool EnablePasswordValidation { get; set; } = true;
 
+        public bool DiscordStatusNotifications { get; set; }
+
+        public string DiscordWebhookUrl { get; set; }
+
+        // Per-event Discord notification preferences.
+        // Default to true so existing users keep the same behavior after upgrading.
+        public bool DiscordNotifyServerOnline { get; set; } = true;
+        public bool DiscordNotifyServerOffline { get; set; } = true;
+        public bool DiscordNotifyPlayerJoined { get; set; } = true;
+        public bool DiscordNotifyPlayerLeft { get; set; } = true;
+        public bool DiscordNotifyPlayerDied { get; set; } = true;
+        public bool DiscordNotifyJoinCode { get; set; } = true;
+
         public List<ServerPreferences> Servers { get; set; } = new();
 
         public List<WorldPreferences> Worlds { get; set; } = new();
@@ -45,6 +58,14 @@ namespace ValheimServerGUI.Game
             prefs.SaveProfileOnStart = file.SaveProfileOnStart ?? prefs.SaveProfileOnStart;
             prefs.WriteApplicationLogsToFile = file.WriteApplicationLogsToFile ?? prefs.WriteApplicationLogsToFile;
             prefs.EnablePasswordValidation = file.EnablePasswordValidation ?? prefs.EnablePasswordValidation;
+            prefs.DiscordStatusNotifications = file.DiscordStatusNotifications ?? prefs.DiscordStatusNotifications;
+            prefs.DiscordWebhookUrl = file.DiscordWebhookUrl ?? prefs.DiscordWebhookUrl;
+            prefs.DiscordNotifyServerOnline = file.DiscordNotifyServerOnline ?? prefs.DiscordNotifyServerOnline;
+            prefs.DiscordNotifyServerOffline = file.DiscordNotifyServerOffline ?? prefs.DiscordNotifyServerOffline;
+            prefs.DiscordNotifyPlayerJoined = file.DiscordNotifyPlayerJoined ?? prefs.DiscordNotifyPlayerJoined;
+            prefs.DiscordNotifyPlayerLeft = file.DiscordNotifyPlayerLeft ?? prefs.DiscordNotifyPlayerLeft;
+            prefs.DiscordNotifyPlayerDied = file.DiscordNotifyPlayerDied ?? prefs.DiscordNotifyPlayerDied;
+            prefs.DiscordNotifyJoinCode = file.DiscordNotifyJoinCode ?? prefs.DiscordNotifyJoinCode;
 
             if (file.Servers != null)
             {
@@ -79,6 +100,14 @@ namespace ValheimServerGUI.Game
                 SaveProfileOnStart = SaveProfileOnStart,
                 WriteApplicationLogsToFile = WriteApplicationLogsToFile,
                 EnablePasswordValidation = EnablePasswordValidation,
+                DiscordStatusNotifications = DiscordStatusNotifications,
+                DiscordWebhookUrl = DiscordWebhookUrl,
+                DiscordNotifyServerOnline = DiscordNotifyServerOnline,
+                DiscordNotifyServerOffline = DiscordNotifyServerOffline,
+                DiscordNotifyPlayerJoined = DiscordNotifyPlayerJoined,
+                DiscordNotifyPlayerLeft = DiscordNotifyPlayerLeft,
+                DiscordNotifyPlayerDied = DiscordNotifyPlayerDied,
+                DiscordNotifyJoinCode = DiscordNotifyJoinCode,
                 Servers = new(),
                 Worlds = new(),
             };

@@ -173,6 +173,14 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             window.ShowDialog(GetOwnerWindow());
         }
 
+        [RelayCommand]
+        private void ShowDiscord()
+        {
+            var window = ServiceProvider.GetRequiredService<DiscordSettingsWindow>();
+            window.DataContext = ServiceProvider.GetRequiredService<DiscordSettingsViewModel>();
+            window.ShowDialog(GetOwnerWindow());
+        }
+
         private static Window GetOwnerWindow()
         {
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop
