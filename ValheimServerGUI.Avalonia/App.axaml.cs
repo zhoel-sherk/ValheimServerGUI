@@ -1,6 +1,8 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -35,22 +37,118 @@ namespace ValheimServerGUI.Avalonia
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                _serviceProvider = AppServices.BuildServiceProvider();
+                try
+                {
+                    _serviceProvider = AppServices.BuildServiceProvider();
 
-                RegisterUnhandledExceptionHandlers();
+                    RegisterUnhandledExceptionHandlers();
 
-                // Instantiate the Discord notification service so it starts listening to server events.
-                _serviceProvider.GetRequiredService<Services.DiscordStatusService>();
+                    // Instantiate the Discord notification service so it starts listening to server events.
+                    _serviceProvider.GetRequiredService<Services.DiscordStatusService>();
 
-                var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
-                desktop.MainWindow = mainWindow;
+                    var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+                    desktop.MainWindow = mainWindow;
 
-                // Kick off the initial async load (IP addresses, player cache) once the window is shown.
-                mainWindow.Opened += (_, _) =>
-                    _ = _serviceProvider.GetRequiredService<ViewModels.ShellViewModel>().LoadCommand.ExecuteAsync(null);
+                    InitializeTray(desktop, mainWindow);
+
+                    // Kick off the initial async load (IP addresses, player cache) once the window is shown.
+                    mainWindow.Opened += (_, _) =>
+                        _ = _serviceProvider.GetRequiredService<ViewModels.ShellViewModel>().LoadCommand.ExecuteAsync(null);
+                }
+                catch (Exception e)
+                {
+                    _serviceProvider?.GetService<IExceptionHandler>()?.HandleException(e, "Fatal startup error");
+                    throw;
+                }
             }
 
             base.OnFrameworkInitializationCompleted();
+        }
+
+        /// <summary>
+        /// Adds a system tray icon so closing the window hides it instead of stopping a running
+        /// server. Best-effort: if the platform has no tray, the window simply closes normally.
+        /// </summary>
+        private void InitializeTray(IClassicDesktopStyleApplicationLifetime desktop, MainWindow mainWindow)
+        {
+            try
+            {
+                var shell = _serviceProvider!.GetRequiredService<ViewModels.ShellViewModel>();
+                var server = _serviceProvider!.GetRequiredService<ValheimServer>();
+
+                var trayIcon = new TrayIcon
+                {
+                    ToolTipText = "Valheim Server GUI",
+                    Icon = LoadTrayIcon(),
+                    IsVisible = true,
+                };
+
+                var showItem = new NativeMenuItem("Show window");
+                showItem.Click += (_, _) => ShowMainWindow(mainWindow);
+
+                var startItem = new NativeMenuItem("Start server");
+                startItem.Click += (_, _) => shell.ServerControls.StartCommand.Execute(null);
+
+                var stopItem = new NativeMenuItem("Stop server");
+                stopItem.Click += (_, _) => shell.ServerControls.StopCommand.Execute(null);
+
+                var exitItem = new NativeMenuItem("Exit");
+                exitItem.Click += (_, _) =>
+                {
+                    try
+                    {
+                        // Stop the server before exiting so the world is saved.
+                        if (server.IsAnyStatus(ServerStatus.Running, ServerStatus.Starting)) server.Stop();
+                    }
+                    finally
+                    {
+                        mainWindow.AllowClose = true;
+                        desktop.Shutdown();
+                    }
+                };
+
+                trayIcon.Menu = new NativeMenu
+                {
+                    Items = { showItem, startItem, stopItem, exitItem },
+                };
+
+                trayIcon.Clicked += (_, _) => ShowMainWindow(mainWindow);
+
+                TrayIcon.SetIcons(this, new TrayIcons { trayIcon });
+
+                mainWindow.TrayEnabled = true;
+            }
+            catch (Exception e)
+            {
+                _serviceProvider?.GetService<IExceptionHandler>()?.HandleException(e, "Failed to create the tray icon");
+            }
+        }
+
+        private static WindowIcon? LoadTrayIcon()
+        {
+            try
+            {
+                using var stream = AssetLoader.Open(new Uri("avares://ValheimServerGUI.Avalonia/Assets/ApplicationIcon.ico"));
+                return new WindowIcon(stream);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static void ShowMainWindow(MainWindow mainWindow)
+        {
+            try
+            {
+                mainWindow.Show();
+                if (mainWindow.WindowState == WindowState.Minimized) mainWindow.WindowState = WindowState.Normal;
+                mainWindow.Activate();
+            }
+            catch
+            {
+                // Bringing the window back is best-effort
+            }
         }
 
         private void RegisterUnhandledExceptionHandlers()

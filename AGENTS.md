@@ -151,3 +151,6 @@ non-ASCII character names. Do not remove those encoding settings.
   notifications and mod folder/config actions have shipped.
 - `ValheimServerGUI.Infrastructure` targets `net10.0` (platform-neutral) but `SteamCloudWorldProvider`
   reads the Windows registry — keep such calls behind `OperatingSystem.IsWindows()` guards.
+- Avalonia client: closing the window hides it to the system tray (protects a running server); the
+  tray Exit stops the server first. `IPlatformIntegration` open folder/file/URL calls are
+  best-effort and must never throw on a missing path or shell handler.

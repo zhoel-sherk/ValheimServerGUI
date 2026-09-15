@@ -20,6 +20,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AvaloniaResource Include="..\ValheimServerGUI\Resources\ApplicationIcon.ico" Link="Assets\ApplicationIcon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Avalonia" Version="12.1.2" />
     <PackageReference Include="Avalonia.Desktop" Version="12.1.2" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.2" />

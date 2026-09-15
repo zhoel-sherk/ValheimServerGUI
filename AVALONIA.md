@@ -213,6 +213,10 @@ preserved for a smooth move.
   config-file listing, surfaced in the Avalonia Mods tab (open server/plugins/config folders, open the
   BepInEx log, and open a selected `*.cfg`).
 - **`LastStatusServer`**: player records now carry the last server a status change was seen on.
+- **Robustness + tray**: platform open-folder/file/URL calls are best-effort (a missing path or
+  shell handler never throws), and the Avalonia client adds a system tray icon. Closing the window
+  now hides it to the tray so a running server is never stopped by accident; the tray menu offers
+  Show / Start / Stop / Exit (Exit stops the server first).
 
 ## Target architecture
 
