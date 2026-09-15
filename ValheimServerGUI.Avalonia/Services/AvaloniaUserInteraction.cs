@@ -4,6 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using ValheimServerGUI.Core.Platform;
 
@@ -20,9 +21,71 @@ namespace ValheimServerGUI.Avalonia.Services
             _ = ShowDialogAsync(title, message, isConfirm: false);
         }
 
+        public void ShowInfo(string title, string message)
+        {
+            _ = ShowDialogAsync(title, message, isConfirm: false);
+        }
+
         public Task<bool> ConfirmAsync(string title, string message)
         {
             return ShowDialogAsync(title, message, isConfirm: true);
+        }
+
+        public Task<string?> ChooseAsync(string title, string message, IReadOnlyList<string> options, string? defaultOption = null)
+        {
+            return ShowChoiceDialogAsync(title, message, options, defaultOption);
+        }
+
+        private static async Task<string?> ShowChoiceDialogAsync(string title, string message, IReadOnlyList<string> options, string? defaultOption)
+        {
+            var owner = GetMainWindow();
+            if (owner == null) return null;
+
+            string? result = null;
+
+            var dialog = new Window
+            {
+                Title = title,
+                Width = 460,
+                Height = 260,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                CanResize = false,
+                ShowInTaskbar = false,
+            };
+
+            var buttons = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Spacing = 8,
+            };
+
+            foreach (var option in options)
+            {
+                var captured = option;
+                var button = new Button
+                {
+                    Content = option,
+                    Width = 90,
+                    IsDefault = option == defaultOption,
+                };
+                button.Click += (_, _) => { result = captured; dialog.Close(); };
+                buttons.Children.Add(button);
+            }
+
+            dialog.Content = new StackPanel
+            {
+                Margin = new Thickness(16),
+                Spacing = 16,
+                Children =
+                {
+                    new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
+                    buttons,
+                },
+            };
+
+            await dialog.ShowDialog(owner);
+            return result;
         }
 
         private static async Task<bool> ShowDialogAsync(string title, string message, bool isConfirm)

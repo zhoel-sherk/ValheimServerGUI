@@ -28,6 +28,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private readonly IServerPreferencesProvider ServerPrefsProvider;
         private readonly IWorldPreferencesProvider WorldPrefsProvider;
         private readonly IIpAddressProvider IpAddressProvider;
+        private readonly ISteamCloudWorldProvider SteamCloudWorlds;
         private readonly IUserInteraction UserInteraction;
         private readonly IApplicationLogger Logger;
 
@@ -101,6 +102,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             IServerPreferencesProvider serverPrefsProvider,
             IWorldPreferencesProvider worldPrefsProvider,
             IIpAddressProvider ipAddressProvider,
+            ISteamCloudWorldProvider steamCloudWorldProvider,
             IUserInteraction userInteraction,
             IApplicationLogger logger)
         {
@@ -109,6 +111,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             ServerPrefsProvider = serverPrefsProvider;
             WorldPrefsProvider = worldPrefsProvider;
             IpAddressProvider = ipAddressProvider;
+            SteamCloudWorlds = steamCloudWorldProvider;
             UserInteraction = userInteraction;
             Logger = logger;
 
@@ -201,7 +204,14 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         {
             WorldNames.Clear();
             var saveFolder = BuildOptions().GetValidatedSaveDataFolder();
-            foreach (var worldName in saveFolder.GetWorldNames())
+            var localWorlds = saveFolder.GetWorldNames();
+
+            // Also surface Steam Cloud worlds so they can be imported and hosted; local wins on a name collision.
+            var cloudWorlds = SteamCloudWorlds.GetCloudWorldNames()
+                .Where(n => !localWorlds.Contains(n, StringComparer.OrdinalIgnoreCase))
+                .Select(n => n + SteamCloudWorldProvider.CloudWorldSuffix);
+
+            foreach (var worldName in localWorlds.Concat(cloudWorlds))
             {
                 WorldNames.Add(worldName);
             }
@@ -253,6 +263,45 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private async Task StartAsync()
         {
             if (IsBusy) return;
+
+            // A selected cloud world isn't hostable until its files are brought into the local save
+            // folder. Import it here, before options are built, so the suffix never reaches
+            // validation or saved prefs.
+            if (!IsNewWorld && ExistingWorldName != null &&
+                ExistingWorldName.EndsWith(SteamCloudWorldProvider.CloudWorldSuffix, StringComparison.Ordinal))
+            {
+                var cloudWorldName = ExistingWorldName[..^SteamCloudWorldProvider.CloudWorldSuffix.Length];
+
+                var choice = await UserInteraction.ChooseAsync(
+                    "Import cloud world",
+                    $"Host the cloud world '{cloudWorldName}'?{NL}{NL}" +
+                    "This world is saved to Steam Cloud and must be brought into the server's local " +
+                    $"save folder to be hosted.{NL}{NL}" +
+                    $"Move: bring the world over and remove the Steam Cloud copy.{NL}" +
+                    "Copy: bring a copy over and leave the Steam Cloud copy in place.",
+                    new[] { "Move", "Copy", "Cancel" },
+                    defaultOption: "Copy");
+
+                if (choice == null || choice == "Cancel") return;
+
+                try
+                {
+                    var cloudSaveFolder = BuildOptions().GetValidatedSaveDataFolder();
+                    SteamCloudWorlds.ImportCloudWorld(cloudWorldName, cloudSaveFolder, move: choice == "Move");
+                    Logger.Information("{action} cloud world '{world}' into local save folder",
+                        choice == "Move" ? "Moved" : "Copied", cloudWorldName);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e, "Failed to import cloud world '{world}'", cloudWorldName);
+                    UserInteraction.ShowError("Error starting server", $"Failed to import cloud world '{cloudWorldName}': {e.Message}");
+                    return;
+                }
+
+                // The world is now local; re-list it without the suffix and select it for the start below
+                RefreshWorldNames();
+                ExistingWorldName = cloudWorldName;
+            }
 
             var options = BuildOptions();
 
