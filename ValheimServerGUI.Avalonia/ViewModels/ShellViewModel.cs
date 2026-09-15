@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
@@ -39,6 +40,8 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
         private readonly Stopwatch UptimeTimer = new();
 
+        private readonly Queue<decimal> WorldSaveTimes = new();
+
         public ObservableCollection<string> Profiles { get; } = new();
 
         public ServerControlsViewModel ServerControls { get; }
@@ -66,6 +69,15 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
         [ObservableProperty]
         private string? _internalIpAddress = "Loading...";
+
+        [ObservableProperty]
+        private string _localIpAddress = "127.0.0.1";
+
+        [ObservableProperty]
+        private string? _lastWorldSaveText;
+
+        [ObservableProperty]
+        private string? _averageWorldSaveText;
 
         [ObservableProperty]
         private bool _isBusy;
@@ -109,6 +121,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
             Server.StatusChanged += OnServerStatusChanged;
             Server.InviteCodeReady += OnInviteCodeReady;
+            Server.WorldSaved += OnWorldSaved;
             IpAddressProvider.ExternalIpChanged += OnExternalIpChanged;
             IpAddressProvider.InternalIpChanged += OnInternalIpChanged;
             SoftwareUpdateProvider.UpdateCheckStarted += OnUpdateCheckStarted;
@@ -363,6 +376,31 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         {
             Dispatcher.UIThread.Post(() => InviteCode = inviteCode);
         }
+
+        private void OnWorldSaved(object? sender, decimal duration)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                LastWorldSaveText = $"{DateTime.Now:G} ({duration:F}ms)";
+
+                if (WorldSaveTimes.Count >= 10) WorldSaveTimes.Dequeue();
+                WorldSaveTimes.Enqueue(duration);
+
+                AverageWorldSaveText = $"{WorldSaveTimes.Average():F}ms";
+            });
+        }
+
+        [RelayCommand]
+        private Task CopyExternalIpAsync() => UserInteraction.CopyToClipboardAsync(ExternalIpAddress ?? string.Empty);
+
+        [RelayCommand]
+        private Task CopyInternalIpAsync() => UserInteraction.CopyToClipboardAsync(InternalIpAddress ?? string.Empty);
+
+        [RelayCommand]
+        private Task CopyLocalIpAsync() => UserInteraction.CopyToClipboardAsync(LocalIpAddress ?? string.Empty);
+
+        [RelayCommand]
+        private Task CopyInviteCodeAsync() => UserInteraction.CopyToClipboardAsync(InviteCode ?? string.Empty);
 
         private void OnExternalIpChanged(object? sender, string ip)
         {

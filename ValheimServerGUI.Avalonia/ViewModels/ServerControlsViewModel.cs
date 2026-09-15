@@ -61,6 +61,9 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private bool _isNewWorld;
 
         [ObservableProperty]
+        private bool _showPassword;
+
+        [ObservableProperty]
         private string? _newWorldName;
 
         [ObservableProperty]
@@ -435,6 +438,16 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         {
             Dispatcher.UIThread.Post(() =>
             {
+                // Once a "new world" starts running, switch back to the existing-worlds list
+                // and select the newly created world.
+                if (status == ServerStatus.Running && IsNewWorld)
+                {
+                    var worldName = NewWorldName;
+                    RefreshWorldNames();
+                    ExistingWorldName = worldName;
+                    IsNewWorld = false;
+                }
+
                 OnPropertyChanged(nameof(CanEdit));
                 OnPropertyChanged(nameof(CanStart));
                 OnPropertyChanged(nameof(CanStop));
@@ -443,6 +456,15 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                 StopCommand.NotifyCanExecuteChanged();
                 RestartCommand.NotifyCanExecuteChanged();
             });
+        }
+
+        [RelayCommand]
+        private async Task CopyPasswordAsync()
+        {
+            if (!string.IsNullOrWhiteSpace(Password))
+            {
+                await UserInteraction.CopyToClipboardAsync(Password);
+            }
         }
 
         private void OnWorldSaved(object? sender, decimal duration)

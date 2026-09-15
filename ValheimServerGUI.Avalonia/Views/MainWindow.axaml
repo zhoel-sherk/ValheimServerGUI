@@ -78,7 +78,13 @@
                   <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding ServerControls.Port}" Minimum="1" Maximum="65535" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
 
                   <TextBlock Grid.Row="2" Text="Password:" VerticalAlignment="Center"/>
-                  <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ServerControls.Password}" PasswordChar="&#x2022;" IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Enter a password"/>
+                  <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                    <TextBox Text="{Binding ServerControls.Password}" PasswordChar="&#x2022;"
+                             RevealPassword="{Binding ServerControls.ShowPassword}"
+                             IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Enter a password"/>
+                    <CheckBox Grid.Column="1" Content="Show" IsChecked="{Binding ServerControls.ShowPassword}" VerticalAlignment="Center"/>
+                    <Button Grid.Column="2" Content="Copy" Command="{Binding ServerControls.CopyPasswordCommand}"/>
+                  </Grid>
 
                   <TextBlock Grid.Row="3" Text="World:" VerticalAlignment="Center"/>
                   <StackPanel Grid.Row="3" Grid.Column="1" Spacing="8">
@@ -108,15 +114,28 @@
               <StackPanel Spacing="12">
                 <TextBlock Text="Server Details" FontSize="16" FontWeight="SemiBold"/>
 
-                <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
+                <Grid ColumnDefinitions="140,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
                   <TextBlock Text="External IP:" VerticalAlignment="Center"/>
-                  <TextBlock Grid.Column="1" Text="{Binding ExternalIpAddress}"/>
+                  <TextBlock Grid.Column="1" Text="{Binding ExternalIpAddress}" VerticalAlignment="Center"/>
+                  <Button Grid.Column="2" Content="Copy" Command="{Binding CopyExternalIpCommand}"/>
 
                   <TextBlock Grid.Row="1" Text="Internal IP:" VerticalAlignment="Center"/>
-                  <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding InternalIpAddress}"/>
+                  <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding InternalIpAddress}" VerticalAlignment="Center"/>
+                  <Button Grid.Row="1" Grid.Column="2" Content="Copy" Command="{Binding CopyInternalIpCommand}"/>
 
-                  <TextBlock Grid.Row="2" Text="Invite Code:" VerticalAlignment="Center"/>
-                  <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding InviteCode}"/>
+                  <TextBlock Grid.Row="2" Text="Local IP:" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LocalIpAddress}" VerticalAlignment="Center"/>
+                  <Button Grid.Row="2" Grid.Column="2" Content="Copy" Command="{Binding CopyLocalIpCommand}"/>
+
+                  <TextBlock Grid.Row="3" Text="Invite Code:" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding InviteCode}" VerticalAlignment="Center"/>
+                  <Button Grid.Row="3" Grid.Column="2" Content="Copy" Command="{Binding CopyInviteCodeCommand}"/>
+
+                  <TextBlock Grid.Row="4" Text="Last world save:" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding LastWorldSaveText}" VerticalAlignment="Center"/>
+
+                  <TextBlock Grid.Row="5" Text="Average world save:" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding AverageWorldSaveText}" VerticalAlignment="Center"/>
                 </Grid>
               </StackPanel>
             </Border>

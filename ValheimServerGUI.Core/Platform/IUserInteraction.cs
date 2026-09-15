@@ -42,5 +42,10 @@ namespace ValheimServerGUI.Core.Platform
         /// Returns the written path, or null when cancelled/failed.
         /// </summary>
         Task<string?> SaveTextFileAsync(string title, string suggestedFileName, string content);
+
+        /// <summary>
+        /// Copies text to the system clipboard.
+        /// </summary>
+        Task CopyToClipboardAsync(string text);
     }
 }

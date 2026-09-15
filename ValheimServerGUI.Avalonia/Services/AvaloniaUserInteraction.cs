@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
@@ -90,6 +91,25 @@ namespace ValheimServerGUI.Avalonia.Services
             catch
             {
                 return null;
+            }
+        }
+
+        public async Task CopyToClipboardAsync(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+
+            var owner = GetMainWindow();
+            if (owner?.Clipboard == null) return;
+
+            try
+            {
+                var data = new DataTransfer();
+                data.Add(DataTransferItem.CreateText(text));
+                await owner.Clipboard.SetDataAsync(data);
+            }
+            catch
+            {
+                // Clipboard access is best-effort
             }
         }
 
