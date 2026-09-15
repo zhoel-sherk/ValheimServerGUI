@@ -2,6 +2,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -203,8 +204,19 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private void RefreshWorldNames()
         {
             WorldNames.Clear();
-            var saveFolder = BuildOptions().GetValidatedSaveDataFolder();
-            var localWorlds = saveFolder.GetWorldNames();
+
+            // The save folder may not exist yet (Valheim/server never ran, or a custom path);
+            // treat that as "no local worlds" instead of failing to load the profile.
+            List<string> localWorlds;
+            try
+            {
+                localWorlds = BuildOptions().GetValidatedSaveDataFolder().GetWorldNames();
+            }
+            catch (Exception e)
+            {
+                Logger.Error("Error refreshing world select: {message}", e.Message);
+                localWorlds = new List<string>();
+            }
 
             // Also surface Steam Cloud worlds so they can be imported and hosted; local wins on a name collision.
             var cloudWorlds = SteamCloudWorlds.GetCloudWorldNames()
