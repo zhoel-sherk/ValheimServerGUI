@@ -18,7 +18,7 @@
       <CheckBox Content="Show webhook URL" IsChecked="{Binding ShowWebhook}"/>
     </StackPanel>
 
-    <Border Padding="12" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+    <Border Padding="12" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
       <StackPanel Spacing="8" IsEnabled="{Binding EnableNotifications}">
         <TextBlock Text="Notifications" FontWeight="SemiBold"/>
         <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="24" RowSpacing="4">

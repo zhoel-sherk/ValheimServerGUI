@@ -2,11 +2,144 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:ValheimServerGUI.Avalonia"
              x:Class="ValheimServerGUI.Avalonia.App"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Dark">
   <Application.DataTemplates>
     <local:ViewLocator/>
   </Application.DataTemplates>
+
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Dark">
+          <!-- Valheim "Mistlands Tech" palette -->
+          <Color x:Key="SystemAccentColor">#9333EA</Color>
+          <Color x:Key="SystemAccentColorLight1">#A855F7</Color>
+          <Color x:Key="SystemAccentColorLight2">#C084FC</Color>
+          <Color x:Key="SystemAccentColorLight3">#D8B4FE</Color>
+          <Color x:Key="SystemAccentColorDark1">#7E22CE</Color>
+          <Color x:Key="SystemAccentColorDark2">#6B21A8</Color>
+          <Color x:Key="SystemAccentColorDark3">#581C87</Color>
+
+          <SolidColorBrush x:Key="VsgBackgroundBrush" Color="#12131A"/>
+          <SolidColorBrush x:Key="VsgPanelBrush" Color="#1C1D26"/>
+          <SolidColorBrush x:Key="VsgPanelAltBrush" Color="#23252F"/>
+          <SolidColorBrush x:Key="VsgBorderBrush" Color="#2A2C3A"/>
+          <SolidColorBrush x:Key="VsgTextBrush" Color="#E2E8F0"/>
+          <SolidColorBrush x:Key="VsgMutedTextBrush" Color="#94A3B8"/>
+          <SolidColorBrush x:Key="VsgDisabledTextBrush" Color="#64748B"/>
+          <SolidColorBrush x:Key="VsgAccentBrush" Color="#9333EA"/>
+          <SolidColorBrush x:Key="VsgAccentHoverBrush" Color="#A855F7"/>
+          <SolidColorBrush x:Key="VsgAccentPressedBrush" Color="#7E22CE"/>
+          <SolidColorBrush x:Key="VsgSuccessBrush" Color="#06B6D4"/>
+          <SolidColorBrush x:Key="VsgWarningBrush" Color="#F59E0B"/>
+          <SolidColorBrush x:Key="VsgDangerBrush" Color="#EF4444"/>
+
+          <!-- Fluent chrome overrides -->
+          <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="#12131A"/>
+          <SolidColorBrush x:Key="ThemeForegroundBrush" Color="#E2E8F0"/>
+
+          <SolidColorBrush x:Key="SystemControlBackgroundAltHighBrush" Color="#12131A"/>
+          <SolidColorBrush x:Key="SystemControlBackgroundAltMediumHighBrush" Color="#171821"/>
+          <SolidColorBrush x:Key="SystemControlBackgroundAltMediumBrush" Color="#1C1D26"/>
+          <SolidColorBrush x:Key="SystemControlBackgroundAltLowBrush" Color="#1C1D26"/>
+          <SolidColorBrush x:Key="SystemControlBackgroundBaseHighBrush" Color="#23252F"/>
+          <SolidColorBrush x:Key="SystemControlBackgroundBaseMediumHighBrush" Color="#23252F"/>
+          <SolidColorBrush x:Key="SystemControlBackgroundBaseMediumBrush" Color="#1C1D26"/>
+          <SolidColorBrush x:Key="SystemControlBackgroundBaseMediumLowBrush" Color="#1C1D26"/>
+          <SolidColorBrush x:Key="SystemControlBackgroundBaseLowBrush" Color="#1C1D26"/>
+          <SolidColorBrush x:Key="SystemControlBackgroundChromeMediumLowBrush" Color="#1C1D26"/>
+          <SolidColorBrush x:Key="SystemControlBackgroundChromeMediumBrush" Color="#1C1D26"/>
+          <SolidColorBrush x:Key="SystemControlBackgroundChromeBlackHighBrush" Color="#12131A"/>
+          <SolidColorBrush x:Key="SystemControlBackgroundChromeBlackMediumBrush" Color="#12131A"/>
+          <SolidColorBrush x:Key="SystemControlBackgroundListLowBrush" Color="#1C1D26"/>
+          <SolidColorBrush x:Key="SystemControlBackgroundListMediumBrush" Color="#23252F"/>
+
+          <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush" Color="#E2E8F0"/>
+          <SolidColorBrush x:Key="SystemControlForegroundBaseMediumHighBrush" Color="#CBD5E1"/>
+          <SolidColorBrush x:Key="SystemControlForegroundBaseMediumBrush" Color="#94A3B8"/>
+          <SolidColorBrush x:Key="SystemControlForegroundBaseMediumLowBrush" Color="#64748B"/>
+          <SolidColorBrush x:Key="SystemControlForegroundBaseLowBrush" Color="#64748B"/>
+          <SolidColorBrush x:Key="SystemControlForegroundAltHighBrush" Color="#E2E8F0"/>
+          <SolidColorBrush x:Key="SystemControlForegroundChromeWhiteBrush" Color="#E2E8F0"/>
+          <SolidColorBrush x:Key="SystemControlForegroundAccentBrush" Color="#A855F7"/>
+
+          <SolidColorBrush x:Key="SystemControlHighlightAccentBrush" Color="#9333EA"/>
+          <SolidColorBrush x:Key="SystemControlHighlightAltAccentBrush" Color="#C084FC"/>
+          <SolidColorBrush x:Key="SystemControlHighlightListAccentLowBrush" Color="#3B1D5E"/>
+          <SolidColorBrush x:Key="SystemControlHighlightListAccentMediumBrush" Color="#4C2478"/>
+          <SolidColorBrush x:Key="SystemControlHighlightListAccentHighBrush" Color="#5B2E8C"/>
+
+          <SolidColorBrush x:Key="SystemControlHighlightAltListAccentLowBrush" Color="#2A2C3A"/>
+          <SolidColorBrush x:Key="SystemControlHighlightAltListAccentMediumBrush" Color="#2A2C3A"/>
+          <SolidColorBrush x:Key="SystemControlHighlightAltListAccentHighBrush" Color="#2A2C3A"/>
+
+          <!-- Accent button -->
+          <SolidColorBrush x:Key="AccentButtonBackground" Color="#9333EA"/>
+          <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#A855F7"/>
+          <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#7E22CE"/>
+          <SolidColorBrush x:Key="AccentButtonForeground" Color="#FFFFFF"/>
+          <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#FFFFFF"/>
+          <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="#FFFFFF"/>
+          <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="#9333EA"/>
+          <SolidColorBrush x:Key="AccentButtonBorderBrushPointerOver" Color="#A855F7"/>
+          <SolidColorBrush x:Key="AccentButtonBorderBrushPressed" Color="#7E22CE"/>
+
+          <!-- Text controls -->
+          <SolidColorBrush x:Key="TextControlBackground" Color="#1C1D26"/>
+          <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#23252F"/>
+          <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#1C1D26"/>
+          <SolidColorBrush x:Key="TextControlForeground" Color="#E2E8F0"/>
+          <SolidColorBrush x:Key="TextControlBorderBrush" Color="#2A2C3A"/>
+          <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#3A3D4F"/>
+          <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#9333EA"/>
+
+          <!-- ComboBox -->
+          <SolidColorBrush x:Key="ComboBoxBackground" Color="#1C1D26"/>
+          <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#23252F"/>
+          <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#23252F"/>
+          <SolidColorBrush x:Key="ComboBoxForeground" Color="#E2E8F0"/>
+          <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#2A2C3A"/>
+          <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#3A3D4F"/>
+          <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#1C1D26"/>
+          <SolidColorBrush x:Key="ComboBoxDropDownForeground" Color="#E2E8F0"/>
+
+          <!-- Buttons -->
+          <SolidColorBrush x:Key="ButtonBackground" Color="#23252F"/>
+          <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#2E3140"/>
+          <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#3A3D4F"/>
+          <SolidColorBrush x:Key="ButtonForeground" Color="#E2E8F0"/>
+          <SolidColorBrush x:Key="ButtonBorderBrush" Color="#2A2C3A"/>
+          <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#3A3D4F"/>
+          <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#4A4D60"/>
+
+          <!-- Tabs -->
+          <SolidColorBrush x:Key="TabItemBackground" Color="Transparent"/>
+          <SolidColorBrush x:Key="TabItemForeground" Color="#94A3B8"/>
+          <SolidColorBrush x:Key="TabItemForegroundSelected" Color="#E2E8F0"/>
+          <SolidColorBrush x:Key="TabItemBorderBrushSelected" Color="#9333EA"/>
+
+          <!-- Lists -->
+          <SolidColorBrush x:Key="ListBoxBackground" Color="#1C1D26"/>
+          <SolidColorBrush x:Key="ListBoxForeground" Color="#E2E8F0"/>
+          <SolidColorBrush x:Key="ListBoxItemBackgroundPointerOver" Color="#23252F"/>
+          <SolidColorBrush x:Key="ListBoxItemBackgroundSelected" Color="#3B1D5E"/>
+          <SolidColorBrush x:Key="ListBoxItemBackgroundSelectedPointerOver" Color="#4C2478"/>
+          <SolidColorBrush x:Key="ListBoxItemForegroundSelected" Color="#E2E8F0"/>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+
   <Application.Styles>
     <FluentTheme/>
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource VsgTextBrush}"/>
+    </Style>
+    <Style Selector="Window">
+      <Setter Property="Background" Value="{DynamicResource VsgBackgroundBrush}"/>
+    </Style>
+    <Style Selector="TabItem:selected">
+      <Setter Property="Foreground" Value="{DynamicResource VsgAccentHoverBrush}"/>
+    </Style>
   </Application.Styles>
 </Application>

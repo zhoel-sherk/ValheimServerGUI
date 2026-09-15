@@ -217,6 +217,10 @@ preserved for a smooth move.
   shell handler never throws), and the Avalonia client adds a system tray icon. Closing the window
   now hides it to the tray so a running server is never stopped by accident; the tray menu offers
   Show / Start / Stop / Exit (Exit stops the server first).
+- **Dark theme**: a Valheim "Mistlands Tech" palette (deep charcoal `#12131A`, panel `#1C1D26`,
+  text `#E2E8F0`, purple accent `#9333EA`, cyan success `#06B6D4`) applied as Fluent resource
+  overrides plus a Windows dark DWM title bar. Server status uses the palette (cyan Running,
+  amber transitional, muted Stopped).
 
 ## Target architecture
 

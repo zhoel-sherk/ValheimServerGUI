@@ -186,6 +186,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             {
                 var window = windowFactory();
                 window.DataContext = viewModelFactory();
+                window.Opened += (_, _) => Services.WindowsTheme.ApplyDarkTitleBar(window);
                 window.ShowDialog(GetOwnerWindow());
             }
             catch (Exception e)

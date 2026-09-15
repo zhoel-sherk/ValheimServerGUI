@@ -154,3 +154,6 @@ non-ASCII character names. Do not remove those encoding settings.
 - Avalonia client: closing the window hides it to the system tray (protects a running server); the
   tray Exit stops the server first. `IPlatformIntegration` open folder/file/URL calls are
   best-effort and must never throw on a missing path or shell handler.
+- Avalonia client uses a Valheim "Mistlands Tech" dark theme (`App.axaml`: Fluent resource
+  overrides + palette brushes; `Services/WindowsTheme.cs`: dark DWM title bar). Keep new UI on the
+  `Vsg*` palette brushes rather than hard-coded colors.

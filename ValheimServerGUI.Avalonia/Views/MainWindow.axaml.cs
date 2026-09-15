@@ -34,6 +34,8 @@ namespace ValheimServerGUI.Avalonia.Views
             Server = server;
             UserInteraction = userInteraction;
             Logger = logger;
+
+            Opened += (_, _) => Services.WindowsTheme.ApplyDarkTitleBar(this);
         }
 
         protected override void OnClosing(WindowClosingEventArgs e)

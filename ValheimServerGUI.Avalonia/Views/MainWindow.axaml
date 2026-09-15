@@ -12,11 +12,12 @@
 
   <Window.Resources>
     <conv:NegateBoolConverter x:Key="NegateBool"/>
+    <conv:StatusToBrushConverter x:Key="StatusToBrush"/>
   </Window.Resources>
 
   <DockPanel>
     <!-- Top bar: profile selection, status, actions -->
-    <Border DockPanel.Dock="Top" Padding="12,8" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+    <Border DockPanel.Dock="Top" Padding="12,8" Background="{DynamicResource VsgPanelBrush}">
       <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
         <TextBlock Text="Profile:" VerticalAlignment="Center"/>
         <ComboBox Grid.Column="1"
@@ -26,7 +27,8 @@
                   HorizontalAlignment="Left"/>
 
         <TextBlock Grid.Column="2" Text="Status:" VerticalAlignment="Center"/>
-        <TextBlock Grid.Column="3" Text="{Binding StatusText}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+        <TextBlock Grid.Column="3" Text="{Binding StatusText}" VerticalAlignment="Center" FontWeight="SemiBold"
+                   Foreground="{Binding StatusText, Converter={StaticResource StatusToBrush}}"/>
 
         <Button Grid.Column="4" Content="Start" Command="{Binding ServerControls.StartCommand}" MinWidth="80"/>
         <Button Grid.Column="5" Content="Restart" Command="{Binding ServerControls.RestartCommand}" MinWidth="80"/>
@@ -39,9 +41,10 @@
     </Border>
 
     <!-- Status bar -->
-    <Border DockPanel.Dock="Bottom" Padding="8,4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+    <Border DockPanel.Dock="Bottom" Padding="8,4" Background="{DynamicResource VsgPanelBrush}">
       <StackPanel Orientation="Horizontal" Spacing="12">
-        <TextBlock Text="{Binding StatusText}" FontWeight="SemiBold"/>
+        <TextBlock Text="{Binding StatusText}" FontWeight="SemiBold"
+                   Foreground="{Binding StatusText, Converter={StaticResource StatusToBrush}}"/>
         <TextBlock Text="Uptime:"/>
         <TextBlock Text="{Binding Uptime}"/>
         <TextBlock Text="External IP:"/>
@@ -58,7 +61,7 @@
           <StackPanel Margin="8" Spacing="16">
 
             <!-- Server Controls -->
-            <Border Padding="16" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+            <Border Padding="16" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
               <StackPanel Spacing="12">
                 <TextBlock Text="Server Controls" FontSize="16" FontWeight="SemiBold"/>
 
@@ -95,7 +98,7 @@
             </Border>
 
             <!-- Server Details -->
-            <Border Padding="16" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+            <Border Padding="16" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
               <StackPanel Spacing="12">
                 <TextBlock Text="Server Details" FontSize="16" FontWeight="SemiBold"/>
 
@@ -113,7 +116,7 @@
             </Border>
 
             <!-- Advanced Controls -->
-            <Border Padding="16" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+            <Border Padding="16" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
               <StackPanel Spacing="12">
                 <TextBlock Text="Advanced Controls" FontSize="16" FontWeight="SemiBold"/>
 
@@ -178,7 +181,7 @@
       <!-- Mods & Backups -->
       <TabItem Header="Mods">
         <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="8" RowSpacing="12">
-          <Border Padding="12" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+          <Border Padding="12" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
             <StackPanel Spacing="8">
               <TextBlock Text="BepInEx" FontWeight="SemiBold"/>
               <TextBlock Text="{Binding Mods.BepInExStatus}"/>
@@ -187,7 +190,7 @@
               </StackPanel>
             </StackPanel>
           </Border>
-          <Border Grid.Row="1" Padding="12" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+          <Border Grid.Row="1" Padding="12" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
             <StackPanel Spacing="8">
               <TextBlock Text="Valheim Plus" FontWeight="SemiBold"/>
               <TextBlock Text="{Binding Mods.ValheimPlusStatus}"/>
@@ -196,7 +199,7 @@
               </StackPanel>
             </StackPanel>
           </Border>
-          <Border Grid.Row="2" Padding="12" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundListLowBrush}">
+          <Border Grid.Row="2" Padding="12" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
             <StackPanel Spacing="8">
               <TextBlock Text="Mod folders &amp; config" FontWeight="SemiBold"/>
               <StackPanel Orientation="Horizontal" Spacing="8">
