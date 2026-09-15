@@ -43,16 +43,20 @@
 
     <!-- Status bar -->
     <Border DockPanel.Dock="Bottom" Padding="8,4" Background="{DynamicResource VsgPanelBrush}">
-      <StackPanel Orientation="Horizontal" Spacing="12">
-        <TextBlock Text="{Binding StatusText}" FontWeight="SemiBold"
-                   Foreground="{Binding StatusText, Converter={StaticResource StatusToBrush}}"/>
-        <TextBlock Text="Uptime:"/>
-        <TextBlock Text="{Binding Uptime}"/>
-        <TextBlock Text="External IP:"/>
-        <TextBlock Text="{Binding ExternalIpAddress}"/>
-        <TextBlock Text="Internal IP:"/>
-        <TextBlock Text="{Binding InternalIpAddress}"/>
-      </StackPanel>
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <TextBlock Text="{Binding StatusText}" FontWeight="SemiBold"
+                     Foreground="{Binding StatusText, Converter={StaticResource StatusToBrush}}"/>
+          <TextBlock Text="Uptime:"/>
+          <TextBlock Text="{Binding Uptime}"/>
+          <TextBlock Text="External IP:"/>
+          <TextBlock Text="{Binding ExternalIpAddress}"/>
+          <TextBlock Text="Internal IP:"/>
+          <TextBlock Text="{Binding InternalIpAddress}"/>
+        </StackPanel>
+        <Button Grid.Column="1" Content="{Binding UpdateStatusText}" Command="{Binding CheckForUpdatesCommand}"
+                IsVisible="{Binding UpdateStatusText, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+      </Grid>
     </Border>
 
     <TabControl Margin="8">

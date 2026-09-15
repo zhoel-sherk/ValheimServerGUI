@@ -35,12 +35,12 @@ namespace ValheimServerGUI.Infrastructure
         public const string UrlValheimPlus = "https://github.com/Grantapher/ValheimPlus";
         public const string UrlDotnetDownload = "https://dotnet.microsoft.com/download/dotnet/10.0";
         public const string UrlExternalIpLookup = "https://api.ipify.org?format=json";
-        public const string UrlGithubApi = "https://api.github.com/repos/runeberry/ValheimServerGUI";
+        public const string UrlGithubApi = "https://api.github.com/repos/zhoel-sherk/ValheimServerGUI";
         public const string UrlRuneberryApi = "https://u312zw22d6.execute-api.us-east-1.amazonaws.com/Prod";
         public const string UrlIssues = "https://github.com/zhoel-sherk/ValheimServerGUI/issues";
         public const string UrlGithubApplication = "https://github.com/zhoel-sherk/ValheimServerGUI";
         public const string UrlGithubOrganization = "https://github.com/runeberry";
-        public const string UrlUpdates = "https://github.com/runeberry/ValheimServerGUI/releases";
+        public const string UrlUpdates = "https://github.com/zhoel-sherk/ValheimServerGUI/releases";
         public const string UrlHelp = "https://github.com/runeberry/ValheimServerGUI/wiki";
         public const string UrlHelpCharacterNames = "https://github.com/runeberry/ValheimServerGUI/wiki/Frequently-Asked-Questions";
         public const string UrlHelpPortForwarding = "https://github.com/runeberry/ValheimServerGUI/wiki/Connecting-to-your-Server";

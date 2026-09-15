@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using ValheimServerGUI.Avalonia.Views;
 using ValheimServerGUI.Core.Platform;
 using ValheimServerGUI.Game;
+using ValheimServerGUI.Infrastructure;
 using ValheimServerGUI.Tools;
 using ValheimServerGUI.Tools.Logging;
 
@@ -31,6 +32,8 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private readonly IIpAddressProvider IpAddressProvider;
         private readonly IPlayerDataRepository PlayerDataProvider;
         private readonly IUserInteraction UserInteraction;
+        private readonly ISoftwareUpdateProvider SoftwareUpdateProvider;
+        private readonly IPlatformIntegration PlatformIntegration;
         private readonly IApplicationLogger Logger;
         private readonly IServiceProvider ServiceProvider;
 
@@ -67,7 +70,11 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         [ObservableProperty]
         private bool _isBusy;
 
+        [ObservableProperty]
+        private string? _updateStatusText;
+
         private readonly System.Threading.Timer? _uptimeTimer;
+        private readonly System.Threading.Timer? _updateCheckTimer;
 
         public ShellViewModel(
             IUserPreferencesProvider userPrefsProvider,
@@ -76,6 +83,8 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             IIpAddressProvider ipAddressProvider,
             IPlayerDataRepository playerDataProvider,
             IUserInteraction userInteraction,
+            ISoftwareUpdateProvider softwareUpdateProvider,
+            IPlatformIntegration platformIntegration,
             IApplicationLogger logger,
             ServerControlsViewModel serverControls,
             PlayersViewModel players,
@@ -89,6 +98,8 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             IpAddressProvider = ipAddressProvider;
             PlayerDataProvider = playerDataProvider;
             UserInteraction = userInteraction;
+            SoftwareUpdateProvider = softwareUpdateProvider;
+            PlatformIntegration = platformIntegration;
             Logger = logger;
             ServerControls = serverControls;
             Players = players;
@@ -100,8 +111,12 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             Server.InviteCodeReady += OnInviteCodeReady;
             IpAddressProvider.ExternalIpChanged += OnExternalIpChanged;
             IpAddressProvider.InternalIpChanged += OnInternalIpChanged;
+            SoftwareUpdateProvider.UpdateCheckStarted += OnUpdateCheckStarted;
+            SoftwareUpdateProvider.UpdateCheckFinished += OnUpdateCheckFinished;
 
             _uptimeTimer = new System.Threading.Timer(OnUptimeTick, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+            // The provider self-gates automatic checks to once per AppSettings.UpdateCheckInterval.
+            _updateCheckTimer = new System.Threading.Timer(OnUpdateCheckTick, null, TimeSpan.FromHours(1), TimeSpan.FromHours(1));
 
             LoadProfiles();
         }
@@ -144,6 +159,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                     IpAddressProvider.LoadExternalIpAddressAsync(),
                     IpAddressProvider.LoadInternalIpAddressAsync(),
                     PlayerDataProvider.LoadAsync(),
+                    SoftwareUpdateProvider.CheckForUpdatesAsync(false),
                 };
 
                 await Task.WhenAll(tasks);
@@ -162,8 +178,84 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         [RelayCommand]
         private void CheckForUpdates()
         {
-            // Software update check is wired up in a later step (Phase 2 step 8).
-            Logger.Information("Update check not yet implemented in the Avalonia client");
+            _ = SoftwareUpdateProvider.CheckForUpdatesAsync(true);
+        }
+
+        private void OnUpdateCheckTick(object? state)
+        {
+            _ = SoftwareUpdateProvider.CheckForUpdatesAsync(false);
+        }
+
+        private void OnUpdateCheckStarted(object? sender, EventArgs e)
+        {
+            Dispatcher.UIThread.Post(() => UpdateStatusText = "Checking for updates...");
+        }
+
+        private void OnUpdateCheckFinished(object? sender, SoftwareUpdateEventArgs e)
+        {
+            Dispatcher.UIThread.Post(() => HandleUpdateCheckFinished(e));
+        }
+
+        private void HandleUpdateCheckFinished(SoftwareUpdateEventArgs e)
+        {
+            string message;
+            bool offerDownload = false;
+
+            if (!e.IsSuccessful)
+            {
+                var exception = e.Exception?.GetPrimaryException();
+                UpdateStatusText = "Update check failed";
+                message = $"Update check failed: {exception?.Message}";
+            }
+            else
+            {
+                var result = AssemblyHelper.CompareVersion(e.LatestVersion);
+
+                if (result > 0)
+                {
+                    UpdateStatusText = $"Update available ({e.LatestVersion})";
+                    message = $"A newer version of ValheimServerGUI is available ({e.LatestVersion}).";
+                    offerDownload = true;
+                }
+                else if (result == 0)
+                {
+                    UpdateStatusText = $"Up to date ({e.LatestVersion})";
+                    message = "You are running the latest version of ValheimServerGUI.";
+                }
+                else if (result < 0)
+                {
+                    UpdateStatusText = $"Pre-release build ({AssemblyHelper.GetApplicationVersion()})";
+                    message = $"You are running a pre-release build ({AssemblyHelper.GetApplicationVersion()}). " +
+                        $"The latest stable version is {e.LatestVersion}.";
+                }
+                else
+                {
+                    UpdateStatusText = "Unable to parse version";
+                    message = $"Update check failed: unable to parse version ({e.LatestVersion}).";
+                }
+            }
+
+            if (!e.IsManualCheck) return;
+
+            _ = ShowUpdateResultAsync(message, offerDownload);
+        }
+
+        private async Task ShowUpdateResultAsync(string message, bool offerDownload)
+        {
+            if (!offerDownload)
+            {
+                UserInteraction.ShowInfo("Check for Updates", message);
+                return;
+            }
+
+            var goToDownload = await UserInteraction.ConfirmAsync(
+                "Check for Updates",
+                $"{message}{Environment.NewLine}Would you like to go to the download page?");
+
+            if (goToDownload)
+            {
+                PlatformIntegration.OpenWebAddress(AppSettings.UrlUpdates);
+            }
         }
 
         [RelayCommand]
