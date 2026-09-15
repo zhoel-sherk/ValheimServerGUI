@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using ValheimServerGUI.Game;
+using ValheimServerGUI.Infrastructure;
 using ValheimServerGUI.Properties;
 using ValheimServerGUI.Tools;
 using ValheimServerGUI.Tools.Logging;
@@ -57,7 +58,7 @@ namespace ValheimServerGUI.Forms
             prefs.WriteApplicationLogsToFile = WriteLogFileField.Value;
             prefs.EnablePasswordValidation = PasswordValidationField.Value;
 
-            StartupHelper.ApplyStartupSetting(prefs.StartWithWindows, Logger);
+            new StartupHelper(Logger).ApplyStartupSetting(prefs.StartWithWindows, AppSettings.ApplicationName, Environment.ProcessPath);
 
             UserPrefsProvider.SavePreferences(prefs);
             Close();

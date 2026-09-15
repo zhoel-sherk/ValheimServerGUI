@@ -56,7 +56,14 @@ namespace ValheimServerGUI.Avalonia
 
                     // Kick off the initial async load (IP addresses, player cache) once the window is shown.
                     mainWindow.Opened += (_, _) =>
+                    {
+                        if (_serviceProvider.GetRequiredService<IUserPreferencesProvider>().LoadPreferences().StartMinimized)
+                        {
+                            mainWindow.Hide();
+                        }
+
                         _ = _serviceProvider.GetRequiredService<ViewModels.ShellViewModel>().LoadCommand.ExecuteAsync(null);
+                    };
                 }
                 catch (Exception e)
                 {

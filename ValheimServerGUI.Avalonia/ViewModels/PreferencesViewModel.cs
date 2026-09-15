@@ -2,6 +2,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using ValheimServerGUI.Game;
+using ValheimServerGUI.Infrastructure;
+using ValheimServerGUI.Tools;
 using ValheimServerGUI.Tools.Logging;
 
 namespace ValheimServerGUI.Avalonia.ViewModels
@@ -12,6 +14,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
     public partial class PreferencesViewModel : ObservableObject
     {
         private readonly IUserPreferencesProvider UserPrefsProvider;
+        private readonly IStartupHelper StartupHelper;
         private readonly IApplicationLogger Logger;
 
         [ObservableProperty]
@@ -32,9 +35,10 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         [ObservableProperty]
         private bool _enablePasswordValidation;
 
-        public PreferencesViewModel(IUserPreferencesProvider userPrefsProvider, IApplicationLogger logger)
+        public PreferencesViewModel(IUserPreferencesProvider userPrefsProvider, IStartupHelper startupHelper, IApplicationLogger logger)
         {
             UserPrefsProvider = userPrefsProvider;
+            StartupHelper = startupHelper;
             Logger = logger;
 
             var prefs = UserPrefsProvider.LoadPreferences();
@@ -72,6 +76,16 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             prefs.EnablePasswordValidation = EnablePasswordValidation;
 
             UserPrefsProvider.SavePreferences(prefs);
+
+            ApplyStartWithWindows();
+        }
+
+        private void ApplyStartWithWindows()
+        {
+            var exePath = Environment.ProcessPath;
+            if (string.IsNullOrWhiteSpace(exePath)) return;
+
+            StartupHelper.ApplyStartupSetting(StartWithWindows, AppSettings.ApplicationName, exePath);
         }
     }
 }

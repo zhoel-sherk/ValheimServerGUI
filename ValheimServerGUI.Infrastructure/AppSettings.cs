@@ -20,6 +20,7 @@ namespace ValheimServerGUI.Infrastructure
         public const string UserPrefsFilePathV2 = "%USERPROFILE%\\AppData\\LocalLow\\Runeberry\\ValheimServerGUI\\userprefs.json";
 
         // Defaults
+        public const string ApplicationName = "ValheimServerGUI";
         public const string DefaultBackupCount = "4";
         public const string DefaultBackupIntervalLong = "43200";
         public const string DefaultBackupIntervalShort = "7200";

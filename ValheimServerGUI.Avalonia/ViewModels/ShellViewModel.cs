@@ -35,6 +35,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private readonly IUserInteraction UserInteraction;
         private readonly ISoftwareUpdateProvider SoftwareUpdateProvider;
         private readonly IPlatformIntegration PlatformIntegration;
+        private readonly IStartupArgsProvider StartupArgs;
         private readonly IApplicationLogger Logger;
         private readonly IServiceProvider ServiceProvider;
 
@@ -97,6 +98,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             IUserInteraction userInteraction,
             ISoftwareUpdateProvider softwareUpdateProvider,
             IPlatformIntegration platformIntegration,
+            IStartupArgsProvider startupArgs,
             IApplicationLogger logger,
             ServerControlsViewModel serverControls,
             PlayersViewModel players,
@@ -112,6 +114,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             UserInteraction = userInteraction;
             SoftwareUpdateProvider = softwareUpdateProvider;
             PlatformIntegration = platformIntegration;
+            StartupArgs = startupArgs;
             Logger = logger;
             ServerControls = serverControls;
             Players = players;
@@ -136,14 +139,27 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
         private void LoadProfiles()
         {
-            foreach (var profile in ServerPrefsProvider.LoadPreferences().OrderByDescending(p => p.LastSaved))
+            var prefs = ServerPrefsProvider.LoadPreferences()
+                .OrderByDescending(p => p.LastSaved)
+                .ToList();
+
+            foreach (var profile in prefs)
             {
                 Profiles.Add(profile.ProfileName);
             }
 
-            SelectedProfile = Profiles.FirstOrDefault();
+            // Prefer an explicit CLI profile, then the first auto-start profile, then the most recent.
+            var startupProfile = StartupArgs?.ServerProfileName;
+            var selected = prefs.FirstOrDefault(p => p.ProfileName == startupProfile)
+                ?? prefs.FirstOrDefault(p => p.AutoStart)
+                ?? prefs.FirstOrDefault();
+
+            StartServerOnLoad = selected?.AutoStart == true;
+            SelectedProfile = selected?.ProfileName;
             // OnSelectedProfileChanged fires on assignment and calls SelectProfile.
         }
+
+        private bool StartServerOnLoad;
 
         partial void OnSelectedProfileChanged(string? value)
         {
@@ -176,6 +192,13 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                 };
 
                 await Task.WhenAll(tasks);
+
+                if (StartServerOnLoad)
+                {
+                    StartServerOnLoad = false;
+                    Logger.Information("Auto-starting server profile {profile}", SelectedProfile);
+                    ServerControls.StartCommand.Execute(null);
+                }
             }
             catch (Exception e)
             {

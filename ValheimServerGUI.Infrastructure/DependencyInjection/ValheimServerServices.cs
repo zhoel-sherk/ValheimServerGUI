@@ -42,6 +42,7 @@ namespace ValheimServerGUI.Infrastructure.DependencyInjection
                 .AddSingleton<IGitHubClient, GitHubClient>()
                 .AddSingleton<ISoftwareUpdateProvider, SoftwareUpdateProvider>()
                 .AddSingleton<IPlatformIntegration, WindowsPlatformIntegration>()
+                .AddSingleton<IStartupHelper, StartupHelper>()
                 .AddSingleton<ISteamCloudWorldProvider, SteamCloudWorldProvider>()
                 .AddSingleton<IPortForwarder, UpnpPortForwarder>()
                 .AddSingleton<IRuneberryApiClient, RuneberryApiClient>();
