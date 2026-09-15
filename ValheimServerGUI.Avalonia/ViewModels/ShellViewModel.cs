@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ValheimServerGUI.Avalonia.Views;
+using ValheimServerGUI.Core.Platform;
 using ValheimServerGUI.Game;
 using ValheimServerGUI.Tools;
 using ValheimServerGUI.Tools.Logging;
@@ -29,6 +30,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private readonly ValheimServer Server;
         private readonly IIpAddressProvider IpAddressProvider;
         private readonly IPlayerDataRepository PlayerDataProvider;
+        private readonly IUserInteraction UserInteraction;
         private readonly IApplicationLogger Logger;
         private readonly IServiceProvider ServiceProvider;
 
@@ -73,6 +75,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             ValheimServer server,
             IIpAddressProvider ipAddressProvider,
             IPlayerDataRepository playerDataProvider,
+            IUserInteraction userInteraction,
             IApplicationLogger logger,
             ServerControlsViewModel serverControls,
             PlayersViewModel players,
@@ -85,6 +88,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             Server = server;
             IpAddressProvider = ipAddressProvider;
             PlayerDataProvider = playerDataProvider;
+            UserInteraction = userInteraction;
             Logger = logger;
             ServerControls = serverControls;
             Players = players;
@@ -184,6 +188,27 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private void ShowPortForwarding()
         {
             ShowDialog(() => ServiceProvider.GetRequiredService<PortForwardingWindow>(), () => ServiceProvider.GetRequiredService<PortForwardingViewModel>());
+        }
+
+        [RelayCommand]
+        private void OpenWorldSettings()
+        {
+            var worldName = ServerControls.IsNewWorld ? ServerControls.NewWorldName : ServerControls.ExistingWorldName;
+
+            if (string.IsNullOrWhiteSpace(worldName))
+            {
+                UserInteraction.ShowError(
+                    "World Settings",
+                    ServerControls.IsNewWorld
+                        ? "Enter a new world name before changing difficulty settings."
+                        : "Select a world before changing difficulty settings.");
+                return;
+            }
+
+            var viewModel = ServiceProvider.GetRequiredService<WorldSettingsViewModel>();
+            viewModel.Load(worldName);
+
+            ShowDialog(() => ServiceProvider.GetRequiredService<WorldSettingsWindow>(), () => viewModel);
         }
 
         private void ShowDialog(Func<Window> windowFactory, Func<object> viewModelFactory)

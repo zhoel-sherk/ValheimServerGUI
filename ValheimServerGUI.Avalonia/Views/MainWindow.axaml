@@ -82,6 +82,7 @@
                       <RadioButton Content="New World" GroupName="WorldSelect" IsChecked="{Binding ServerControls.IsNewWorld}" IsEnabled="{Binding ServerControls.CanEdit}"/>
                       <RadioButton Content="Existing World" GroupName="WorldSelect" IsChecked="{Binding ServerControls.IsNewWorld, Converter={StaticResource NegateBool}}" IsEnabled="{Binding ServerControls.CanEdit}"/>
                       <Button Content="Refresh" Command="{Binding ServerControls.RefreshWorldsCommand}"/>
+                      <Button Content="Difficulty..." Command="{Binding OpenWorldSettingsCommand}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                       <TextBox Text="{Binding ServerControls.NewWorldName}" IsVisible="{Binding ServerControls.IsNewWorld}" Width="220" IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Enter new world name"/>

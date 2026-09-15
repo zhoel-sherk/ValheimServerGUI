@@ -216,12 +216,14 @@ namespace ValheimServerGUI.Avalonia
                 .AddSingleton<ViewModels.AboutViewModel>()
                 .AddTransient<ViewModels.DiscordSettingsViewModel>()
                 .AddTransient<ViewModels.PortForwardingViewModel>()
+                .AddTransient<ViewModels.WorldSettingsViewModel>()
                 .AddSingleton<ViewModels.ShellViewModel>()
                 .AddSingleton<MainWindow>()
                 .AddTransient<PreferencesWindow>()
                 .AddTransient<AboutWindow>()
                 .AddTransient<DiscordSettingsWindow>()
-                .AddTransient<PortForwardingWindow>();
+                .AddTransient<PortForwardingWindow>()
+                .AddTransient<WorldSettingsWindow>();
 
             return services.BuildServiceProvider();
         }
