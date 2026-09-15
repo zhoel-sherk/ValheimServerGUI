@@ -37,6 +37,7 @@ Key files:
 - `ValheimServerGUI.Core/Processes/ServerProcess.cs` — platform-neutral process contract (`IServerProcess`, `IServerProcessFactory`)
 - `ValheimServerGUI.Core/Logging/*` — Core logging contracts (`IApplicationLog`, `IServerLogger`, `IServerLoggerFactory`)
 - `ValheimServerGUI.Core/Platform/IPlatformIntegration.cs` — open directory/file/URL contract (local impl: `WindowsPlatformIntegration` in Infrastructure)
+- `ValheimServerGUI.Core/Network/IPortForwarder.cs` + `ValheimServerGUI.Infrastructure/Network/UpnpPortForwarder.cs` — UPnP/NAT-PMP port forwarding (Mono.Nat); `ValheimPorts` knows the 3 adjacent UDP ports
 - `ValheimServerGUI.Infrastructure/Game/SteamCloudWorldProvider.cs` — Steam Cloud world discovery + import (Move/Copy) into `worlds_local`
 - `ValheimServerGUI.Infrastructure/Tools/DiscordWebhookClient.cs` — Discord webhook sender (System.Text.Json)
 - `ValheimServerGUI.Infrastructure/Game/Mods/BepInExManager.cs` — BepInEx install/status + plugins/config/log paths & config listing
@@ -157,3 +158,7 @@ non-ASCII character names. Do not remove those encoding settings.
 - Avalonia client uses a Valheim "Mistlands Tech" dark theme (`App.axaml`: Fluent resource
   overrides + palette brushes; `Services/WindowsTheme.cs`: dark DWM title bar). Keep new UI on the
   `Vsg*` palette brushes rather than hard-coded colors.
+- Port forwarding is manual only (a "Ports" dialog, like UPnP Wizard): UPnP/NAT-PMP via Mono.Nat
+  (`IPortForwarder`), mapping UDP `base..base+2`. Nothing is mapped automatically on server start;
+  only the router is touched (no Windows Firewall changes). UPnP is often disabled on routers, and
+  CGNAT/double NAT is detected via `ValheimPorts.IsPrivateAddress`.

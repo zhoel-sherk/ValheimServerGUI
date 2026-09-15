@@ -11,11 +11,13 @@ using System.Threading.Tasks;
 using ValheimServerGUI.Avalonia.Services;
 using ValheimServerGUI.Avalonia.Views;
 using ValheimServerGUI.Core.Logging;
+using ValheimServerGUI.Core.Network;
 using ValheimServerGUI.Core.Platform;
 using ValheimServerGUI.Core.Processes;
 using ValheimServerGUI.Game;
 using ValheimServerGUI.Game.Mods;
 using ValheimServerGUI.Infrastructure.Diagnostics;
+using ValheimServerGUI.Infrastructure.Network;
 using ValheimServerGUI.Tools;
 using ValheimServerGUI.Tools.Data;
 using ValheimServerGUI.Tools.Http;
@@ -216,6 +218,7 @@ namespace ValheimServerGUI.Avalonia
                 .AddSingleton<IPlatformIntegration, WindowsPlatformIntegration>()
                 .AddSingleton<ISteamCloudWorldProvider, SteamCloudWorldProvider>()
                 .AddSingleton<IRuneberryApiClient, RuneberryApiClient>()
+                .AddSingleton<IPortForwarder, UpnpPortForwarder>()
                 .AddSingleton<Services.DiscordStatusService>();
 
             // Mods & backups
@@ -243,11 +246,13 @@ namespace ValheimServerGUI.Avalonia
                 .AddSingleton<ViewModels.PreferencesViewModel>()
                 .AddSingleton<ViewModels.AboutViewModel>()
                 .AddTransient<ViewModels.DiscordSettingsViewModel>()
+                .AddTransient<ViewModels.PortForwardingViewModel>()
                 .AddSingleton<ViewModels.ShellViewModel>()
                 .AddSingleton<MainWindow>()
                 .AddTransient<PreferencesWindow>()
                 .AddTransient<AboutWindow>()
-                .AddTransient<DiscordSettingsWindow>();
+                .AddTransient<DiscordSettingsWindow>()
+                .AddTransient<PortForwardingWindow>();
 
             return services.BuildServiceProvider();
         }

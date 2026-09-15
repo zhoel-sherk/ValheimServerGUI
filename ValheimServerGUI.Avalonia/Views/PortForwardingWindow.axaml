@@ -1,0 +1,67 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ValheimServerGUI.Avalonia.ViewModels"
+        xmlns:conv="using:ValheimServerGUI.Avalonia.Converters"
+        x:Class="ValheimServerGUI.Avalonia.Views.PortForwardingWindow"
+        x:DataType="vm:PortForwardingViewModel"
+        Title="Port Forwarding (UPnP)"
+        Width="600" Height="520"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+
+  <Window.Resources>
+    <conv:MappedToBrushConverter x:Key="MappedToBrush"/>
+  </Window.Resources>
+
+  <StackPanel Margin="16" Spacing="12">
+    <TextBlock TextWrapping="Wrap"
+               Text="Forward the server's UDP ports on your router automatically using UPnP or NAT-PMP. UPnP must be enabled on the router. This opens ports to the internet."/>
+
+    <Border Padding="12" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
+      <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="6" ColumnSpacing="8">
+        <TextBlock Text="Status:" VerticalAlignment="Center"/>
+        <TextBlock Grid.Column="1" Text="{Binding StatusText}" FontWeight="SemiBold"/>
+
+        <TextBlock Grid.Row="1" Text="Gateway:" VerticalAlignment="Center"/>
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GatewayText, FallbackValue='—'}"/>
+
+        <TextBlock Grid.Row="2" Text="External IP:" VerticalAlignment="Center"/>
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ExternalIpText, FallbackValue='—'}"/>
+      </Grid>
+    </Border>
+
+    <Border Padding="12" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}"
+            IsVisible="{Binding ShowPrivateAddressWarning}">
+      <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource VsgWarningBrush}"
+                 Text="The external address is private (CGNAT / double NAT). Port forwarding will not make the server reachable from the internet — contact your ISP or use a different connection."/>
+    </Border>
+
+    <StackPanel Spacing="6">
+      <TextBlock Text="{Binding BasePort, StringFormat='Ports for base port {0} (UDP):'}"/>
+      <ListBox ItemsSource="{Binding Ports}" MinHeight="120">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:PortRowViewModel">
+            <Grid ColumnDefinitions="80,80,*">
+              <TextBlock Text="{Binding Protocol}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Text="{Binding Port}" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="2" Text="{Binding StatusText}" VerticalAlignment="Center"
+                         Foreground="{Binding IsMapped, Converter={StaticResource MappedToBrush}}"/>
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </StackPanel>
+
+    <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource VsgDangerBrush}"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static ObjectConverters.IsNotNull}}"
+               Text="{Binding ErrorMessage}"/>
+
+    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+      <Button Content="Discover" Command="{Binding DiscoverCommand}" IsEnabled="{Binding !IsBusy}" MinWidth="90"/>
+      <Button Content="Map ports" Command="{Binding MapCommand}" IsEnabled="{Binding !IsBusy}" MinWidth="90"/>
+      <Button Content="Remove ports" Command="{Binding RemoveCommand}" IsEnabled="{Binding !IsBusy}" MinWidth="100"/>
+      <Button Content="Close" IsCancel="True" MinWidth="80"/>
+    </StackPanel>
+  </StackPanel>
+</Window>

@@ -180,6 +180,12 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             ShowDialog(() => ServiceProvider.GetRequiredService<DiscordSettingsWindow>(), () => ServiceProvider.GetRequiredService<DiscordSettingsViewModel>());
         }
 
+        [RelayCommand]
+        private void ShowPortForwarding()
+        {
+            ShowDialog(() => ServiceProvider.GetRequiredService<PortForwardingWindow>(), () => ServiceProvider.GetRequiredService<PortForwardingViewModel>());
+        }
+
         private void ShowDialog(Func<Window> windowFactory, Func<object> viewModelFactory)
         {
             try

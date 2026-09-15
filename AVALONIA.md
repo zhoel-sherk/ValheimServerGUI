@@ -221,6 +221,10 @@ preserved for a smooth move.
   text `#E2E8F0`, purple accent `#9333EA`, cyan success `#06B6D4`) applied as Fluent resource
   overrides plus a Windows dark DWM title bar. Server status uses the palette (cyan Running,
   amber transitional, muted Stopped).
+- **UPnP port forwarding** (`IPortForwarder` in Core, `UpnpPortForwarder` in Infrastructure using
+  Mono.Nat 3.0.4): a manual "Ports" dialog discovers the gateway and maps/removes the three
+  adjacent UDP ports the server needs. Manual only (nothing auto-mapped), router-only (no firewall
+  changes), with CGNAT/double-NAT detection via `ValheimPorts.IsPrivateAddress`.
 
 ## Target architecture
 

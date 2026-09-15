@@ -18,7 +18,7 @@
   <DockPanel>
     <!-- Top bar: profile selection, status, actions -->
     <Border DockPanel.Dock="Top" Padding="12,8" Background="{DynamicResource VsgPanelBrush}">
-      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8">
         <TextBlock Text="Profile:" VerticalAlignment="Center"/>
         <ComboBox Grid.Column="1"
                   ItemsSource="{Binding Profiles}"
@@ -34,9 +34,10 @@
         <Button Grid.Column="5" Content="Restart" Command="{Binding ServerControls.RestartCommand}" MinWidth="80"/>
         <Button Grid.Column="6" Content="Stop" Command="{Binding ServerControls.StopCommand}" MinWidth="80"/>
 
-        <Button Grid.Column="7" Content="Discord" Command="{Binding ShowDiscordCommand}"/>
-        <Button Grid.Column="8" Content="Preferences" Command="{Binding ShowPreferencesCommand}"/>
-        <Button Grid.Column="9" Content="About" Command="{Binding ShowAboutCommand}"/>
+        <Button Grid.Column="7" Content="Ports" Command="{Binding ShowPortForwardingCommand}"/>
+        <Button Grid.Column="8" Content="Discord" Command="{Binding ShowDiscordCommand}"/>
+        <Button Grid.Column="9" Content="Preferences" Command="{Binding ShowPreferencesCommand}"/>
+        <Button Grid.Column="10" Content="About" Command="{Binding ShowAboutCommand}"/>
       </Grid>
     </Border>
 
