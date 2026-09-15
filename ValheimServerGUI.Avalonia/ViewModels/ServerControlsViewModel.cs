@@ -31,6 +31,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private readonly IIpAddressProvider IpAddressProvider;
         private readonly ISteamCloudWorldProvider SteamCloudWorlds;
         private readonly IUserInteraction UserInteraction;
+        private readonly IServerLogStream ServerLogStream;
         private readonly IApplicationLogger Logger;
 
         private bool IsLoadingState;
@@ -105,6 +106,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             IIpAddressProvider ipAddressProvider,
             ISteamCloudWorldProvider steamCloudWorldProvider,
             IUserInteraction userInteraction,
+            IServerLogStream serverLogStream,
             IApplicationLogger logger)
         {
             Server = server;
@@ -114,6 +116,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             IpAddressProvider = ipAddressProvider;
             SteamCloudWorlds = steamCloudWorldProvider;
             UserInteraction = userInteraction;
+            ServerLogStream = serverLogStream;
             Logger = logger;
 
             Server.StatusChanged += OnServerStatusChanged;
@@ -177,6 +180,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                 ServerExePath = !string.IsNullOrWhiteSpace(ServerExePath) ? ServerExePath : userPrefs.ServerExePath,
                 SaveDataFolderPath = !string.IsNullOrWhiteSpace(SaveDataFolderPath) ? SaveDataFolderPath : userPrefs.SaveDataFolderPath,
                 LogToFile = WriteServerLogsToFile,
+                LogMessageHandler = ServerLogStream.Add,
             };
 
             var worldNameForPrefs = options.WorldName;

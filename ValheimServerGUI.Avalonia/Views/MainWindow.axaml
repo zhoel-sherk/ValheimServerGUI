@@ -250,16 +250,22 @@
 
       <!-- Logs -->
       <TabItem Header="Logs">
-        <Grid RowDefinitions="*,Auto" Margin="8">
-          <ListBox Grid.Row="0" ItemsSource="{Binding Logs.LogEntries}" FontFamily="Consolas" FontSize="12">
+        <Grid RowDefinitions="Auto,*,Auto" Margin="8" RowSpacing="8">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="View:" VerticalAlignment="Center"/>
+            <ComboBox ItemsSource="{Binding Logs.Views}" SelectedItem="{Binding Logs.SelectedView}" MinWidth="140"/>
+          </StackPanel>
+          <ListBox Grid.Row="1" ItemsSource="{Binding Logs.LogEntries}" FontFamily="Consolas" FontSize="12">
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="sys:String">
                 <TextBlock Text="{Binding}"/>
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
-          <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
-            <Button Content="Clear Logs" Command="{Binding Logs.ClearCommand}"/>
+          <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+            <Button Content="Clear" Command="{Binding Logs.ClearCommand}"/>
+            <Button Content="Save..." Command="{Binding Logs.SaveCommand}"/>
+            <Button Content="Open logs folder" Command="{Binding Logs.OpenLogsFolderCommand}"/>
           </StackPanel>
         </Grid>
       </TabItem>

@@ -3,8 +3,11 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using ValheimServerGUI.Core.Platform;
 
@@ -34,6 +37,60 @@ namespace ValheimServerGUI.Avalonia.Services
         public Task<string?> ChooseAsync(string title, string message, IReadOnlyList<string> options, string? defaultOption = null)
         {
             return ShowChoiceDialogAsync(title, message, options, defaultOption);
+        }
+
+        public async Task<string?> PickFileAsync(string title, string filterName, IReadOnlyList<string> extensions)
+        {
+            var owner = GetMainWindow();
+            if (owner == null) return null;
+
+            try
+            {
+                var types = new List<FilePickerFileType>
+                {
+                    new(filterName) { Patterns = extensions.Select(e => "*" + e).ToList() },
+                };
+
+                var files = await owner.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+                {
+                    Title = title,
+                    AllowMultiple = false,
+                    FileTypeFilter = types,
+                });
+
+                return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<string?> SaveTextFileAsync(string title, string suggestedFileName, string content)
+        {
+            var owner = GetMainWindow();
+            if (owner == null) return null;
+
+            try
+            {
+                var file = await owner.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+                {
+                    Title = title,
+                    SuggestedFileName = suggestedFileName,
+                    DefaultExtension = "txt",
+                    FileTypeChoices = new[] { new FilePickerFileType("Text Files") { Patterns = new[] { "*.txt" } } },
+                });
+
+                var path = file?.TryGetLocalPath();
+                if (string.IsNullOrWhiteSpace(path)) return null;
+
+                await File.WriteAllTextAsync(path, content);
+                return path;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private static async Task<string?> ShowChoiceDialogAsync(string title, string message, IReadOnlyList<string> options, string? defaultOption)

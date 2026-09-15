@@ -35,6 +35,7 @@ namespace ValheimServerGUI.Infrastructure.DependencyInjection
                 .AddSingleton<IApplicationLogger>(sp => sp.GetRequiredService<ApplicationLogger>())
                 .AddSingleton<IApplicationLog>(sp => sp.GetRequiredService<ApplicationLogger>())
                 .AddSingleton<IServerLoggerFactory, ValheimServerLoggerFactory>()
+                .AddSingleton<IServerLogStream, ServerLogStream>()
                 .AddSingleton<IHttpClientProvider, HttpClientProvider>()
                 .AddSingleton<IRestClientContext, RestClientContext>()
                 .AddSingleton<IIpAddressProvider, IpAddressProvider>()
