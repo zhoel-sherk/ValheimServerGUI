@@ -393,6 +393,22 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         }
 
         [RelayCommand]
+        private void OpenPlayerDetails()
+        {
+            var playerKey = Players.SelectedPlayer?.PlayerKey;
+            if (string.IsNullOrWhiteSpace(playerKey))
+            {
+                UserInteraction.ShowError("Player Details", "Select a player first.");
+                return;
+            }
+
+            var viewModel = ServiceProvider.GetRequiredService<PlayerDetailsViewModel>();
+            viewModel.Load(playerKey);
+
+            ShowDialog(() => ServiceProvider.GetRequiredService<PlayerDetailsWindow>(), () => viewModel);
+        }
+
+        [RelayCommand]
         private void OpenManual()
         {
             PlatformIntegration.OpenWebAddress(AppSettings.UrlHelp);

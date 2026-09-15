@@ -20,6 +20,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         public string DisplayName => GetPlayerDisplayName(Player);
         public string Platform => Player.Platform;
         public string PlayerId => Player.PlayerId;
+        public string PlayerKey => Player.Key;
         public string Status => Player.PlayerStatus.ToString();
         public string LastUpdated => new TimeAgo(Player.LastStatusChange).ToString();
 

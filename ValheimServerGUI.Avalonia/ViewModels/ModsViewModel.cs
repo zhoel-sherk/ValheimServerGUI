@@ -25,6 +25,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private readonly IBackupService BackupService;
         private readonly ServerControlsViewModel ServerControls;
         private readonly IPlatformIntegration PlatformIntegration;
+        private readonly IUserInteraction UserInteraction;
         private readonly IApplicationLogger Logger;
 
         public ObservableCollection<BackupRowViewModel> Backups { get; } = new();
@@ -33,6 +34,9 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
         [ObservableProperty]
         private ModConfigFileViewModel? _selectedConfigFile;
+
+        [ObservableProperty]
+        private BackupRowViewModel? _selectedBackup;
 
         [ObservableProperty]
         private string? _bepInExStatus;
@@ -52,6 +56,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             IBackupService backupService,
             ServerControlsViewModel serverControls,
             IPlatformIntegration platformIntegration,
+            IUserInteraction userInteraction,
             IApplicationLogger logger)
         {
             BepInExManager = bepInExManager;
@@ -59,6 +64,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             BackupService = backupService;
             ServerControls = serverControls;
             PlatformIntegration = platformIntegration;
+            UserInteraction = userInteraction;
             Logger = logger;
 
             // Refresh only when the paths that determine the server/mods folder change.
@@ -230,6 +236,98 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                 setStatus: s => ValheimPlusStatus = s);
         }
 
+        [RelayCommand]
+        private async Task InstallBepInExFromFileAsync()
+        {
+            var archivePath = await UserInteraction.PickFileAsync("Select a BepInEx archive", "Archives", new[] { ".zip", ".dll" });
+            if (archivePath == null) return;
+
+            await RunModOperationAsync(
+                "Installing BepInEx...",
+                (folder, onProgress) => BepInExManager.InstallFromFileAsync(folder, archivePath, onProgress),
+                "BepInEx install failed: {message}",
+                setStatus: s => BepInExStatus = s);
+        }
+
+        [RelayCommand]
+        private async Task InstallValheimPlusFromFileAsync()
+        {
+            var archivePath = await UserInteraction.PickFileAsync("Select a Valheim Plus archive", "Archives", new[] { ".zip", ".dll" });
+            if (archivePath == null) return;
+
+            await RunModOperationAsync(
+                "Installing Valheim Plus...",
+                (folder, onProgress) => ValheimPlusManager.InstallFromFileAsync(folder, archivePath, onProgress),
+                "Valheim Plus install failed: {message}",
+                setStatus: s => ValheimPlusStatus = s);
+        }
+
+        [RelayCommand]
+        private Task CheckBepInExUpdateAsync()
+        {
+            return RunModCheckAsync(
+                folder => BepInExManager.CheckForUpdateAsync(folder),
+                "BepInEx",
+                status => BepInExStatus = status);
+        }
+
+        [RelayCommand]
+        private Task CheckValheimPlusUpdateAsync()
+        {
+            return RunModCheckAsync(
+                folder => ValheimPlusManager.CheckForUpdateAsync(folder),
+                "Valheim Plus",
+                status => ValheimPlusStatus = status);
+        }
+
+        private async Task RunModCheckAsync(Func<string, Task<ModStatus>> operation, string name, Action<string> setStatus)
+        {
+            if (IsBusy) return;
+
+            var serverFolder = GetServerFolder();
+            if (string.IsNullOrWhiteSpace(serverFolder) || !Directory.Exists(serverFolder))
+            {
+                setStatus("Server folder not available");
+                return;
+            }
+
+            IsBusy = true;
+            try
+            {
+                var status = await operation(serverFolder);
+                setStatus(FormatModStatus(name, status));
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Failed to check {name} for updates", name);
+                setStatus($"Error: {e.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private void OpenBackupsFolder()
+        {
+            try
+            {
+                PlatformIntegration.OpenDirectory(ServerControls.BuildOptions().GetValidatedSaveDataFolder().FullName);
+            }
+            catch (Exception e)
+            {
+                Logger.Error("Unable to open the backups folder: {message}", e.Message);
+            }
+        }
+
+        [RelayCommand]
+        private void OpenSelectedBackup()
+        {
+            if (SelectedBackup == null) return;
+            PlatformIntegration.OpenDirectory(SelectedBackup.FullPath);
+        }
+
         private async Task RunModOperationAsync(
             string progressMessage,
             Func<string, Action<string>, Task<ModStatus>> operation,
@@ -283,6 +381,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         public string Name => Backup.Name;
         public string Date => Backup.Timestamp.ToString("yyyy-MM-dd HH:mm:ss");
         public string Size => FormatSize(Backup.SizeBytes);
+        public string FullPath => Backup.FullPath;
 
         public BackupRowViewModel(BackupInfo backup)
         {

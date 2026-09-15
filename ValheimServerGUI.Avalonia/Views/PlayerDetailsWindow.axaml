@@ -1,0 +1,63 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ValheimServerGUI.Avalonia.ViewModels"
+        xmlns:sys="using:System"
+        x:Class="ValheimServerGUI.Avalonia.Views.PlayerDetailsWindow"
+        x:DataType="vm:PlayerDetailsViewModel"
+        Title="Player Details"
+        Width="520" Height="520"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+
+  <DockPanel Margin="16">
+    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+      <Button Content="Refresh" Command="{Binding RefreshCommand}" MinWidth="90"/>
+      <Button Content="Cancel" IsCancel="True" MinWidth="80"/>
+      <Button Content="Save" Command="{Binding SaveCommand}" IsDefault="True" MinWidth="80" Click="OnSaveClick"/>
+    </StackPanel>
+
+    <StackPanel Spacing="12">
+      <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="6" ColumnSpacing="8">
+        <TextBlock Text="Platform:" VerticalAlignment="Center"/>
+        <TextBlock Grid.Column="1" Text="{Binding Platform}" VerticalAlignment="Center"/>
+
+        <TextBlock Grid.Row="1" Text="Player ID:" VerticalAlignment="Center"/>
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding PlayerId}" VerticalAlignment="Center"/>
+
+        <TextBlock Grid.Row="2" Text="Name:" VerticalAlignment="Center"/>
+        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding PlayerName}" PlaceholderText="Player name"/>
+
+        <TextBlock Grid.Row="3" Text="ZDO ID:" VerticalAlignment="Center"/>
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ZdoId}" VerticalAlignment="Center"/>
+
+        <TextBlock Grid.Row="4" Text="Current character:" VerticalAlignment="Center"/>
+        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding CurrentCharacter}" VerticalAlignment="Center"/>
+
+        <TextBlock Grid.Row="5" Text="Status:" VerticalAlignment="Center"/>
+        <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" Spacing="12">
+          <TextBlock Text="{Binding Status}" VerticalAlignment="Center"/>
+          <TextBlock Text="{Binding LastUpdated}" VerticalAlignment="Center" Foreground="{DynamicResource VsgMutedTextBrush}"/>
+        </StackPanel>
+      </Grid>
+
+      <TextBlock Text="Characters" FontWeight="SemiBold"/>
+      <Border Padding="12" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
+        <Grid ColumnDefinitions="*,Auto" RowDefinitions="*,Auto" RowSpacing="8" ColumnSpacing="8">
+          <ListBox ItemsSource="{Binding Characters}" SelectedItem="{Binding SelectedCharacter}" MinHeight="140">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="sys:String">
+                <TextBlock Text="{Binding}"/>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Top">
+            <Button Content="Add..." Command="{Binding AddCharacterCommand}" MinWidth="90"/>
+            <Button Content="Edit..." Command="{Binding EditCharacterCommand}" MinWidth="90"/>
+            <Button Content="Remove" Command="{Binding RemoveCharacterCommand}" MinWidth="90"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+    </StackPanel>
+  </DockPanel>
+</Window>
