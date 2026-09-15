@@ -6,6 +6,8 @@ namespace ValheimServerGUI.Tools
 {
     /// <summary>
     /// Windows implementation of <see cref="IPlatformIntegration"/> using explorer.exe.
+    /// Every method is best-effort: a missing file/folder, an invalid path or a missing shell
+    /// handler must never crash the app.
     /// </summary>
     public class WindowsPlatformIntegration : IPlatformIntegration
     {
@@ -13,7 +15,14 @@ namespace ValheimServerGUI.Tools
         {
             if (string.IsNullOrWhiteSpace(path)) return;
 
-            path = Environment.ExpandEnvironmentVariables(path);
+            try
+            {
+                path = Environment.ExpandEnvironmentVariables(path);
+            }
+            catch
+            {
+                return;
+            }
 
             try
             {
@@ -34,29 +43,49 @@ namespace ValheimServerGUI.Tools
                 }
             }
 
-            Process.Start("explorer.exe", path);
+            TryStart("explorer.exe", path);
         }
 
         public void OpenWebAddress(string url)
         {
             if (string.IsNullOrWhiteSpace(url)) return;
-            Process.Start("explorer.exe", url);
+
+            TryStart("explorer.exe", url);
         }
 
         public void OpenFile(string path)
         {
             if (string.IsNullOrWhiteSpace(path)) return;
 
-            path = Environment.ExpandEnvironmentVariables(path);
-
             try
             {
-                // Use the OS shell so the file opens with its registered default application.
+                path = Environment.ExpandEnvironmentVariables(path);
+            }
+            catch
+            {
+                return;
+            }
+
+            // Use the OS shell so the file opens with its registered default application.
+            try
+            {
                 Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
             }
             catch
             {
                 // A missing file or no registered handler should never crash the app
+            }
+        }
+
+        private static void TryStart(string fileName, string arguments)
+        {
+            try
+            {
+                Process.Start(fileName, arguments);
+            }
+            catch
+            {
+                // A missing shell handler should never crash the app
             }
         }
     }

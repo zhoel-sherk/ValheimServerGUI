@@ -144,6 +144,11 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
                 await Task.WhenAll(tasks);
             }
+            catch (Exception e)
+            {
+                // Startup data (IP lookups, player cache) must never take down the shell.
+                Logger.Error(e, "Failed to load initial shell data");
+            }
             finally
             {
                 IsBusy = false;
@@ -160,25 +165,33 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         [RelayCommand]
         private void ShowPreferences()
         {
-            var window = ServiceProvider.GetRequiredService<PreferencesWindow>();
-            window.DataContext = ServiceProvider.GetRequiredService<PreferencesViewModel>();
-            window.ShowDialog(GetOwnerWindow());
+            ShowDialog(() => ServiceProvider.GetRequiredService<PreferencesWindow>(), () => ServiceProvider.GetRequiredService<PreferencesViewModel>());
         }
 
         [RelayCommand]
         private void ShowAbout()
         {
-            var window = ServiceProvider.GetRequiredService<AboutWindow>();
-            window.DataContext = ServiceProvider.GetRequiredService<AboutViewModel>();
-            window.ShowDialog(GetOwnerWindow());
+            ShowDialog(() => ServiceProvider.GetRequiredService<AboutWindow>(), () => ServiceProvider.GetRequiredService<AboutViewModel>());
         }
 
         [RelayCommand]
         private void ShowDiscord()
         {
-            var window = ServiceProvider.GetRequiredService<DiscordSettingsWindow>();
-            window.DataContext = ServiceProvider.GetRequiredService<DiscordSettingsViewModel>();
-            window.ShowDialog(GetOwnerWindow());
+            ShowDialog(() => ServiceProvider.GetRequiredService<DiscordSettingsWindow>(), () => ServiceProvider.GetRequiredService<DiscordSettingsViewModel>());
+        }
+
+        private void ShowDialog(Func<Window> windowFactory, Func<object> viewModelFactory)
+        {
+            try
+            {
+                var window = windowFactory();
+                window.DataContext = viewModelFactory();
+                window.ShowDialog(GetOwnerWindow());
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Failed to open dialog window");
+            }
         }
 
         private static Window GetOwnerWindow()

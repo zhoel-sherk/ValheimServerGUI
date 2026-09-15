@@ -30,14 +30,17 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
         private static string GetPlayerDisplayName(PlayerInfo player)
         {
-            var name = player.PlayerName ?? $"[...{player.PlayerId[^4..]}]";
+            var id = player.PlayerId ?? string.Empty;
+
+            // Guard short/empty ids: a naive [^4..] throws on ids shorter than 4 characters.
+            var name = player.PlayerName ?? (id.Length > 4 ? $"[...{id[^4..]}]" : id);
 
             if (!string.IsNullOrWhiteSpace(player.LastStatusCharacter))
             {
                 name += $" ({player.LastStatusCharacter})";
             }
 
-            return name;
+            return string.IsNullOrWhiteSpace(name) ? "Unknown player" : name;
         }
     }
 

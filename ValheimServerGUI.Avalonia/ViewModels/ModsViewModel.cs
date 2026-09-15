@@ -77,7 +77,17 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             var exePath = ServerControls.ServerExePath;
             if (string.IsNullOrWhiteSpace(exePath)) return null;
 
-            return Path.GetDirectoryName(Path.GetFullPath(exePath));
+            try
+            {
+                var expanded = Environment.ExpandEnvironmentVariables(exePath);
+                return Path.GetDirectoryName(Path.GetFullPath(expanded));
+            }
+            catch (Exception e)
+            {
+                // An invalid/partial path (e.g. while the user is typing) must never crash the tab.
+                Logger.Error("Invalid server executable path '{path}': {message}", exePath, e.Message);
+                return null;
+            }
         }
 
         [RelayCommand]
@@ -96,14 +106,23 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                 return;
             }
 
-            var bepInEx = BepInExManager.GetStatus(serverFolder);
-            BepInExStatus = FormatModStatus("BepInEx", bepInEx);
+            try
+            {
+                var bepInEx = BepInExManager.GetStatus(serverFolder);
+                BepInExStatus = FormatModStatus("BepInEx", bepInEx);
 
-            var valheimPlus = ValheimPlusManager.GetStatus(serverFolder);
-            ValheimPlusStatus = FormatModStatus("Valheim Plus", valheimPlus);
+                var valheimPlus = ValheimPlusManager.GetStatus(serverFolder);
+                ValheimPlusStatus = FormatModStatus("Valheim Plus", valheimPlus);
 
-            RefreshBackups(serverFolder);
-            RefreshConfigFiles(serverFolder);
+                RefreshBackups(serverFolder);
+                RefreshConfigFiles(serverFolder);
+            }
+            catch (Exception e)
+            {
+                Logger.Error("Error refreshing the mods tab: {message}", e.Message);
+                BepInExStatus = "Unable to read mod status";
+                ValheimPlusStatus = "Unable to read mod status";
+            }
         }
 
         private void RefreshConfigFiles(string serverFolder)
