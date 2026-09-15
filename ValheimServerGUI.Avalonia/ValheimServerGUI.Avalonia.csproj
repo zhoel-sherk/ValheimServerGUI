@@ -5,7 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>ValheimServerGUI.Avalonia</RootNamespace>
     <Nullable>enable</Nullable>
-    <Version>2.4.2-alpha</Version>
+    <Version>2.4.3-alpha</Version>
     <!-- Build date adapted from: https://rmauro.dev/add-build-time-to-your-csharp-assembly/ -->
     <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"))</SourceRevisionId>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>

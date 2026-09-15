@@ -12,12 +12,12 @@
 
 <table width="100%" align="center">
   <tr>
-    <td><a href="img/Screenshot-ServerControls.png"><img src="img/Screenshot-ServerControls.png"></a></td>
-    <td><a href="img/Screenshot-AdvancedControls.png"><img src="img/Screenshot-AdvancedControls.png"></a></td>
+    <td align="center"><a href="img/Screenshot-Server.png"><img src="img/Screenshot-Server.png" alt="Управление сервером"></a><br/>Сервер</td>
+    <td align="center"><a href="img/Screenshot-Players.png"><img src="img/Screenshot-Players.png" alt="Игроки"></a><br/>Игроки</td>
   </tr>
   <tr>
-    <td><a href="img/Screenshot-ServerDetails.png"><img src="img/Screenshot-ServerDetails.png"></a></td>
-    <td><a href="img/Screenshot-Players.png"><img src="img/Screenshot-Players.png"></a></td>
+    <td align="center"><a href="img/Screenshot-Mods.png"><img src="img/Screenshot-Mods.png" alt="Моды и бэкапы"></a><br/>Моды и бэкапы</td>
+    <td align="center"><a href="img/Screenshot-Logs.png"><img src="img/Screenshot-Logs.png" alt="Логи"></a><br/>Логи</td>
   </tr>
 </table>
 

@@ -12,12 +12,12 @@ Need help? Create a [GitHub issue](https://github.com/zhoel-sherk/ValheimServerG
 
 <table width="100%" align="center">
   <tr>
-    <td><a href="img/Screenshot-ServerControls.png"><img src="img/Screenshot-ServerControls.png"></a></td>
-    <td><a href="img/Screenshot-AdvancedControls.png"><img src="img/Screenshot-AdvancedControls.png"></a></td>
+    <td align="center"><a href="img/Screenshot-Server.png"><img src="img/Screenshot-Server.png" alt="Server controls"></a><br/>Server</td>
+    <td align="center"><a href="img/Screenshot-Players.png"><img src="img/Screenshot-Players.png" alt="Players"></a><br/>Players</td>
   </tr>
   <tr>
-    <td><a href="img/Screenshot-ServerDetails.png"><img src="img/Screenshot-ServerDetails.png"></a></td>
-    <td><a href="img/Screenshot-Players.png"><img src="img/Screenshot-Players.png"></a></td>
+    <td align="center"><a href="img/Screenshot-Mods.png"><img src="img/Screenshot-Mods.png" alt="Mods and backups"></a><br/>Mods &amp; backups</td>
+    <td align="center"><a href="img/Screenshot-Logs.png"><img src="img/Screenshot-Logs.png" alt="Logs"></a><br/>Logs</td>
   </tr>
 </table>
 
