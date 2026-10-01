@@ -1,7 +1,9 @@
 ﻿using Serilog;
 using Serilog.Events;
+using Serilog.Parsing;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using ValheimServerGUI.Infrastructure;
 using ValheimServerGUI.Tools.Logging.Components;
 
@@ -96,7 +98,7 @@ namespace ValheimServerGUI.Tools.Logging
             // Wait until first log is written to create logger, so all dependencies are resolved
             Logger ??= CreateLogger();
 
-            var message = logEvent.RenderMessage();
+            var message = RenderLiteral(logEvent);
 
             foreach (var rule in Rules)
             {
@@ -112,6 +114,50 @@ namespace ValheimServerGUI.Tools.Logging
             Logger.Write(logEvent.Level, message);
 
             LogReceived?.Invoke(message);
+        }
+
+        /// <summary>
+        /// Renders the event's message with substitutions inserted literally. Serilog's default
+        /// <see cref="LogEvent.RenderMessage()"/> wraps scalar strings in quotes, so a template that
+        /// already quotes the token ends up double-quoted (""Test Server""), and inner quotes get
+        /// backslash-escaped. We render string scalars raw instead - if a value should be quoted,
+        /// the quotes belong in the template. Non-string values and explicitly formatted tokens
+        /// (e.g. "{n:G}") render normally.
+        /// </summary>
+        private static string RenderLiteral(LogEvent logEvent)
+        {
+            using var output = new StringWriter();
+
+            foreach (var token in logEvent.MessageTemplate.Tokens)
+            {
+                if (token is TextToken text)
+                {
+                    output.Write(text.Text);
+                }
+                else if (token is PropertyToken property)
+                {
+                    if (logEvent.Properties.TryGetValue(property.PropertyName, out var value))
+                    {
+                        // The "l" (literal) format only applies to unformatted string scalars - that is
+                        // what strips the quotes. Applying it to other types throws (e.g. int.ToString("l")),
+                        // so leave those and explicitly formatted tokens alone.
+                        var format = property.Format;
+                        if (string.IsNullOrEmpty(format) && value is ScalarValue { Value: string })
+                        {
+                            format = "l";
+                        }
+
+                        value.Render(output, format, formatProvider: null);
+                    }
+                    else
+                    {
+                        // No matching property; emit the raw token text, as Serilog does.
+                        output.Write(property.ToString());
+                    }
+                }
+            }
+
+            return output.ToString();
         }
 
         #endregion

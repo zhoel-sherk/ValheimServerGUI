@@ -82,7 +82,9 @@ namespace ValheimServerGUI.Tools.Http
                     ResponseContent = JsonConvert.DeserializeObject(responseContentStr, ResponseContentType);
                 }
 
-                Context.Logger.Debug("HTTP request was successful ({0}): {1}", statusCode, logAddress);
+                // Information, not Debug: update checks and the external-IP lookup are user-relevant
+            // activity, and "the app checked for updates" should be visible without enabling debug.
+            Context.Logger.Information("HTTP request was successful ({0}): {1}", statusCode, logAddress);
 
                 foreach (var callback in Callbacks)
                 {

@@ -48,8 +48,52 @@ namespace ValheimServerGUI.Core.Tests.Game
             Assert.True(PlayerPlatforms.TryGetValidPlatform("xbox", out var xbox));
             Assert.Equal(PlayerPlatforms.Xbox, xbox);
 
-            Assert.False(PlayerPlatforms.TryGetValidPlatform("PlayStation", out _));
+            Assert.True(PlayerPlatforms.TryGetValidPlatform("playstation", out var playStation));
+            Assert.Equal(PlayerPlatforms.PlayStation, playStation);
+
+            // The game's "Switch" token normalizes to Nintendo.
+            Assert.True(PlayerPlatforms.TryGetValidPlatform("switch", out var fromSwitch));
+            Assert.Equal(PlayerPlatforms.Nintendo, fromSwitch);
+
+            Assert.True(PlayerPlatforms.TryGetValidPlatform("Nintendo", out var nintendo));
+            Assert.Equal(PlayerPlatforms.Nintendo, nintendo);
+
+            Assert.True(PlayerPlatforms.TryGetValidPlatform("  STEAM  ", out var padded));
+            Assert.Equal(PlayerPlatforms.Steam, padded);
+
             Assert.False(PlayerPlatforms.TryGetValidPlatform(null, out _));
+            Assert.False(PlayerPlatforms.TryGetValidPlatform("", out _));
+            Assert.False(PlayerPlatforms.TryGetValidPlatform("   ", out _));
+        }
+
+        [Fact]
+        public void PlayerPlatformsKnowsTheFourGamePlatforms()
+        {
+            Assert.Equal(4, PlayerPlatforms.All.Count);
+            Assert.Contains(PlayerPlatforms.Steam, PlayerPlatforms.All);
+            Assert.Contains(PlayerPlatforms.Xbox, PlayerPlatforms.All);
+            Assert.Contains(PlayerPlatforms.PlayStation, PlayerPlatforms.All);
+            Assert.Contains(PlayerPlatforms.Nintendo, PlayerPlatforms.All);
+        }
+
+        [Theory]
+        [InlineData("Epic", "Epic")]
+        [InlineData("epic", "Epic")]
+        [InlineData("BATTLE.NET", "BATTLE.NET")]
+        [InlineData("PlayStation", "PlayStation")]
+        public void PlayerPlatformsAcceptsUnknownPlatforms(string input, string expected)
+        {
+            // Crossplay can report platforms we don't know. Rejecting them would silently drop the
+            // player from the list, so anything non-blank is kept.
+            Assert.True(PlayerPlatforms.TryGetValidPlatform(input, out var platform));
+            Assert.Equal(expected, platform);
+        }
+
+        [Fact]
+        public void PlayerKeyKeepsUnknownPlatform()
+        {
+            var player = new PlayerInfo { Platform = "Epic", PlayerId = "abc123" };
+            Assert.Equal("Epic:abc123", player.Key);
         }
     }
 }

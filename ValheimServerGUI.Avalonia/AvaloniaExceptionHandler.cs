@@ -24,9 +24,35 @@ namespace ValheimServerGUI.Avalonia
             if (e == null) return;
 
             contextMessage ??= "Unknown Exception";
-            Logger.Error(e, contextMessage);
+
+            // A cancelled operation is benign: it reaches the global handler on teardown or on a
+            // request timeout, not from a real fault. Reporting it as an error (with a stack trace)
+            // is misleading, so log it plainly and stop there.
+            if (e is OperationCanceledException)
+            {
+                TryLog(() => Logger.Information("Operation cancelled ({context}): {message}", contextMessage, e.Message));
+                return;
+            }
+
+            TryLog(() => Logger.Error(e, contextMessage));
 
             ExceptionHandled?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Logging must never throw on the exception path - a failure here would replace the real
+        /// exception with a confusing one.
+        /// </summary>
+        private static void TryLog(Action log)
+        {
+            try
+            {
+                log();
+            }
+            catch
+            {
+                // Intentionally swallowed: we are already handling a fault.
+            }
         }
     }
 }
