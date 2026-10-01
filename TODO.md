@@ -134,3 +134,28 @@ roadmap is mod list / mod config (on/off) / mod presets.
 **Status.** Implemented. `AGENTS.md` and `README.md` now list BepInEx/Valheim Plus,
 Steam Cloud world import, Discord webhook notifications and mod folder/config actions as
 shipped; the remaining roadmap is mod list / mod config / mod presets.
+
+---
+
+## 9. [open] [medium] NAT-PMP mapping read spams the log
+
+**Problem.** `UpnpPortForwarder` tries to enumerate existing mappings, but the NAT-PMP protocol
+has no "list all" call — Mono.Nat raises `UnsupportedOperation: The NAT-PMP protocol does not
+support listing all mappings`. Every discovery attempt logs
+`[WRN] UPnP: could not read the existing mappings: ...`, which in practice repeats every few
+seconds while the Ports dialog / gateway check runs. The Logs tab now colours warnings, which
+makes the repetition more visible than it was.
+
+**Fix.** Treat "cannot enumerate" as a normal outcome rather than a fault: log once per session
+at Debug, and fall back to reporting the port state from the mapping we ourselves created.
+
+---
+
+## 10. [open] [low] README screenshots predate the 2.4.4 UI
+
+**Problem.** `img/Screenshot-Players.png` and `img/Screenshot-Logs.png` still show the UI from
+before the Players/Logs rework — no column headers, no platform badges, no log highlighting and
+the gaps between log lines that 2.4.4 removed.
+
+**Fix.** Re-capture both screenshots against a 2.4.4+ build (they are the first thing a new
+visitor sees). Not done automatically: capturing needs a live window and a running server.

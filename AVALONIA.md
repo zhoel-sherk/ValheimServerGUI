@@ -24,6 +24,12 @@ client until the Avalonia client reaches feature parity and has passed the same 
 
 ### Projects today
 
+> **Historical.** This table is the solution as it stood *before* the Avalonia client, kept as the
+> migration's starting point. For the current solution see `AGENTS.md` — `ValheimServerGUI.Avalonia`
+> now replaces the WinForms executable, `ValheimServerGUI.Controls` / `ValheimServerGUI.Tests` /
+> `ValheimServerGUI.Serverless` have been deleted, and the two surviving test projects are
+> `ValheimServerGUI.Core.Tests` and `ValheimServerGUI.Infrastructure.Tests`.
+
 | Project | TFM | Role | Migration relevance |
 |---|---|---|---|
 | `ValheimServerGUI.Core` | `net10.0` | Platform-neutral domain: server options & validation, player models, log parsing (regexes), world-gen data, primary-key contract | New shared project; must stay free of WinForms, System.Drawing, registry and local-process APIs |
@@ -33,9 +39,9 @@ client until the Avalonia client reaches feature parity and has passed the same 
 | `ValheimServerGUI.Tests` | `net10.0-windows` | xUnit tests for game logic and UI | Logic tests should become cross-platform; UI tests should be replaced |
 | `ValheimServerGUI.Serverless` | `net10.0` | Legacy Lambda backend | Not part of the desktop UI migration |
 
-There is no Avalonia project or SSH project in the solution yet. The solution currently contains seven
-projects: the WinForms executable, `ValheimServerGUI.Core`, `ValheimServerGUI.Tools`, the WinForms
-controls library, the two test projects and the legacy Serverless backend.
+The solution contained seven projects back then: the WinForms executable, `ValheimServerGUI.Core`,
+`ValheimServerGUI.Tools`, the WinForms controls library, the two test projects and the legacy
+Serverless backend. It is six today.
 
 ### Measured code size
 
@@ -93,16 +99,17 @@ Other platform-specific points found in the code:
 
 ### Tests today
 
-There are 108 `[Fact]`/`[Theory]` tests across three test projects (the exact executed count can
-differ because theories expand at runtime):
+216 tests across two test projects (116 Core + 100 Infrastructure; theories expand at runtime):
 
-- `ValheimServerGUI.Core.Tests` (`net10.0`): 53 tests — log parsing (`ServerLogParser`), the full
-  server state machine (`ValheimServerCoreTests`), `ValheimServerOptions` validation, player models
-  and world discovery. These run without a Windows desktop and are the primary cross-platform
-  safety net.
-- `ValheimServerGUI.Tests` (`net10.0-windows`): 54 tests — server integration (`ValheimServerTests`),
-  mods/backups, and WinForms UI tests (`MainWindowTests`, `SplashFormTests`).
-- `ValheimServerGUI.Serverless.Tests` (`net10.0`): 1 test.
+- `ValheimServerGUI.Core.Tests` (`net10.0`): log parsing (`ServerLogParser`), the full server state
+  machine (`ValheimServerCoreTests`), `ValheimServerOptions` validation, player models and
+  platform tokens, world discovery, world-settings equivalence. These run without a Windows
+  desktop and are the primary cross-platform safety net.
+- `ValheimServerGUI.Infrastructure.Tests` (`net10.0`): server integration (`ValheimServerTests`,
+  hermetic — dummy exe + temp save folder), mods/backups, preferences, `LogSeverityClassifier`
+  and literal log-substitution rendering.
+- The WinForms-era `ValheimServerGUI.Tests` and `ValheimServerGUI.Serverless.Tests` are gone
+  along with the retired client.
 
 Before changing architecture, add tests around process events, path resolution, JSON migration,
 archive extraction, and log parsing. These tests should target a TFM-neutral project where possible.
@@ -202,7 +209,10 @@ preserved for a smooth move.
     before reload; `IPlatformIntegration` registered in the Avalonia container; About links to the
     fork's GitHub Issues; Avalonia csproj gains `SourceRevisionId` for a truthful build date.
 - Windows real-server validation (start/stop/restart, player join/leave, mods/backups) is the
-  remaining Phase 2 exit-criteria gate before WSL/Linux (Phase 3).
+  remaining Phase 2 exit-criteria gate before WSL/Linux (Phase 3). Partially exercised against a
+  real 1.0.12 dedicated server during 2.4.3/2.4.4 (start, autostart, restart-with-new-options,
+  apply-difficulty, log capture), but mods/backups and the Windows shutdown path have not been
+  walked end-to-end yet.
 
 ### Post-audit feature work (2026)
 
@@ -231,6 +241,43 @@ preserved for a smooth move.
   Mono.Nat 3.0.4): a manual "Ports" dialog discovers the gateway and maps/removes the three
   adjacent UDP ports the server needs. Manual only (nothing auto-mapped), router-only (no firewall
   changes), with CGNAT/double-NAT detection via `ValheimPorts.IsPrivateAddress`.
+
+### Difficulty, players and logs (2.4.4-alpha)
+
+- **World difficulty is now applied, not just saved.** The dialog used to write `userprefs.json`
+  and nothing else, but `-preset`/`-modifier`/`-setkey` are baked into the argv at launch and the
+  game has no runtime difficulty API — so saving while the server ran silently did nothing. OK
+  became **Apply**: it commits the selection, `ShellViewModel` asks before restarting (everyone
+  connected is disconnected), and nothing restarts when the selection did not actually change
+  (`WorldSettingsOptions.AreEquivalent`). `Restart` now passes freshly built, validated options
+  rather than the launch snapshot, which also fixed the plain Restart button. The dialog warns
+  that modifiers are baked in at world *generation*, so raising difficulty on an existing world
+  mostly affects new areas only.
+- **Avalonia 12 dialog results.** `Window.DialogResult` no longer exists: `ShowDialog<TResult>`
+  returns the value and `Close(result)` sets it. `ShellViewModel.ShowDialog` was `void` and threw
+  the result away — it is now generic, and the World Settings window closes with `Close(true)`.
+  Renaming the five call sites to `…Async` was needed to stop CS4014.
+- **Players tab readability**: column headers (there were none), live players green / joining
+  amber / offline dimmed, and a letter badge per platform coloured from new `VsgPlatform*Brush`
+  theme resources. `PlayerPlatforms.TryGetValidPlatform` no longer rejects unknown tokens —
+  rejecting them made `OnPlayerConnectingCrossplay` bail out, so those players never reached the
+  data repository and vanished from the list with nothing logged. Known tokens are Steam, Xbox,
+  PlayStation and `Switch` (→ Nintendo); there is no Epic.
+- **Logs**: `LogEntry`/`LogSeverity` in Core and a pure `LogSeverityClassifier` in Infrastructure
+  colour lines by importance from the existing `ServerLogPatterns` (refused connections and
+  `[ERR]` red, deaths amber, joins/server-start green, join codes/saves cyan). `PlayerDied` must
+  be tested before `PlayerConnected`, which also matches the `0:0` death line. The vertical gaps
+  were Fluent `ListBoxItem` padding/min-height, not blank lines — flattened via `ListBox.Styles`.
+  The view follows the tail and stops while the user scrolls up.
+- **Two Avalonia 12 traps hit here**, both worth remembering: `ListBox` has no
+  `HorizontalContentAlignment`, and no `ScrollChanged`/`Viewport` — the `ScrollViewer` has to be
+  found with `GetVisualDescendants().OfType<ScrollViewer>()` after the template is applied.
+  Polling it from `LayoutUpdated` re-subscribes on every layout pass and the handlers multiply
+  exponentially; that leaked ~4 GB before a bool flag fixed it.
+- **Ported from upstream** (`runeberry/ValheimServerGUI` `v3.0`, which is active, not dormant):
+  Serilog renders substitutions literally (`""Test Server""` and `\"…\"` were showing up in every
+  logged command line), Information-level HTTP success logging, `OperationCanceledException`
+  treated as benign rather than an error, and the PlayStation/Nintendo platform tokens.
 
 ## Target architecture
 

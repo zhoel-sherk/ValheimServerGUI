@@ -33,19 +33,27 @@ In order to run ValheimServerGUI, you will need the following:
 
 * **It remembers!** - Stores your server info between sessions, and it can't be overwritten by Steam
 * **Status updates** - Clearly shows when your server is running, starting, or stopping
-* **Online players** - Show which players are online or offline, and when they arrived/left
-* **Cross-platform support** - Recognizes players from Steam and Xbox platforms
+* **Online players** - Live players are highlighted, with a badge showing which platform they joined from and when they were last seen
+* **Cross-platform support** - Recognizes players from Steam, Xbox, PlayStation and Nintendo
 * **Easy IP address** - No more guessing, copy the right IP address to give to your friends straight from the app
-* **Cleaner server logs** - Eliminates a lot of the noisy debug logs produced by the server
+* **Cleaner, clearer logs** - Filters out the noisy debug output and highlights the events that matter (joins, deaths, refused connections), following the tail as it streams
 * **Input validation** - Prevents you from creating a server with bad info that would fail to launch
 * **Safe shutdowns** - Safely stops the server when you close the app or shut down Windows
 * **Automatic startup** - If enabled, can automatically start up your server when Windows starts
 * **Minimize to tray** - Minimize this app and control your server entirely from the Windows system tray
-* **Multi-server support** - Run multiple servers at once by creating separate server profiles (see [FAQs](https://github.com/runeberry/ValheimServerGUI/wiki/Frequently-Asked-Questions) for details)
-* **Difficulty presets** - Apply world difficulty presets (Easy, Hard, Hardcore, Casual, etc.) via the world settings dialog (the gear icon next to the world selector)
+* **Server profiles** - Save and switch between server configurations from the profile dropdown (one server runs at a time)
+* **Difficulty presets** - Set world difficulty (Easy, Hard, Hardcore, Casual, and per-modifier or per-key control) via the "Difficulty..." dialog next to the world selector. It can restart a running server so the change takes effect
 * **Works with mods!** - Tested and working with server-side mods such as [Valheim Plus](https://www.nexusmods.com/valheim/mods/2323). Install/update BepInEx and Valheim Plus from the app, and open the plugins/config folders or a mod's config file directly
 * **Steam Cloud worlds** - Worlds saved to Steam Cloud appear in the world list; import them (Move/Copy) into the server's local save folder to host them
+* **Port forwarding** - Maps the three UDP ports your server needs through UPnP/NAT-PMP from a "Ports" dialog, and warns when you are behind CGNAT/double NAT
 * **Discord notifications** - Optional webhook notifications for server online/offline, player join/leave/death and join-code changes
+
+### A note on difficulty
+
+Valheim bakes difficulty modifiers in when a *world is generated*, and the server only reads them
+at launch. So raising the difficulty of an **existing** world mostly affects newly generated areas
+rather than the world you already have; to change it fully, delete the world and start it again.
+The dialog warns about this, and about the restart, before it changes anything.
 
 ## Roadmap
 
@@ -55,8 +63,8 @@ Ideas for future releases (no timelines, contributions welcome):
 * **Mod config** - Enable/disable installed mods (on/off)
 * **Mod presets** - Save & apply whole mod loadouts (presets)
 
-BepInEx + Valheim Plus install/update, Steam Cloud world import and Discord webhook notifications
-have shipped.
+BepInEx + Valheim Plus install/update, Steam Cloud world import, Discord webhook notifications,
+UPnP/NAT-PMP port forwarding and mod folder/config actions have shipped.
 
 ## Quick guide
 

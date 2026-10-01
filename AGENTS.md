@@ -8,11 +8,21 @@ Avalonia (.NET 10) desktop app that manages a Valheim dedicated server on Window
 starts/stops `valheim_server.exe`, parses its stdout for status & player events,
 manages server profiles, worlds, difficulty settings and mods.
 
-This is a **community fork** of [runeberry/ValheimServerGUI](https://github.com/runeberry/ValheimServerGUI)
-(upstream is dormant since 2024). Licensed **GNU GPLv3** — keep the `LICENSE` file and the
+This is a **community fork** of [runeberry/ValheimServerGUI](https://github.com/runeberry/ValheimServerGUI).
+Licensed **GNU GPLv3** — keep the `LICENSE` file and the
 "© Runeberry Software, LLC / Licensed under GNU GPLv3" notice in the About dialog intact.
 Upstream promo links (Discord, donate, email) were deliberately removed; support links
 must point to this fork's GitHub Issues (`AppSettings.UrlIssues`).
+
+**Upstream is not dormant** — it is an active WinForms project (branches `main`, `v2.4`,
+`v3.0`, commits through 2026-09). It is registered as the `upstream` remote, so
+`git log HEAD..upstream/main` and `git log HEAD..upstream/v3.0` show what we have not taken.
+Check it when touching Core/Infrastructure: their WinForms UI work does not apply, but their
+domain fixes do. Our merge-base with `upstream/main` is from 2024, so plenty of upstream
+commits are already implemented here independently — verify before porting, and never
+cherry-pick blindly. Ported so far: literal log substitution rendering, the
+PlayStation/Nintendo platform tokens, Information-level HTTP success logging, and treating
+`OperationCanceledException` as benign rather than a fault.
 
 The original WinForms client has been **retired** (see tag `legacy-winforms`); the Avalonia
 client is the only UI. `AVALONIA.md` records the migration plan/history.
@@ -32,8 +42,10 @@ Key files:
 - `ValheimServerGUI.Core/Game/ServerLogParser.cs` + `ServerLogPatterns.cs` — server stdout regexes & dispatch
 - `ValheimServerGUI.Core/Game/ValheimServer.cs` — server lifecycle + state transitions + log handler wiring
 - `ValheimServerGUI.Core/Game/ValheimServerOptions.cs` — options model & validation
-- `ValheimServerGUI.Core/Game/WorldSettingsOptions.cs` — difficulty presets + preset→modifier/key rules
+- `ValheimServerGUI.Core/Game/WorldSettingsOptions.cs` — difficulty presets + preset→modifier/key rules + `AreEquivalent`
+- `ValheimServerGUI.Core/Game/LogEntry.cs` + `LogSeverity.cs` — a log line plus its UI severity
 - `ValheimServerGUI.Core/Game/ValheimPathExtensions.cs` — world discovery (see World layouts below)
+- `ValheimServerGUI.Core/Models/PlayerPlatforms.cs` — Steam/Xbox/PlayStation/Nintendo tokens (see below)
 - `ValheimServerGUI.Core/Processes/ServerProcess.cs` — `IServerProcess`/`IServerProcessFactory`
 - `ValheimServerGUI.Core/Platform/IPlatformIntegration.cs` + `IUserInteraction.cs` — host contracts
 - `ValheimServerGUI.Core/Network/IPortForwarder.cs` + `Infrastructure/Network/UpnpPortForwarder.cs` — UPnP/NAT-PMP (Mono.Nat); `ValheimPorts` knows the 3 adjacent UDP ports
@@ -42,6 +54,8 @@ Key files:
 - `ValheimServerGUI.Infrastructure/Tools/AssemblyHelper.cs` — version/build-date + pure `CompareVersions`
 - `ValheimServerGUI.Infrastructure/Tools/GitHubClient.cs` — release lookup + pure `SelectLatestRelease`
 - `ValheimServerGUI.Infrastructure/Tools/Logging/ValheimServerLogger.cs` + `ServerLogStream.cs` — server log filter/stream
+- `ValheimServerGUI.Infrastructure/Tools/Logging/LogSeverityClassifier.cs` — maps a rendered line to `LogSeverity` for the Logs tab
+- `ValheimServerGUI.Infrastructure/Tools/Logging/BaseLogger.cs` — rule pipeline; renders substitutions literally (see Logging gotchas)
 - `ValheimServerGUI.Infrastructure/Tools/StartupHelper.cs` — Windows "Run" registry helper
 - `ValheimServerGUI.Infrastructure/Game/Mods/BepInExManager.cs` — BepInEx install/status + paths/config listing
 - `ValheimServerGUI.Infrastructure/Game/SteamCloudWorldProvider.cs` — Steam Cloud world import
@@ -56,7 +70,7 @@ Requires **.NET SDK 10** (`dotnet --list-sdks`).
 
 ```pwsh
 dotnet build ValheimServerGUI.sln -c Debug
-dotnet test ValheimServerGUI.sln --nologo            # 161 tests, must be green
+dotnet test ValheimServerGUI.sln --nologo            # 216 tests, must be green
 dotnet run --project ValheimServerGUI.Avalonia
 ```
 
@@ -66,6 +80,36 @@ Gotchas:
 - Release builds need `/p:SignAssembly=false` (upstream `.snk` is not committed).
 - Tests are hermetic: `ValheimServerTests` creates a dummy exe + temp save folder — do not
   reintroduce machine-specific paths there.
+- Publishing fails with an opaque `File.Delete` / `GenerateBundle` MSB4018 if the client is
+  running: a launched `publish\...\ValheimServerGUI.Avalonia.exe` holds the output. Stop it
+  first. If you kill it with `Stop-Process -Force` rather than the tray Exit, the auto-started
+  `valheim_server` is **orphaned** and keeps running — stop that too.
+
+### Avalonia 12 API changes (this project targets 12.1.2)
+
+These differ from Avalonia 11 and will bite on copy-pasted snippets:
+
+- `Window.DialogResult` **does not exist**. `ShowDialog` is `Task` / `Task<TResult>`, and the
+  result is passed to `Close(result)`. `ShellViewModel.ShowDialog` wraps the generic form and
+  the Windows close with `Close(true)` on accept.
+- `ListBox` has no `HorizontalContentAlignment`; use `ListBox.Styles` to retarget item styles
+  (e.g. flatten the Fluent `ListBoxItem` padding for the dense log list).
+- `ListBox` exposes no `ScrollChanged` or `Viewport` — find the `ScrollViewer` with
+  `GetVisualDescendants().OfType<ScrollViewer>()`, and only after the template is applied.
+  Poll from `LayoutUpdated` **behind a bool flag**: re-subscribing from inside the handler adds
+  a fresh delegate every layout pass and the handlers multiply exponentially (this leaked ~4 GB).
+- `Application` has `TryGetResource(key, themeVariant, out value)`, not `TryFindResource`.
+
+### Logging gotchas
+
+- `BaseLogger` renders message-template substitutions **literally**. Serilog's default
+  `RenderMessage()` wraps string scalars in quotes, so a template that already quotes its token
+  would log as `""Test Server""` with inner quotes escaped. Quotes belong in the template.
+- `LogEventLevel` does not survive to the UI — `LogReceived` carries a `string`. The Logs tab
+  re-derives a severity via `LogSeverityClassifier`; the Application view recovers the level from
+  the textual prefix in `LogLevelTransformer` (whose prefixes are public constants for this).
+- `LogSeverityClassifier` must test `PlayerDied` **before** `PlayerConnected`: the connected
+  pattern also matches the `0:0` line the game emits on death.
 
 ## Release / publish (vX.Y.Z)
 
@@ -80,10 +124,21 @@ Gotchas:
    Output: `publish\avalonia-small-x64\` (single-file exe; native Skia/HarfBuzz bundled).
 4. **Scan the artifact** for secrets and machine data: passwords, server/world names, local IPs,
    SteamIDs, `C:\Users\<name>` paths, upstream promo URLs. Decode as ASCII and search the bytes.
-5. Zip the exe + `LICENSE.txt`, commit, tag `vX.Y.Z`, push, `gh release create`.
+   Note: decoding as UTF-16 must be tried at **both** byte offsets 0 and 1 — .NET string literals
+   are not 2-byte aligned in the file, and offset 1 alone produces false "MISSING" results.
+5. Delete `publish\avalonia-small-x64\*.pdb` — the Skia/HarfBuzz native packages drag in ~100 MB
+   of debug symbols that are not part of the client.
+6. Zip the exe + `LICENSE.txt` into **`release-artifacts/`** and commit. Do **not** use `release/`
+   or `artifacts/`: `.gitignore` already claims both for Visual Studio / .NET build output and the
+   paths would be silently ignored.
+7. Tag `vX.Y.Z`, push, then `gh release create ... --repo zhoel-sherk/ValheimServerGUI --prerelease`
+   (pass `--repo` explicitly — `gh` resolves the wrong repo otherwise, and a failed first attempt
+   can leave an empty draft release behind that must be deleted).
    For an alpha/RC, mark the GitHub release as pre-release (no update notification).
+8. Check the tag is free before tagging: `git fetch origin --tags` **without `--force`** (a forced
+   fetch overwrites a local tag of the same name) and `git ls-remote origin refs/tags/<tag>`.
 
-## Valheim server integration (verified against 1.0.7, network version 39)
+## Valheim server integration (verified against 1.0.12, network version 40)
 
 The app launches `valheim_server.exe` with `-nographics -batchmode -name -port -world -public
 -savedir -saveinterval -backups -backupshort -backuplong -password -crossplay [-preset|-modifier|-setkey]`.
@@ -120,6 +175,20 @@ passivemobs|nomap|fire`), the shipped `Valheim Dedicated Server Manual.pdf` (oft
 behind — e.g. it omits `fire`). `WorldSettingsOptions` (Core) matches 1.0.7; presets override
 modifiers/keys, same as in-game.
 
+**World difficulty only reaches the server at launch.** `-preset`/`-modifier`/`-setkey` are baked
+into the argv once by `ValheimServer.GenerateArgs`; the game exposes no runtime difficulty API.
+So the World Settings dialog has to restart the server to apply anything, and the modifiers are
+themselves baked in when a *world is generated* — raising difficulty on an existing world mostly
+only affects newly generated areas. The dialog says both things out loud; do not "simplify" the
+warnings away.
+
+**Player platforms.** Crossplay logs a `Platform ID <token>_<id>` pair. The tokens the binary
+reports are `Steam`, `Xbox`, `PlayStation` and `Switch` (which normalizes to our `Nintendo`).
+There is no `Epic` token. `PlayerPlatforms.TryGetValidPlatform` deliberately accepts *unknown*
+tokens too: rejecting them made `OnPlayerConnectingCrossplay` return early, so such a player
+silently vanished from the list with nothing in the log. Keep it accepting, and keep the
+once-per-platform warning.
+
 Server stdout is read as **UTF-8** (`LocalServerProcess`) — required for
 non-ASCII character names. Do not remove those encoding settings.
 
@@ -147,7 +216,12 @@ non-ASCII character names. Do not remove those encoding settings.
   never throw on a missing path or shell handler.
 - The client uses a Valheim "Mistlands Tech" dark theme (`App.axaml`: Fluent resource overrides +
   `Vsg*` palette brushes; `Services/WindowsTheme.cs`: dark DWM title bar). Keep new UI on the `Vsg*`
-  brushes rather than hard-coded colors.
+  brushes rather than hard-coded colors. The platform badge colours are the one deliberate
+  exception and live in the theme as `VsgPlatform*Brush` (brand stand-ins, not real logos).
+- The Players list is a `ListBox` whose rows are replaced wholesale on every update
+  (`PlayersViewModel.UpsertRow`) — per-field `INotifyPropertyChanged` on rows is pointless there.
+- `PlayerInfo.PlayerStatus` is `[JsonIgnore]`: a player restored from the cache reads as Offline
+  until they actually connect. That is what makes the offline rows dim immediately.
 - Port forwarding is manual only (a "Ports" dialog, like UPnP Wizard): UPnP/NAT-PMP via Mono.Nat
   (`IPortForwarder`), mapping UDP `base..base+2`. Nothing is mapped automatically; only the router is
   touched (no Windows Firewall changes). CGNAT/double NAT is detected via `ValheimPorts.IsPrivateAddress`.
