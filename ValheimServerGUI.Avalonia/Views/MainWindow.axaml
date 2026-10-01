@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:ValheimServerGUI.Avalonia.ViewModels"
         xmlns:conv="using:ValheimServerGUI.Avalonia.Converters"
-        xmlns:sys="using:System"
+        xmlns:game="using:ValheimServerGUI.Game"
         x:Class="ValheimServerGUI.Avalonia.Views.MainWindow"
         x:DataType="vm:ShellViewModel"
         Title="Valheim Server GUI (Avalonia)"
@@ -13,6 +13,9 @@
   <Window.Resources>
     <conv:NegateBoolConverter x:Key="NegateBool"/>
     <conv:StatusToBrushConverter x:Key="StatusToBrush"/>
+    <conv:PlayerStatusToBrushConverter x:Key="PlayerStatusToBrush"/>
+    <conv:PlatformToBrushConverter x:Key="PlatformToBrush"/>
+    <conv:LogSeverityToBrushConverter x:Key="LogSeverityToBrush"/>
   </Window.Resources>
 
   <DockPanel>
@@ -208,22 +211,41 @@
 
       <!-- Players -->
       <TabItem Header="Players">
-        <Grid RowDefinitions="*,Auto" Margin="8">
-          <ListBox Grid.Row="0"
+        <Grid RowDefinitions="Auto,*,Auto" Margin="8" RowSpacing="4">
+          <Grid Grid.Row="0" ColumnDefinitions="*,120,140,80" Margin="8,4,8,0">
+            <TextBlock Grid.Column="0" Text="Player" FontWeight="SemiBold" Foreground="{DynamicResource VsgMutedTextBrush}"/>
+            <TextBlock Grid.Column="1" Text="Platform" FontWeight="SemiBold" Foreground="{DynamicResource VsgMutedTextBrush}"/>
+            <TextBlock Grid.Column="2" Text="Status" FontWeight="SemiBold" Foreground="{DynamicResource VsgMutedTextBrush}"/>
+            <TextBlock Grid.Column="3" Text="Last seen" FontWeight="SemiBold" Foreground="{DynamicResource VsgMutedTextBrush}"/>
+          </Grid>
+
+          <ListBox Grid.Row="1"
                    ItemsSource="{Binding Players.Players}"
                    SelectedItem="{Binding Players.SelectedPlayer}">
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="vm:PlayerRowViewModel">
                 <Grid ColumnDefinitions="*,120,140,80">
-                  <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"/>
-                  <TextBlock Grid.Column="1" Text="{Binding Platform}" VerticalAlignment="Center"/>
-                  <TextBlock Grid.Column="2" Text="{Binding Status}" VerticalAlignment="Center"/>
-                  <TextBlock Grid.Column="3" Text="{Binding LastUpdated}" VerticalAlignment="Center"/>
+                  <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"
+                             Foreground="{Binding StatusKind, Converter={StaticResource PlayerStatusToBrush}}"/>
+                  <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Border Width="20" Height="20" CornerRadius="10" VerticalAlignment="Center"
+                            Background="{Binding Platform, Converter={StaticResource PlatformToBrush}}">
+                      <TextBlock Text="{Binding PlatformInitial}" FontSize="11" FontWeight="SemiBold"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                                 Foreground="{DynamicResource VsgTextBrush}"/>
+                    </Border>
+                    <TextBlock Text="{Binding Platform}" VerticalAlignment="Center"/>
+                  </StackPanel>
+                  <TextBlock Grid.Column="2" Text="{Binding Status}" VerticalAlignment="Center"
+                             Foreground="{Binding StatusKind, Converter={StaticResource PlayerStatusToBrush}}"/>
+                  <TextBlock Grid.Column="3" Text="{Binding LastUpdated}" VerticalAlignment="Center"
+                             Foreground="{DynamicResource VsgMutedTextBrush}"/>
                 </Grid>
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
-          <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+
+          <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
             <Button Content="Details..." Command="{Binding OpenPlayerDetailsCommand}"/>
             <Button Content="Remove Player" Command="{Binding Players.RemovePlayerCommand}"/>
             <Button Content="Refresh" Command="{Binding Players.RefreshCommand}"/>
@@ -312,10 +334,20 @@
             <TextBlock Text="View:" VerticalAlignment="Center"/>
             <ComboBox ItemsSource="{Binding Logs.Views}" SelectedItem="{Binding Logs.SelectedView}" MinWidth="140"/>
           </StackPanel>
-          <ListBox Grid.Row="1" ItemsSource="{Binding Logs.LogEntries}" FontFamily="Consolas" FontSize="12">
+          <ListBox x:Name="LogList" Grid.Row="1" ItemsSource="{Binding Logs.LogEntries}"
+                   FontFamily="Consolas" FontSize="12" BorderThickness="0">
+            <!-- The Fluent ListBoxItem has generous padding and a min height, which reads as a
+                 blank line between every two log lines. Flatten it for this dense list. -->
+            <ListBox.Styles>
+              <Style Selector="ListBoxItem">
+                <Setter Property="Padding" Value="6,1"/>
+                <Setter Property="MinHeight" Value="0"/>
+              </Style>
+            </ListBox.Styles>
             <ListBox.ItemTemplate>
-              <DataTemplate x:DataType="sys:String">
-                <TextBlock Text="{Binding}"/>
+              <DataTemplate x:DataType="game:LogEntry">
+                <TextBlock Text="{Binding Text}"
+                           Foreground="{Binding Severity, Converter={StaticResource LogSeverityToBrush}}"/>
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>

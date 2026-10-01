@@ -4,8 +4,10 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using ValheimServerGUI.Core.Platform;
+using ValheimServerGUI.Game;
 using ValheimServerGUI.Infrastructure;
 using ValheimServerGUI.Tools.Logging;
 
@@ -27,15 +29,32 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private readonly IUserInteraction UserInteraction;
         private readonly IPlatformIntegration PlatformIntegration;
 
-        private readonly ObservableCollection<string> ServerEntries = new();
-        private readonly ObservableCollection<string> ApplicationEntries = new();
+        private readonly ObservableCollection<LogEntry> ServerEntries = new();
+        private readonly ObservableCollection<LogEntry> ApplicationEntries = new();
 
-        public ObservableCollection<string> LogEntries { get; } = new();
+        public ObservableCollection<LogEntry> LogEntries { get; } = new();
 
         public IReadOnlyList<string> Views { get; } = new[] { ServerView, ApplicationView };
 
         [ObservableProperty]
         private string _selectedView = ServerView;
+
+        /// <summary>
+        /// Whether the view should follow new lines. The window turns this off when the user
+        /// scrolls up to read something, and back on when they return to the bottom.
+        /// </summary>
+        [ObservableProperty]
+        private bool _autoScroll = true;
+
+        /// <summary>
+        /// True while the whole buffer is being replayed into the visible list (view switch,
+        /// clear). The window skips per-item scrolling during a replay, since firing a scroll per
+        /// item would mean thousands of redundant relayouts.
+        /// </summary>
+        public bool IsBulkUpdate { get; private set; }
+
+        /// <summary>Raised once a replay has finished, so the view can jump to the tail.</summary>
+        public event EventHandler? BulkUpdateFinished;
 
         public LogsViewModel(
             IApplicationLogger logger,
@@ -52,8 +71,8 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             ServerLogStream.LogReceived += OnServerLogReceived;
 
             // Flush the backlogs captured before the view was created.
-            foreach (var entry in ServerLogStream.LogBuffer) ServerEntries.Add(entry);
-            foreach (var entry in Logger.LogBuffer) ApplicationEntries.Add(entry);
+            foreach (var entry in ServerLogStream.LogBuffer) ServerEntries.Add(ToServerEntry(entry));
+            foreach (var entry in Logger.LogBuffer) ApplicationEntries.Add(ToApplicationEntry(entry));
 
             ShowSelectedView();
         }
@@ -64,31 +83,55 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         {
             var source = SelectedView == ApplicationView ? ApplicationEntries : ServerEntries;
 
-            LogEntries.Clear();
-            foreach (var entry in source)
+            ReplayInto(source);
+        }
+
+        /// <summary>
+        /// Replaces the visible list with the contents of <paramref name="source"/> in one go.
+        /// </summary>
+        private void ReplayInto(System.Collections.IEnumerable source)
+        {
+            IsBulkUpdate = true;
+            try
             {
-                LogEntries.Add(entry);
+                LogEntries.Clear();
+                foreach (var entry in source)
+                {
+                    LogEntries.Add((LogEntry)entry);
+                }
             }
+            finally
+            {
+                IsBulkUpdate = false;
+            }
+
+            BulkUpdateFinished?.Invoke(this, EventArgs.Empty);
         }
 
         private void OnApplicationLogReceived(string message)
         {
-            Dispatcher.UIThread.Post(() => Append(ApplicationEntries, message, SelectedView == ApplicationView));
+            Dispatcher.UIThread.Post(() => Append(ApplicationEntries, ToApplicationEntry(message), SelectedView == ApplicationView));
         }
 
         private void OnServerLogReceived(string message)
         {
-            Dispatcher.UIThread.Post(() => Append(ServerEntries, message, SelectedView == ServerView));
+            Dispatcher.UIThread.Post(() => Append(ServerEntries, ToServerEntry(message), SelectedView == ServerView));
         }
 
-        private void Append(ObservableCollection<string> buffer, string message, bool isVisible)
+        private static LogEntry ToServerEntry(string message)
+            => new(message, LogSeverityClassifier.ClassifyServerLine(message));
+
+        private static LogEntry ToApplicationEntry(string message)
+            => new(message, LogSeverityClassifier.ClassifyApplicationLine(message));
+
+        private void Append(ObservableCollection<LogEntry> buffer, LogEntry entry, bool isVisible)
         {
-            buffer.Add(message);
+            buffer.Add(entry);
             if (buffer.Count > MaxEntries) buffer.RemoveAt(0);
 
             if (!isVisible) return;
 
-            LogEntries.Add(message);
+            LogEntries.Add(entry);
             if (LogEntries.Count > MaxEntries) LogEntries.RemoveAt(0);
         }
 
@@ -105,7 +148,15 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                 ServerLogStream.Clear();
             }
 
-            LogEntries.Clear();
+            IsBulkUpdate = true;
+            try
+            {
+                LogEntries.Clear();
+            }
+            finally
+            {
+                IsBulkUpdate = false;
+            }
         }
 
         [RelayCommand]
@@ -118,7 +169,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             }
 
             var suggested = $"ValheimServerGUI-{SelectedView}Logs-{DateTime.Now:yyyyMMdd-HHmmss}.txt";
-            var content = string.Join(Environment.NewLine, LogEntries);
+            var content = string.Join(Environment.NewLine, LogEntries.Select(entry => entry.Text));
 
             var path = await UserInteraction.SaveTextFileAsync("Save Logs", suggested, content);
             if (path != null)

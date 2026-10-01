@@ -35,6 +35,15 @@
           <SolidColorBrush x:Key="VsgWarningBrush" Color="#F59E0B"/>
           <SolidColorBrush x:Key="VsgDangerBrush" Color="#EF4444"/>
 
+          <!-- Player platform badge backgrounds. These are the only off-palette colours in the
+               theme: they stand in for store branding, which we deliberately do not reproduce
+               with real logos. Unknown platforms fall back to VsgPlatformOtherBrush. -->
+          <SolidColorBrush x:Key="VsgPlatformSteamBrush" Color="#1B6E8C"/>
+          <SolidColorBrush x:Key="VsgPlatformXboxBrush" Color="#107C10"/>
+          <SolidColorBrush x:Key="VsgPlatformPlayStationBrush" Color="#2B5BA8"/>
+          <SolidColorBrush x:Key="VsgPlatformNintendoBrush" Color="#B8332F"/>
+          <SolidColorBrush x:Key="VsgPlatformOtherBrush" Color="#3F3A56"/>
+
           <!-- Fluent chrome overrides -->
           <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="#12131A"/>
           <SolidColorBrush x:Key="ThemeForegroundBrush" Color="#E2E8F0"/>

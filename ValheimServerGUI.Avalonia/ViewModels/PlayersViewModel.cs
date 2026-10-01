@@ -24,6 +24,30 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         public string Status => Player.PlayerStatus.ToString();
         public string LastUpdated => new TimeAgo(Player.LastStatusChange).ToString();
 
+        /// <summary>Live status, for converters that need the enum rather than its name.</summary>
+        public PlayerStatus StatusKind => Player.PlayerStatus;
+
+        /// <summary>
+        /// True only while the player is actually in the world. Players restored from the cache
+        /// default to Offline, so they show as inactive until they next connect.
+        /// </summary>
+        public bool IsOnline => Player.PlayerStatus == PlayerStatus.Online;
+
+        /// <summary>Single letter for the platform badge, e.g. "S" for Steam, "E" for Epic.</summary>
+        public string PlatformInitial
+        {
+            get
+            {
+                var platform = Player.Platform;
+                if (string.IsNullOrWhiteSpace(platform)) return "?";
+
+                platform = platform.Trim();
+                return platform.Length == 1
+                    ? platform.ToUpperInvariant()
+                    : char.ToUpperInvariant(platform[0]).ToString();
+            }
+        }
+
         public PlayerRowViewModel(PlayerInfo player)
         {
             Player = player;
