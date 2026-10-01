@@ -212,7 +212,7 @@
       <!-- Players -->
       <TabItem Header="Players">
         <Grid RowDefinitions="Auto,*,Auto" Margin="8" RowSpacing="4">
-          <Grid Grid.Row="0" ColumnDefinitions="*,120,140,80" Margin="8,4,8,0">
+          <Grid Grid.Row="0" ColumnDefinitions="*,100,110,150" Margin="8,4,8,0">
             <TextBlock Grid.Column="0" Text="Player" FontWeight="SemiBold" Foreground="{DynamicResource VsgMutedTextBrush}"/>
             <TextBlock Grid.Column="1" Text="Platform" FontWeight="SemiBold" Foreground="{DynamicResource VsgMutedTextBrush}"/>
             <TextBlock Grid.Column="2" Text="Status" FontWeight="SemiBold" Foreground="{DynamicResource VsgMutedTextBrush}"/>
@@ -224,7 +224,7 @@
                    SelectedItem="{Binding Players.SelectedPlayer}">
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="vm:PlayerRowViewModel">
-                <Grid ColumnDefinitions="*,120,140,80">
+                <Grid ColumnDefinitions="*,100,110,150">
                   <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"
                              Foreground="{Binding StatusKind, Converter={StaticResource PlayerStatusToBrush}}"/>
                   <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
