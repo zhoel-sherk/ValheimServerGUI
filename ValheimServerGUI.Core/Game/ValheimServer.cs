@@ -262,7 +262,25 @@ namespace ValheimServerGUI.Game
             var playerId = captures[1];
             if (!hasValidPlatform || string.IsNullOrWhiteSpace(playerId)) return;
 
+            // Crossplay can report platforms we have no display hints for. The player is kept (dropping
+            // them would hide them from the list), but note it once so it is visible in the log.
+            if (!PlayerPlatforms.All.Contains(platform))
+            {
+                WarnOnUnknownPlatform(platform);
+            }
+
             PlayerDataRepository.SetPlayerJoining(Options?.Name, new() { Platform = platform, PlayerId = playerId });
+        }
+
+        private readonly HashSet<string> WarnedPlatforms = new(StringComparer.OrdinalIgnoreCase);
+
+        private void WarnOnUnknownPlatform(string platform)
+        {
+            if (!WarnedPlatforms.Add(platform)) return;
+
+            ApplicationLogger.Warning(
+                "Unrecognised player platform '{platform}'; it will be shown with a generic badge",
+                platform);
         }
 
         private void OnPlayerConnected(params string[] captures)
