@@ -66,11 +66,50 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
         private bool IsApplyingPreset;
 
+        /// <summary>The settings as they were loaded, used to detect whether the user changed anything.</summary>
+        private WorldSettings _loadedSettings = new();
+
+        /// <summary>Whether the server was running when the dialog opened.</summary>
+        private bool _isServerRunning;
+
         public ObservableCollection<WorldModifierRowViewModel> Modifiers { get; } = new();
 
         public ObservableCollection<WorldKeyRowViewModel> Keys { get; } = new();
 
         public IReadOnlyList<WorldSettingOption> Presets => WorldSettingsOptions.PresetOptions;
+
+        /// <summary>
+        /// True when the server was running when this dialog opened. Difficulty settings are only
+        /// passed to the server on launch, so applying them requires a restart.
+        /// </summary>
+        public bool IsServerRunning
+        {
+            get => _isServerRunning;
+            set
+            {
+                if (_isServerRunning == value) return;
+
+                _isServerRunning = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(RestartNotice));
+            }
+        }
+
+        /// <summary>Shown when the server is running, explaining that a restart is needed.</summary>
+        public string RestartNotice => "The server is currently running. These settings are only passed " +
+            "to the server on launch, so applying them will restart it and disconnect everyone connected.";
+
+        /// <summary>
+        /// True when the world has already been generated on disk. Difficulty modifiers are baked in
+        /// at generation time, so changing them on an existing world only partly takes effect.
+        /// </summary>
+        public bool WorldAlreadyExists { get; private set; }
+
+        /// <summary>
+        /// True once <see cref="ApplyCommand"/> has committed a change that differs from what was
+        /// loaded. Lets the caller decide whether a restart is actually needed.
+        /// </summary>
+        public bool HasChanges { get; private set; }
 
         [ObservableProperty]
         private string? _worldName;
@@ -109,10 +148,21 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             : $"World Settings - {WorldName}";
 
         /// <summary>Call before showing the dialog.</summary>
-        public void Load(string worldName)
+        /// <param name="worldName">The world the settings apply to.</param>
+        /// <param name="isServerRunning">
+        /// Whether the server is currently running, so the dialog can tell the user that applying
+        /// the settings requires a restart.
+        /// </param>
+        /// <param name="worldAlreadyExists">
+        /// Whether the world has already been generated on disk, so the dialog can warn that
+        /// difficulty modifiers only take effect for newly generated areas.
+        /// </param>
+        public void Load(string worldName, bool isServerRunning = false, bool worldAlreadyExists = false)
         {
             WorldName = worldName;
             OnPropertyChanged(nameof(Title));
+            IsServerRunning = isServerRunning;
+            WorldAlreadyExists = worldAlreadyExists;
 
             var prefs = WorldPrefsProvider.LoadPreferences(worldName);
 
@@ -139,6 +189,19 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             {
                 SetPreset(prefs.Preset);
             }
+
+            // Snapshot what is currently saved so we can tell whether the user actually changed
+            // anything, and skip a pointless restart when they just open and close the dialog.
+            _loadedSettings = new WorldSettings
+            {
+                Preset = prefs?.Preset,
+                Modifiers = prefs?.Modifiers != null
+                    ? new Dictionary<string, string>(prefs.Modifiers)
+                    : new Dictionary<string, string>(),
+                Keys = prefs?.Keys != null ? new HashSet<string>(prefs.Keys) : new HashSet<string>(),
+            };
+
+            HasChanges = false;
         }
 
         [RelayCommand]
@@ -154,40 +217,60 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         }
 
         [RelayCommand]
-        private void Save()
+        private void Apply()
         {
             if (string.IsNullOrWhiteSpace(WorldName))
             {
-                Logger.Error("Unable to save world settings: no world name has been set");
+                Logger.Error("Unable to apply world settings: no world name has been set");
                 return;
             }
 
-            var prefs = WorldPrefsProvider.LoadPreferences(WorldName)
-                ?? new WorldPreferences { WorldName = WorldName };
+            var settings = BuildSettings();
 
-            prefs.Preset = null;
-            prefs.Modifiers.Clear();
-            prefs.Keys.Clear();
+            var prefs = new WorldPreferences
+            {
+                WorldName = WorldName,
+                Preset = settings.Preset,
+                Modifiers = settings.Modifiers,
+                Keys = settings.Keys,
+            };
+
+            WorldPrefsProvider.SavePreferences(prefs);
+            HasChanges = !WorldSettingsOptions.AreEquivalent(_loadedSettings, settings);
+            Logger.Information("Applied world settings for {world}", WorldName);
+        }
+
+        /// <summary>
+        /// Builds the settings that the current dialog selection represents. A selected preset wins
+        /// over individual modifiers/keys, exactly like the in-game menu.
+        /// </summary>
+        private WorldSettings BuildSettings()
+        {
+            var settings = new WorldSettings();
 
             if (SelectedPreset != null && SelectedPreset.Value != WorldSettingsOptions.NoPreset)
             {
-                prefs.Preset = SelectedPreset.Value;
+                settings.Preset = SelectedPreset.Value;
+                return settings;
             }
-            else
+
+            foreach (var row in Modifiers)
             {
-                foreach (var row in Modifiers)
+                if (row.Value != WorldSettingsOptions.NoModifier)
                 {
-                    if (row.Value != WorldSettingsOptions.NoModifier) prefs.Modifiers[row.Modifier.Key] = row.Value;
-                }
-
-                foreach (var row in Keys)
-                {
-                    if (row.IsChecked) prefs.Keys.Add(row.Key.Key);
+                    settings.Modifiers[row.Modifier.Key] = row.Value;
                 }
             }
 
-            WorldPrefsProvider.SavePreferences(prefs);
-            Logger.Information("Saved world settings for {world}", WorldName);
+            foreach (var row in Keys)
+            {
+                if (row.IsChecked)
+                {
+                    settings.Keys.Add(row.Key.Key);
+                }
+            }
+
+            return settings;
         }
 
         private void SetPreset(string presetValue)

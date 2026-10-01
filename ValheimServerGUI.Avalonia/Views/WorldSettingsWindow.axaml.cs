@@ -10,9 +10,11 @@ namespace ValheimServerGUI.Avalonia.Views
             InitializeComponent();
         }
 
-        private void OnOkClick(object? sender, RoutedEventArgs e)
+        private void OnApplyClick(object? sender, RoutedEventArgs e)
         {
-            Close();
+            // The ViewModel commits the settings in ApplyCommand. The close result tells the caller
+            // the user accepted (Cancel and Esc close without a result).
+            Close(true);
         }
     }
 }

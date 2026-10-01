@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using ValheimServerGUI.Core.Platform;
 using ValheimServerGUI.Game;
@@ -406,7 +407,35 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         [RelayCommand(CanExecute = nameof(CanExecuteRestart))]
         private void Restart()
         {
-            Server.Restart();
+            // Rebuild the options from the current UI/prefs state. Restarting with the snapshot the
+            // server was launched with would silently discard any settings changed since then
+            // (world difficulty in particular).
+            if (!TryBuildValidatedOptions(out var options)) return;
+
+            Server.Restart(options);
+        }
+
+        /// <summary>
+        /// Builds server options from the current UI state and validates them, reporting any
+        /// problem to the user. Shared with callers that need to restart the server with fresh
+        /// options, such as applying world settings.
+        /// </summary>
+        public bool TryBuildValidatedOptions([NotNullWhen(true)] out ValheimServerOptions? options)
+        {
+            options = BuildOptions();
+
+            try
+            {
+                options.Validate();
+                return true;
+            }
+            catch (Exception e)
+            {
+                options = null;
+                UserInteraction.ShowError("Error restarting server", e.Message);
+                Logger.Error(e, "Invalid server options while restarting");
+                return false;
+            }
         }
 
         public void SaveCurrentProfile()
@@ -449,6 +478,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                 }
 
                 OnPropertyChanged(nameof(CanEdit));
+                OnPropertyChanged(nameof(IsServerRunning));
                 OnPropertyChanged(nameof(CanStart));
                 OnPropertyChanged(nameof(CanStop));
                 OnPropertyChanged(nameof(CanRestart));
@@ -506,6 +536,34 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         public bool CanStart => Server.CanStart && !IsBusy;
         public bool CanStop => Server.CanStop && !IsBusy;
         public bool CanRestart => Server.CanRestart && !IsBusy;
+
+        /// <summary>
+        /// True when the server process is up or coming up. Unlike <see cref="CanEdit"/> this stays
+        /// true for the whole run, which is what callers need when deciding whether a change has to
+        /// restart the server to take effect.
+        /// </summary>
+        public bool IsServerRunning => Server.IsAnyStatus(ServerStatus.Starting, ServerStatus.Running);
+
+        /// <summary>
+        /// True when the named world has already been generated in the save folder. World
+        /// difficulty modifiers are baked in at generation time, so this drives a warning when
+        /// changing difficulty for a world that already exists.
+        /// </summary>
+        public bool WorldExists(string worldName)
+        {
+            if (string.IsNullOrWhiteSpace(worldName)) return false;
+
+            try
+            {
+                return !BuildOptions().GetValidatedSaveDataFolder().IsWorldNameAvailable(worldName);
+            }
+            catch (Exception e)
+            {
+                // A missing/unreadable save folder just means "can't tell"; don't block the dialog.
+                Logger.Error("Error checking whether world '{world}' exists: {message}", worldName, e.Message);
+                return false;
+            }
+        }
 
         private bool CanExecuteStart() => CanStart;
         private bool CanExecuteStop() => CanStop;

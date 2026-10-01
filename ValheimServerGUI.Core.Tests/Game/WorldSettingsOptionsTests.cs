@@ -145,5 +145,94 @@ namespace ValheimServerGUI.Core.Tests.Game
             Assert.Equal(WorldSettingsOptions.NoPresetDisplayName, WorldSettingsOptions.GetPresetDisplayName("nope"));
             Assert.Equal(WorldSettingsOptions.NoModifierDisplayName, WorldSettingsOptions.GetModifierDisplayName(WorldGenModifiers.Combat, "nope"));
         }
+
+        [Fact]
+        public void AreEquivalent_IdenticalSettings()
+        {
+            var left = WorldSettingsOptions.ApplyPreset(WorldGenPresets.Hardcore);
+            var right = WorldSettingsOptions.ApplyPreset(WorldGenPresets.Hardcore);
+
+            Assert.True(WorldSettingsOptions.AreEquivalent(left, right));
+        }
+
+        [Fact]
+        public void AreEquivalent_DifferentPreset()
+        {
+            var left = WorldSettingsOptions.ApplyPreset(WorldGenPresets.Hardcore);
+            var right = WorldSettingsOptions.ApplyPreset(WorldGenPresets.Easy);
+
+            Assert.False(WorldSettingsOptions.AreEquivalent(left, right));
+        }
+
+        [Fact]
+        public void AreEquivalent_DifferentModifierValue()
+        {
+            var left = new WorldSettings
+            {
+                Modifiers = { [WorldGenModifiers.Combat] = WorldGenModifiers.Values.CombatEasy }
+            };
+            var right = new WorldSettings
+            {
+                Modifiers = { [WorldGenModifiers.Combat] = WorldGenModifiers.Values.CombatHard }
+            };
+
+            Assert.False(WorldSettingsOptions.AreEquivalent(left, right));
+        }
+
+        [Fact]
+        public void AreEquivalent_ExtraModifierKey()
+        {
+            var left = new WorldSettings
+            {
+                Modifiers = { [WorldGenModifiers.Combat] = WorldGenModifiers.Values.CombatEasy }
+            };
+            var right = new WorldSettings
+            {
+                Modifiers =
+                {
+                    [WorldGenModifiers.Combat] = WorldGenModifiers.Values.CombatEasy,
+                    [WorldGenModifiers.Raids] = WorldGenModifiers.Values.RaidsMore
+                }
+            };
+
+            Assert.False(WorldSettingsOptions.AreEquivalent(left, right));
+        }
+
+        [Fact]
+        public void AreEquivalent_DifferentKeys()
+        {
+            var left = new WorldSettings();
+            left.Keys.Add(WorldGenKeys.NoMap);
+
+            var right = new WorldSettings();
+            right.Keys.Add(WorldGenKeys.Fire);
+
+            Assert.False(WorldSettingsOptions.AreEquivalent(left, right));
+        }
+
+        [Fact]
+        public void AreEquivalent_TreatsNullCollectionsAsEmpty()
+        {
+            var left = new WorldSettings { Modifiers = null, Keys = null };
+            var right = new WorldSettings();
+
+            Assert.True(WorldSettingsOptions.AreEquivalent(left, right));
+        }
+
+        [Fact]
+        public void AreEquivalent_TreatsNullPresetAsNoPreset()
+        {
+            var left = new WorldSettings { Preset = null };
+            var right = new WorldSettings { Preset = WorldSettingsOptions.NoPreset };
+
+            Assert.True(WorldSettingsOptions.AreEquivalent(left, right));
+        }
+
+        [Fact]
+        public void AreEquivalent_BothNull()
+        {
+            Assert.True(WorldSettingsOptions.AreEquivalent(null, null));
+            Assert.False(WorldSettingsOptions.AreEquivalent(new WorldSettings(), null));
+        }
     }
 }

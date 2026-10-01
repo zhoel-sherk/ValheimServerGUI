@@ -295,31 +295,31 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         }
 
         [RelayCommand]
-        private void ShowPreferences()
+        private async Task ShowPreferencesAsync()
         {
-            ShowDialog(() => ServiceProvider.GetRequiredService<PreferencesWindow>(), () => ServiceProvider.GetRequiredService<PreferencesViewModel>());
+            await ShowDialog(() => ServiceProvider.GetRequiredService<PreferencesWindow>(), () => ServiceProvider.GetRequiredService<PreferencesViewModel>());
         }
 
         [RelayCommand]
-        private void ShowAbout()
+        private async Task ShowAboutAsync()
         {
-            ShowDialog(() => ServiceProvider.GetRequiredService<AboutWindow>(), () => ServiceProvider.GetRequiredService<AboutViewModel>());
+            await ShowDialog(() => ServiceProvider.GetRequiredService<AboutWindow>(), () => ServiceProvider.GetRequiredService<AboutViewModel>());
         }
 
         [RelayCommand]
-        private void ShowDiscord()
+        private async Task ShowDiscordAsync()
         {
-            ShowDialog(() => ServiceProvider.GetRequiredService<DiscordSettingsWindow>(), () => ServiceProvider.GetRequiredService<DiscordSettingsViewModel>());
+            await ShowDialog(() => ServiceProvider.GetRequiredService<DiscordSettingsWindow>(), () => ServiceProvider.GetRequiredService<DiscordSettingsViewModel>());
         }
 
         [RelayCommand]
-        private void ShowPortForwarding()
+        private async Task ShowPortForwardingAsync()
         {
-            ShowDialog(() => ServiceProvider.GetRequiredService<PortForwardingWindow>(), () => ServiceProvider.GetRequiredService<PortForwardingViewModel>());
+            await ShowDialog(() => ServiceProvider.GetRequiredService<PortForwardingWindow>(), () => ServiceProvider.GetRequiredService<PortForwardingViewModel>());
         }
 
         [RelayCommand]
-        private void OpenWorldSettings()
+        private async Task OpenWorldSettingsAsync()
         {
             var worldName = ServerControls.IsNewWorld ? ServerControls.NewWorldName : ServerControls.ExistingWorldName;
 
@@ -334,9 +334,53 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             }
 
             var viewModel = ServiceProvider.GetRequiredService<WorldSettingsViewModel>();
-            viewModel.Load(worldName);
+            viewModel.Load(
+                worldName,
+                isServerRunning: ServerControls.IsServerRunning,
+                worldAlreadyExists: ServerControls.WorldExists(worldName));
 
-            ShowDialog(() => ServiceProvider.GetRequiredService<WorldSettingsWindow>(), () => viewModel);
+            var result = await ShowDialog(
+                () => ServiceProvider.GetRequiredService<WorldSettingsWindow>(),
+                () => viewModel);
+
+            // The ViewModel commits the settings itself; without changes there is nothing to apply.
+            if (!result || !viewModel.HasChanges) return;
+
+            await ApplyWorldSettingsToRunningServerAsync();
+        }
+
+        /// <summary>
+        /// Difficulty settings are only passed to the server on launch, so a running server has to
+        /// be restarted for them to take effect. Ask first, since that disconnects everyone.
+        /// </summary>
+        private async Task ApplyWorldSettingsToRunningServerAsync()
+        {
+            if (!ServerControls.IsServerRunning)
+            {
+                UserInteraction.ShowInfo(
+                    "World Settings",
+                    "Settings saved. They will take effect the next time the server starts.");
+                return;
+            }
+
+            if (!ServerControls.CanRestart)
+            {
+                UserInteraction.ShowInfo(
+                    "World Settings",
+                    "Settings saved. The server is busy right now — restart it to apply them.");
+                return;
+            }
+
+            var restart = await UserInteraction.ConfirmAsync(
+                "Restart server?",
+                "The new difficulty settings will take effect after a restart." + Environment.NewLine + Environment.NewLine +
+                "All players currently connected will be disconnected.");
+
+            if (!restart) return;
+
+            // Go through the same path as the Restart button so the freshly saved settings are
+            // picked up and validated before the server is bounced.
+            ServerControls.RestartCommand.Execute(null);
         }
 
         [RelayCommand]
@@ -393,7 +437,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         }
 
         [RelayCommand]
-        private void OpenPlayerDetails()
+        private async Task OpenPlayerDetailsAsync()
         {
             var playerKey = Players.SelectedPlayer?.PlayerKey;
             if (string.IsNullOrWhiteSpace(playerKey))
@@ -405,7 +449,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             var viewModel = ServiceProvider.GetRequiredService<PlayerDetailsViewModel>();
             viewModel.Load(playerKey);
 
-            ShowDialog(() => ServiceProvider.GetRequiredService<PlayerDetailsWindow>(), () => viewModel);
+            await ShowDialog(() => ServiceProvider.GetRequiredService<PlayerDetailsWindow>(), () => viewModel);
         }
 
         [RelayCommand]
@@ -453,19 +497,26 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                 : Profiles.FirstOrDefault();
         }
 
-        private void ShowDialog(Func<Window> windowFactory, Func<object> viewModelFactory)
+        private async Task<T> ShowDialog<T>(Func<Window> windowFactory, Func<object> viewModelFactory, T cancelResult)
         {
             try
             {
                 var window = windowFactory();
                 window.DataContext = viewModelFactory();
                 window.Opened += (_, _) => Services.WindowsTheme.ApplyDarkTitleBar(window);
-                window.ShowDialog(GetOwnerWindow());
+                return await window.ShowDialog<T>(GetOwnerWindow());
             }
             catch (Exception e)
             {
                 Logger.Error(e, "Failed to open dialog window");
+                return cancelResult;
             }
+        }
+
+        /// <summary>Opens a dialog that only reports whether it was accepted or dismissed.</summary>
+        private async Task<bool> ShowDialog(Func<Window> windowFactory, Func<object> viewModelFactory)
+        {
+            return await ShowDialog(windowFactory, viewModelFactory, false);
         }
 
         private static Window GetOwnerWindow()

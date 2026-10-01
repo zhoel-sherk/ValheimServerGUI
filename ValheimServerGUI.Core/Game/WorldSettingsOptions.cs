@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -215,6 +216,38 @@ namespace ValheimServerGUI.Game
         public static string GetKeyDisplayName(string key)
         {
             return KeyOptions.FirstOrDefault(k => k.Key == key)?.DisplayName ?? key;
+        }
+
+        /// <summary>
+        /// Compares two world settings selections for equality, so callers can tell whether the
+        /// user actually changed anything before committing. Presets and modifiers are mutually
+        /// exclusive, so the two dictionaries/keysets are compared independently. Null collections
+        /// are treated as empty, and a null preset as <see cref="NoPreset"/>.
+        /// </summary>
+        public static bool AreEquivalent(WorldSettings left, WorldSettings right)
+        {
+            if (left == null || right == null) return ReferenceEquals(left, right);
+
+            var leftPreset = left.Preset ?? NoPreset;
+            var rightPreset = right.Preset ?? NoPreset;
+
+            if (!string.Equals(leftPreset, rightPreset, StringComparison.Ordinal)) return false;
+
+            var leftModifiers = left.Modifiers ?? new Dictionary<string, string>();
+            var rightModifiers = right.Modifiers ?? new Dictionary<string, string>();
+
+            if (leftModifiers.Count != rightModifiers.Count) return false;
+
+            foreach (var (key, value) in leftModifiers)
+            {
+                if (!rightModifiers.TryGetValue(key, out var otherValue)) return false;
+                if (!string.Equals(value, otherValue, StringComparison.Ordinal)) return false;
+            }
+
+            var leftKeys = left.Keys ?? new HashSet<string>();
+            var rightKeys = right.Keys ?? new HashSet<string>();
+
+            return leftKeys.SetEquals(rightKeys);
         }
     }
 }
