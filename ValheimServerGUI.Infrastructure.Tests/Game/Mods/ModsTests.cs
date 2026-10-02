@@ -402,4 +402,216 @@ namespace ValheimServerGUI.Tests.Game.Mods
             await Assert.ThrowsAsync<InvalidOperationException>(() => manager.InstallFromFileAsync(serverFolder, zip));
         }
     }
+
+    /// <summary>
+    /// BepInExLogReader replaces the client-log fallback: a dedicated host has no
+    /// %LOCALAPPDATA%\IronGate\Valheim\Player.log, which silently made the pack version null and
+    /// therefore made "check for updates" always report nothing to do.
+    /// </summary>
+    public class BepInExLogReaderTests
+    {
+        // Real lines from a dedicated server's BepInEx/LogOutput.log.
+        private const string ServerLog = """
+            [Message:   BepInEx] BepInEx 5.4.23.5 - valheim_server (9/9/2026 9:07:58 PM)
+            [Message:   BepInEx] User is running BepInExPack Valheim version 5.4.2350 from Thunderstore
+            [Info   : BepInEx] Chainloader started
+            [Info   : Unity Log] Console: ValheimPlus [0.10.1.1] is loaded.
+            [Info   : Unity Log] Console: ValheimPlus [0.10.1.1] is outdated, version [0.10.2.0] is available.
+            """;
+
+        [Fact]
+        public void ParsesAllVersionsFromServerLog()
+        {
+            var info = BepInExLogReader.Parse(ServerLog);
+
+            Assert.Equal("5.4.23.5", info.BepInExVersion);
+            Assert.Equal("5.4.2350", info.BepInExPackVersion);
+            Assert.Equal("0.10.1.1", info.ValheimPlusVersion);
+            Assert.Contains("outdated", info.ValheimPlusUpdateStatus);
+            Assert.Contains("0.10.2.0", info.ValheimPlusUpdateStatus);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        public void EmptyLogYieldsNoVersions(string logText)
+        {
+            var info = BepInExLogReader.Parse(logText);
+
+            Assert.Null(info.BepInExPackVersion);
+            Assert.Null(info.ValheimPlusVersion);
+        }
+
+        [Fact]
+        public void LogWithoutPackLineYieldsNoPackVersion()
+        {
+            // e.g. a BepInEx installed by hand that never got far enough to print the pack line
+            var info = BepInExLogReader.Parse("[Info : BepInEx] Chainloader started");
+
+            Assert.Null(info.BepInExPackVersion);
+        }
+
+        [Fact]
+        public void ReadReturnsEmptyInfoForMissingFolder()
+        {
+            var info = BepInExLogReader.Read(Path.Combine(Path.GetTempPath(), "vsg-no-such-server-" + Guid.NewGuid().ToString("N")));
+
+            Assert.Null(info.BepInExPackVersion);
+        }
+
+        [Fact]
+        public void ReadPicksUpTheServerLogOnDisk()
+        {
+            var folder = Path.Combine(Path.GetTempPath(), "vsg-tests", "bepilog", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(Path.Combine(folder, "BepInEx"));
+            File.WriteAllText(Path.Combine(folder, "BepInEx", "LogOutput.log"), ServerLog);
+
+            try
+            {
+                Assert.Equal("5.4.2350", BepInExLogReader.Read(folder).BepInExPackVersion);
+            }
+            finally
+            {
+                Directory.Delete(folder, recursive: true);
+            }
+        }
+    }
+
+    public class BepInExManagerRepairTests : IDisposable
+    {
+        private readonly string TestFolder =
+            Path.Combine(Path.GetTempPath(), "vsg-tests", "repair", Guid.NewGuid().ToString("N"));
+
+        private readonly IApplicationLogger Logger = new Mock<IApplicationLogger>().Object;
+
+        private IBepInExManager Manager => new BepInExManager(new Mock<IModSourceClient>().Object, Logger);
+
+        public BepInExManagerRepairTests() => Directory.CreateDirectory(TestFolder);
+
+        public void Dispose()
+        {
+            try { Directory.Delete(TestFolder, recursive: true); } catch { }
+        }
+
+        private string WriteConfig(string content, string folderName = "server")
+        {
+            var serverFolder = Path.Combine(TestFolder, folderName);
+            var configFolder = Path.Combine(serverFolder, "BepInEx", "config");
+            Directory.CreateDirectory(configFolder);
+
+            var path = Path.Combine(configFolder, "BepInEx.cfg");
+            File.WriteAllText(path, content);
+            return serverFolder;
+        }
+
+        [Fact]
+        public void DisablesConsoleLoggingAndReportsTheChange()
+        {
+            var serverFolder = WriteConfig("[Logging.Console]\nEnabled = true\nPreventClose = true\n");
+
+            Assert.True(Manager.EnsureConsoleLoggingDisabled(serverFolder));
+
+            var updated = File.ReadAllText(Path.Combine(serverFolder, "BepInEx", "config", "BepInEx.cfg"));
+            Assert.Contains("Enabled = false", updated);
+            Assert.Contains("PreventClose = true", updated);
+        }
+
+        [Fact]
+        public void IsANoOpWhenAlreadyDisabled()
+        {
+            const string content = "[Logging.Console]\nEnabled = false\n";
+            var serverFolder = WriteConfig(content);
+
+            Assert.False(Manager.EnsureConsoleLoggingDisabled(serverFolder));
+
+            // Byte-identical: a no-op must not rewrite the file at all.
+            Assert.Equal(content, File.ReadAllText(Path.Combine(serverFolder, "BepInEx", "config", "BepInEx.cfg")));
+        }
+
+        [Fact]
+        public void IsANoOpWhenThereIsNoBepInExConfig()
+        {
+            var serverFolder = Path.Combine(TestFolder, "empty");
+            Directory.CreateDirectory(serverFolder);
+
+            Assert.False(Manager.EnsureConsoleLoggingDisabled(serverFolder));
+        }
+
+        [Fact]
+        public void IsANoOpForABlankFolder()
+        {
+            Assert.False(Manager.EnsureConsoleLoggingDisabled(null));
+            Assert.False(Manager.EnsureConsoleLoggingDisabled("   "));
+        }
+
+        [Fact]
+        public void ListsInstalledPluginsAndSkipsSidecarFiles()
+        {
+            var serverFolder = Path.Combine(TestFolder, "plugins-server");
+            var plugins = Path.Combine(serverFolder, "BepInEx", "plugins");
+            Directory.CreateDirectory(plugins);
+
+            File.WriteAllText(Path.Combine(plugins, "ValheimPlus.dll"), "x");
+            File.WriteAllText(Path.Combine(plugins, "Jotunn.dll"), "yy");
+            File.WriteAllText(Path.Combine(plugins, "Jotunn.pdb"), "zzz");
+            File.WriteAllText(Path.Combine(plugins, "Jotunn.xml"), "docs");
+
+            var pluginsList = Manager.GetInstalledPlugins(serverFolder);
+
+            Assert.Equal(2, pluginsList.Count);
+            Assert.Equal("Jotunn", pluginsList[0].Name);
+            Assert.Equal("ValheimPlus", pluginsList[1].Name);
+
+            // Only the mod the app can install/update is marked managed.
+            Assert.False(pluginsList[0].IsManaged);
+            Assert.True(pluginsList[1].IsManaged);
+        }
+
+        [Fact]
+        public void PluginListingIsEmptyForAFolderWithoutBepInEx()
+        {
+            var serverFolder = Path.Combine(TestFolder, "no-bepinex");
+            Directory.CreateDirectory(serverFolder);
+
+            Assert.Empty(Manager.GetInstalledPlugins(serverFolder));
+            Assert.Empty(Manager.GetInstalledPlugins(null));
+        }
+
+        [Fact]
+        public void PackVersionComesFromTheServerLogWhenTheMarkerIsMissing()
+        {
+            var serverFolder = Path.Combine(TestFolder, "log-only");
+            Directory.CreateDirectory(Path.Combine(serverFolder, "BepInEx", "core"));
+            Directory.CreateDirectory(Path.Combine(serverFolder, "BepInEx", "config"));
+            File.WriteAllText(Path.Combine(serverFolder, "winhttp.dll"), "x");
+            File.WriteAllText(Path.Combine(serverFolder, "doorstop_config.ini"), "x");
+            File.WriteAllText(Path.Combine(serverFolder, "BepInEx", "core", "BepInEx.dll"), "x");
+            File.WriteAllText(
+                Path.Combine(serverFolder, "BepInEx", "LogOutput.log"),
+                "[Message:   BepInEx] User is running BepInExPack Valheim version 5.4.2350 from Thunderstore");
+
+            var status = Manager.GetStatus(serverFolder);
+
+            Assert.True(status.IsInstalled);
+            Assert.Equal("5.4.2350", status.PackageVersion);
+        }
+
+        [Fact]
+        public void MarkerFileWinsOverTheLog()
+        {
+            var serverFolder = Path.Combine(TestFolder, "marker-wins");
+            Directory.CreateDirectory(Path.Combine(serverFolder, "BepInEx", "core"));
+            Directory.CreateDirectory(Path.Combine(serverFolder, "BepInEx", "config"));
+            File.WriteAllText(Path.Combine(serverFolder, "winhttp.dll"), "x");
+            File.WriteAllText(Path.Combine(serverFolder, "doorstop_config.ini"), "x");
+            File.WriteAllText(Path.Combine(serverFolder, "BepInEx", "core", "BepInEx.dll"), "x");
+            File.WriteAllText(Path.Combine(serverFolder, "BepInEx", ".vsg-bepinex-pack-version"), "5.4.2400");
+            File.WriteAllText(
+                Path.Combine(serverFolder, "BepInEx", "LogOutput.log"),
+                "[Message:   BepInEx] User is running BepInExPack Valheim version 5.4.2350 from Thunderstore");
+
+            Assert.Equal("5.4.2400", Manager.GetStatus(serverFolder).PackageVersion);
+        }
+    }
 }

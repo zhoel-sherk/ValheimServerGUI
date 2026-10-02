@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -78,6 +79,27 @@ namespace ValheimServerGUI.Game
             {
                 // Assume the world name is available if we cannot load the worlds folders
                 return true;
+            }
+        }
+
+        /// <summary>
+        /// Derives the Valheim server folder (the directory holding valheim_server.exe) from a
+        /// configured executable path, expanding environment variables along the way.
+        /// Returns null for a blank or invalid path - an invalid value is normal while the
+        /// user is still typing it, so callers must not treat null as an error.
+        /// </summary>
+        public static string GetServerFolderFromExePath(string serverExePath)
+        {
+            if (string.IsNullOrWhiteSpace(serverExePath)) return null;
+
+            try
+            {
+                var expanded = Environment.ExpandEnvironmentVariables(serverExePath);
+                return Path.GetDirectoryName(Path.GetFullPath(expanded));
+            }
+            catch
+            {
+                return null;
             }
         }
 
