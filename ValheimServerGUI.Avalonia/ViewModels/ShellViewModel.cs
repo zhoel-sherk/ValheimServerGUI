@@ -74,6 +74,28 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         [ObservableProperty]
         private string _localIpAddress = "127.0.0.1";
 
+        /// <summary>
+        /// The address to hand to a friend: host and port together. Showing the IP and the port
+        /// in separate fields meant the user had to assemble the connect string by hand, which is
+        /// the one thing a server owner does most often.
+        /// </summary>
+        public string ExternalAddress => ComposeAddress(ExternalIpAddress);
+
+        /// <summary>The LAN address, for players on the same network.</summary>
+        public string InternalAddress => ComposeAddress(InternalIpAddress);
+
+        /// <summary>Loopback address, handy for testing a public server from the host itself.</summary>
+        public string LocalAddress => ComposeAddress(LocalIpAddress);
+
+        private string ComposeAddress(string? ip)
+        {
+            // The providers report "Loading..." until the lookup completes and can fail outright,
+            // so guard against stitching a placeholder together with a port.
+            if (string.IsNullOrWhiteSpace(ip) || ip == "Loading...") return string.Empty;
+
+            return ServerControls == null ? ip : $"{ip}:{ServerControls.Port}";
+        }
+
         [ObservableProperty]
         private string? _lastWorldSaveText;
 
@@ -129,6 +151,9 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             IpAddressProvider.InternalIpChanged += OnInternalIpChanged;
             SoftwareUpdateProvider.UpdateCheckStarted += OnUpdateCheckStarted;
             SoftwareUpdateProvider.UpdateCheckFinished += OnUpdateCheckFinished;
+
+            // The composed addresses embed the port, so they have to be refreshed when it changes.
+            ServerControls.PropertyChanged += OnServerControlsPropertyChanged;
 
             _uptimeTimer = new System.Threading.Timer(OnUptimeTick, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
             // The provider self-gates automatic checks to once per AppSettings.UpdateCheckInterval.
@@ -579,16 +604,32 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         }
 
         [RelayCommand]
-        private Task CopyExternalIpAsync() => UserInteraction.CopyToClipboardAsync(ExternalIpAddress ?? string.Empty);
+        private Task CopyExternalAddressAsync() => UserInteraction.CopyToClipboardAsync(ExternalAddress);
 
         [RelayCommand]
-        private Task CopyInternalIpAsync() => UserInteraction.CopyToClipboardAsync(InternalIpAddress ?? string.Empty);
+        private Task CopyInternalAddressAsync() => UserInteraction.CopyToClipboardAsync(InternalAddress);
 
         [RelayCommand]
-        private Task CopyLocalIpAsync() => UserInteraction.CopyToClipboardAsync(LocalIpAddress ?? string.Empty);
+        private Task CopyLocalAddressAsync() => UserInteraction.CopyToClipboardAsync(LocalAddress);
 
         [RelayCommand]
         private Task CopyInviteCodeAsync() => UserInteraction.CopyToClipboardAsync(InviteCode ?? string.Empty);
+
+        private void OnServerControlsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ServerControlsViewModel.Port))
+            {
+                OnPropertyChanged(nameof(ExternalAddress));
+                OnPropertyChanged(nameof(InternalAddress));
+                OnPropertyChanged(nameof(LocalAddress));
+            }
+        }
+
+        partial void OnExternalIpAddressChanged(string? value) => OnPropertyChanged(nameof(ExternalAddress));
+
+        partial void OnInternalIpAddressChanged(string? value) => OnPropertyChanged(nameof(InternalAddress));
+
+        partial void OnLocalIpAddressChanged(string value) => OnPropertyChanged(nameof(LocalAddress));
 
         private void OnExternalIpChanged(object? sender, string ip)
         {

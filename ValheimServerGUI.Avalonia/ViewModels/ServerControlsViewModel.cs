@@ -82,14 +82,41 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         [ObservableProperty]
         private int _saveInterval;
 
+        /// <summary>
+        /// Human-readable equivalent of <see cref="SaveInterval"/>, shown next to the field so the
+        /// raw seconds are not the only thing on screen. The server itself still takes seconds.
+        /// </summary>
+        public string SaveIntervalHint => FormatIntervalHint(SaveInterval);
+
         [ObservableProperty]
         private int _backupCount;
+
+        /// <summary>Human-readable equivalent of <see cref="BackupShortInterval"/>.</summary>
+        public string BackupShortHint => FormatIntervalHint(BackupShortInterval);
 
         [ObservableProperty]
         private int _backupShortInterval;
 
+        /// <summary>Human-readable equivalent of <see cref="BackupLongInterval"/>.</summary>
+        public string BackupLongHint => FormatIntervalHint(BackupLongInterval);
+
         [ObservableProperty]
         private int _backupLongInterval;
+
+        private static string FormatIntervalHint(int seconds)
+        {
+            var formatted = TimeFormat.FormatDuration(seconds);
+            return string.IsNullOrEmpty(formatted) ? string.Empty : $"≈ {formatted}";
+        }
+
+        partial void OnSaveIntervalChanged(int value)
+            => OnPropertyChanged(nameof(SaveIntervalHint));
+
+        partial void OnBackupShortIntervalChanged(int value)
+            => OnPropertyChanged(nameof(BackupShortHint));
+
+        partial void OnBackupLongIntervalChanged(int value)
+            => OnPropertyChanged(nameof(BackupLongHint));
 
         [ObservableProperty]
         private bool _autoStart;

@@ -17,6 +17,13 @@
     <conv:PlayerStatusToBrushConverter x:Key="PlayerStatusToBrush"/>
     <conv:PlatformToBrushConverter x:Key="PlatformToBrush"/>
     <conv:LogSeverityToBrushConverter x:Key="LogSeverityToBrush"/>
+
+    <!-- Two hand-drawn glyphs, so the dense read-only rows can use an icon button instead of a
+         column of identical "Copy" text buttons. Drawn here rather than pulled from an icon pack
+         to avoid a new dependency for two shapes. -->
+    <StreamGeometry x:Key="CopyIcon">M0.7,0.7 H7.3 V9.3 H0.7 Z M4.7,4.7 H11.3 V13.3 H4.7 Z</StreamGeometry>
+    <StreamGeometry x:Key="EyeIcon">M0.5,7 C3,3.4 5,2.7 7,2.7 C9,2.7 11,3.4 13.5,7 C11,10.6 9,11.3 7,11.3 C5,11.3 3,10.6 0.5,7 Z</StreamGeometry>
+    <StreamGeometry x:Key="EyePupilIcon">M7,4.9 A2.1,2.1 0 1 0 7.01,4.9 Z</StreamGeometry>
   </Window.Resources>
 
   <DockPanel>
@@ -88,125 +95,207 @@
       <!-- Server -->
       <TabItem Header="Server">
         <ScrollViewer>
-          <StackPanel Margin="8" Spacing="16">
+<Grid ColumnDefinitions="*,320" ColumnSpacing="12" Margin="8">
 
-            <!-- Server Controls -->
-            <Border Padding="16" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
-              <StackPanel Spacing="12">
-                <TextBlock Text="Server Controls" FontSize="16" FontWeight="SemiBold"/>
+            <!-- ================= Left: configuration ================= -->
+            <StackPanel Grid.Column="0" Spacing="12">
 
-                <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
-                  <TextBlock Text="Server Name:" VerticalAlignment="Center"/>
-                  <TextBox Grid.Column="1" Text="{Binding ServerControls.ServerName}" IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Enter a server name"/>
+              <!-- Server -->
+              <Border Padding="16" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
+                <StackPanel Spacing="12">
+                  <TextBlock Text="Server" FontSize="16" FontWeight="SemiBold"/>
 
-                  <TextBlock Grid.Row="1" Text="Port:" VerticalAlignment="Center"/>
-                  <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding ServerControls.Port}" Minimum="1" Maximum="65535" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                  <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
+                    <TextBlock Text="Server Name:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="1" Text="{Binding ServerControls.ServerName}" IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Enter a server name"/>
 
-                  <TextBlock Grid.Row="2" Text="Password:" VerticalAlignment="Center"/>
-                  <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                    <TextBox Text="{Binding ServerControls.Password}" PasswordChar="&#x2022;"
+                    <TextBlock Grid.Row="1" Text="Port:" VerticalAlignment="Center"/>
+                    <NumericUpDown Grid.Row="1" Grid.Column="1" Width="140" HorizontalAlignment="Left"
+                                   Value="{Binding ServerControls.Port}" Minimum="1" Maximum="65535" Increment="1" FormatString="N0"
+                                   IsEnabled="{Binding ServerControls.CanEdit}"/>
+
+                    <TextBlock Grid.Row="2" Text="Password:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ServerControls.Password}" PasswordChar="&#x2022;"
                              RevealPassword="{Binding ServerControls.ShowPassword}"
-                             IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Enter a password"/>
-                    <CheckBox Grid.Column="1" Content="Show" IsChecked="{Binding ServerControls.ShowPassword}" VerticalAlignment="Center"/>
-                    <Button Grid.Column="2" Content="Copy" Command="{Binding ServerControls.CopyPasswordCommand}"/>
-                  </Grid>
+                             IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Enter a password">
+                      <TextBox.InnerRightContent>
+                        <StackPanel Orientation="Horizontal" Spacing="2">
+                          <Button Command="{Binding ServerControls.CopyPasswordCommand}" Padding="6"
+                                  ToolTip.Tip="Copy the password">
+                            <Path Data="{StaticResource CopyIcon}" Stroke="{DynamicResource VsgMutedTextBrush}"
+                                  StrokeThickness="1.2" Fill="Transparent"/>
+                          </Button>
+                          <ToggleButton IsChecked="{Binding ServerControls.ShowPassword, Mode=TwoWay}" Padding="6"
+                                        ToolTip.Tip="Show or hide the password">
+                            <Grid>
+                              <Path Data="{StaticResource EyeIcon}" Stroke="{DynamicResource VsgMutedTextBrush}"
+                                    StrokeThickness="1.2" Fill="Transparent"/>
+                              <Path Data="{StaticResource EyePupilIcon}" Fill="{DynamicResource VsgMutedTextBrush}"/>
+                            </Grid>
+                          </ToggleButton>
+                        </StackPanel>
+                      </TextBox.InnerRightContent>
+                    </TextBox>
 
-                  <TextBlock Grid.Row="3" Text="World:" VerticalAlignment="Center"/>
-                  <StackPanel Grid.Row="3" Grid.Column="1" Spacing="8">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                      <RadioButton Content="New World" GroupName="WorldSelect" IsChecked="{Binding ServerControls.IsNewWorld}" IsEnabled="{Binding ServerControls.CanEdit}"/>
-                      <RadioButton Content="Existing World" GroupName="WorldSelect" IsChecked="{Binding ServerControls.IsNewWorld, Converter={StaticResource NegateBool}}" IsEnabled="{Binding ServerControls.CanEdit}"/>
-                      <Button Content="Refresh" Command="{Binding ServerControls.RefreshWorldsCommand}"/>
-                      <Button Content="Difficulty..." Command="{Binding OpenWorldSettingsCommand}"/>
+                    <!-- The toggle replaces the old New/Existing radio pair, which forced the world
+                       field onto a second line anyway. The field gets its own row so the row
+                       above can never overflow the column at the minimum window width. -->
+                    <TextBlock Grid.Row="3" Text="World:" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                      <ToggleButton IsChecked="{Binding ServerControls.IsNewWorld, Mode=TwoWay}" Content="+ New"
+                                    IsEnabled="{Binding ServerControls.CanEdit}" VerticalAlignment="Center"
+                                    ToolTip.Tip="Host a new world instead of an existing one"/>
+                      <Button Content="Refresh" Command="{Binding ServerControls.RefreshWorldsCommand}" VerticalAlignment="Center"/>
+                      <Button Content="Difficulty..." Command="{Binding OpenWorldSettingsCommand}" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                      <TextBox Text="{Binding ServerControls.NewWorldName}" IsVisible="{Binding ServerControls.IsNewWorld}" Width="220" IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Enter new world name"/>
-                      <ComboBox ItemsSource="{Binding ServerControls.WorldNames}" SelectedItem="{Binding ServerControls.ExistingWorldName}" IsVisible="{Binding ServerControls.IsNewWorld, Converter={StaticResource NegateBool}}" Width="220" IsEnabled="{Binding ServerControls.CanEdit}"/>
+
+                    <TextBox Grid.Row="4" Grid.ColumnSpan="2" Text="{Binding ServerControls.NewWorldName}"
+                             IsVisible="{Binding ServerControls.IsNewWorld}"
+                             IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Name for the new world"/>
+                    <ComboBox Grid.Row="4" Grid.ColumnSpan="2" ItemsSource="{Binding ServerControls.WorldNames}"
+                              SelectedItem="{Binding ServerControls.ExistingWorldName}"
+                              IsVisible="{Binding ServerControls.IsNewWorld, Converter={StaticResource NegateBool}}"
+                              IsEnabled="{Binding ServerControls.CanEdit}"/>
+
+                    <TextBlock Grid.Row="5" Text="Join Options:" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" Spacing="16">
+                      <CheckBox Content="Community Server (Public)" IsChecked="{Binding ServerControls.IsPublic}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                      <CheckBox Content="Enable Crossplay" IsChecked="{Binding ServerControls.IsCrossplay}" IsEnabled="{Binding ServerControls.CanEdit}"/>
                     </StackPanel>
-                  </StackPanel>
+                  </Grid>
+                </StackPanel>
+              </Border>
 
-                  <TextBlock Grid.Row="4" Text="Join Options:" VerticalAlignment="Center"/>
-                  <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="16">
-                    <CheckBox Content="Community Server (Public)" IsChecked="{Binding ServerControls.IsPublic}" IsEnabled="{Binding ServerControls.CanEdit}"/>
-                    <CheckBox Content="Enable Crossplay" IsChecked="{Binding ServerControls.IsCrossplay}" IsEnabled="{Binding ServerControls.CanEdit}"/>
-                  </StackPanel>
-                </Grid>
-              </StackPanel>
-            </Border>
+              <!-- Storage & backups -->
+              <Border Padding="16" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
+                <StackPanel Spacing="12">
+                  <TextBlock Text="Storage &amp; backups" FontSize="16" FontWeight="SemiBold"/>
 
-            <!-- Server Details -->
-            <Border Padding="16" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
-              <StackPanel Spacing="12">
-                <TextBlock Text="Server Details" FontSize="16" FontWeight="SemiBold"/>
+                  <Grid ColumnDefinitions="140,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
+                    <TextBlock Text="Server executable:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="1" Text="{Binding ServerControls.ServerExePath}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                    <Button Grid.Column="2" Content="Browse..." Command="{Binding ServerControls.BrowseServerExeCommand}"/>
 
-                <Grid ColumnDefinitions="140,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
-                  <TextBlock Text="External IP:" VerticalAlignment="Center"/>
-                  <TextBlock Grid.Column="1" Text="{Binding ExternalIpAddress}" VerticalAlignment="Center"/>
-                  <Button Grid.Column="2" Content="Copy" Command="{Binding CopyExternalIpCommand}"/>
+                    <TextBlock Grid.Row="1" Text="Save data folder:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ServerControls.SaveDataFolderPath}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                    <Button Grid.Row="1" Grid.Column="2" Content="Browse..." Command="{Binding ServerControls.BrowseSaveFolderCommand}"/>
 
-                  <TextBlock Grid.Row="1" Text="Internal IP:" VerticalAlignment="Center"/>
-                  <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding InternalIpAddress}" VerticalAlignment="Center"/>
-                  <Button Grid.Row="1" Grid.Column="2" Content="Copy" Command="{Binding CopyInternalIpCommand}"/>
+                    <!-- The server takes raw seconds, so the field stays free-form and the hint
+                         just restates it the way a person would say it. A preset dropdown would
+                         make values like 45 or 90 minutes unreachable. -->
+                    <TextBlock Grid.Row="2" Text="Save interval (s):" VerticalAlignment="Center"/>
+                    <NumericUpDown Grid.Row="2" Grid.Column="1" Width="140" HorizontalAlignment="Left"
+                                   Value="{Binding ServerControls.SaveInterval}" Minimum="1" Increment="1" FormatString="N0"
+                                   IsEnabled="{Binding ServerControls.CanEdit}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding ServerControls.SaveIntervalHint}"
+                               VerticalAlignment="Center" Foreground="{DynamicResource VsgMutedTextBrush}"/>
 
-                  <TextBlock Grid.Row="2" Text="Local IP:" VerticalAlignment="Center"/>
-                  <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LocalIpAddress}" VerticalAlignment="Center"/>
-                  <Button Grid.Row="2" Grid.Column="2" Content="Copy" Command="{Binding CopyLocalIpCommand}"/>
+                    <TextBlock Grid.Row="3" Text="Backups kept:" VerticalAlignment="Center"/>
+                    <NumericUpDown Grid.Row="3" Grid.Column="1" Width="140" HorizontalAlignment="Left"
+                                   Value="{Binding ServerControls.BackupCount}" Minimum="1" Increment="1" FormatString="N0"
+                                   IsEnabled="{Binding ServerControls.CanEdit}"/>
 
-                  <TextBlock Grid.Row="3" Text="Invite Code:" VerticalAlignment="Center"/>
-                  <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding InviteCode}" VerticalAlignment="Center"/>
-                  <Button Grid.Row="3" Grid.Column="2" Content="Copy" Command="{Binding CopyInviteCodeCommand}"/>
+                    <TextBlock Grid.Row="4" Text="Short backup (s):" VerticalAlignment="Center"/>
+                    <NumericUpDown Grid.Row="4" Grid.Column="1" Width="140" HorizontalAlignment="Left"
+                                   Value="{Binding ServerControls.BackupShortInterval}" Minimum="1" Increment="1" FormatString="N0"
+                                   IsEnabled="{Binding ServerControls.CanEdit}"/>
+                    <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding ServerControls.BackupShortHint}"
+                               VerticalAlignment="Center" Foreground="{DynamicResource VsgMutedTextBrush}"/>
 
-                  <TextBlock Grid.Row="4" Text="Last world save:" VerticalAlignment="Center"/>
-                  <TextBlock Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding LastWorldSaveText}" VerticalAlignment="Center"/>
-
-                  <TextBlock Grid.Row="5" Text="Average world save:" VerticalAlignment="Center"/>
-                  <TextBlock Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding AverageWorldSaveText}" VerticalAlignment="Center"/>
-                </Grid>
-              </StackPanel>
-            </Border>
-
-            <!-- Advanced Controls -->
-            <Border Padding="16" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
-              <StackPanel Spacing="12">
-                <TextBlock Text="Advanced Controls" FontSize="16" FontWeight="SemiBold"/>
-
-                <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
-                  <TextBlock Text="Server Executable:" VerticalAlignment="Center"/>
-                  <Grid Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                    <TextBox Text="{Binding ServerControls.ServerExePath}" IsEnabled="{Binding ServerControls.CanEdit}"/>
-                    <Button Grid.Column="1" Content="Browse..." Command="{Binding ServerControls.BrowseServerExeCommand}"/>
+                    <TextBlock Grid.Row="5" Text="Long backup (s):" VerticalAlignment="Center"/>
+                    <NumericUpDown Grid.Row="5" Grid.Column="1" Width="140" HorizontalAlignment="Left"
+                                   Value="{Binding ServerControls.BackupLongInterval}" Minimum="1" Increment="1" FormatString="N0"
+                                   IsEnabled="{Binding ServerControls.CanEdit}"/>
+                    <TextBlock Grid.Row="5" Grid.Column="2" Text="{Binding ServerControls.BackupLongHint}"
+                               VerticalAlignment="Center" Foreground="{DynamicResource VsgMutedTextBrush}"/>
                   </Grid>
 
-                  <TextBlock Grid.Row="1" Text="Save Data Folder:" VerticalAlignment="Center"/>
-                  <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                    <TextBox Text="{Binding ServerControls.SaveDataFolderPath}" IsEnabled="{Binding ServerControls.CanEdit}"/>
-                    <Button Grid.Column="1" Content="Browse..." Command="{Binding ServerControls.BrowseSaveFolderCommand}"/>
+                  <!-- Save timings live here rather than in the narrow status column: the
+                       timestamp plus duration collided with its own label at 320px. Both
+                       values only appear once the server has saved, hence the placeholders. -->
+                  <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto" RowSpacing="4" ColumnSpacing="8" Margin="0,4,0,0">
+                    <TextBlock Text="Last world save:" Foreground="{DynamicResource VsgMutedTextBrush}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding LastWorldSaveText, TargetNullValue=Not saved yet}"
+                               HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Grid.Row="1" Text="Average save:" Foreground="{DynamicResource VsgMutedTextBrush}"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AverageWorldSaveText, TargetNullValue=Not saved yet}"
+                               HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
                   </Grid>
+                </StackPanel>
+              </Border>
 
-                  <TextBlock Grid.Row="2" Text="Save Interval (s):" VerticalAlignment="Center"/>
-                  <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding ServerControls.SaveInterval}" Minimum="1" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
-
-                  <TextBlock Grid.Row="3" Text="Backups:" VerticalAlignment="Center"/>
-                  <NumericUpDown Grid.Row="3" Grid.Column="1" Value="{Binding ServerControls.BackupCount}" Minimum="1" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
-
-                  <TextBlock Grid.Row="4" Text="Short Backup (s):" VerticalAlignment="Center"/>
-                  <NumericUpDown Grid.Row="4" Grid.Column="1" Value="{Binding ServerControls.BackupShortInterval}" Minimum="1" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
-
-                  <TextBlock Grid.Row="5" Text="Long Backup (s):" VerticalAlignment="Center"/>
-                  <NumericUpDown Grid.Row="5" Grid.Column="1" Value="{Binding ServerControls.BackupLongInterval}" Minimum="1" Increment="1" FormatString="N0" IsEnabled="{Binding ServerControls.CanEdit}"/>
-                </Grid>
-
-                <CheckBox Content="Auto-start server on launch" IsChecked="{Binding ServerControls.AutoStart}" IsEnabled="{Binding ServerControls.CanEdit}"/>
-                <CheckBox Content="Write server logs to file" IsChecked="{Binding ServerControls.WriteServerLogsToFile}" IsEnabled="{Binding ServerControls.CanEdit}"/>
-
-                <Grid ColumnDefinitions="160,*" ColumnSpacing="8">
-                  <TextBlock Text="Additional Args:" VerticalAlignment="Center"/>
-                  <TextBox Grid.Column="1" Text="{Binding ServerControls.AdditionalArgs}" IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Additional command-line arguments"/>
-                </Grid>
               </StackPanel>
-            </Border>
 
-          </StackPanel>
+            <!-- ================= Right: live state ================= -->
+            <StackPanel Grid.Column="1" Spacing="12">
+
+              <Border Padding="16" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
+                <StackPanel Spacing="10">
+                  <TextBlock Text="Status" FontSize="16" FontWeight="SemiBold"/>
+                  <TextBlock Text="{Binding StatusText}" FontSize="24" FontWeight="SemiBold"
+                             Foreground="{Binding StatusText, Converter={StaticResource StatusToBrush}}"/>
+                  <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                    <TextBlock Text="Uptime" Foreground="{DynamicResource VsgMutedTextBrush}"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Uptime}" HorizontalAlignment="Right"/>
+                  </Grid>
+                </StackPanel>
+              </Border>
+
+              <Border Padding="16" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
+                <StackPanel Spacing="12">
+                  <TextBlock Text="Share this server" FontSize="16" FontWeight="SemiBold"/>
+                  <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource VsgMutedTextBrush}"
+                             Text="Address and port together - copy it and send it to whoever should join."/>
+
+                  <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
+                    <TextBlock Text="Invite code" Foreground="{DynamicResource VsgMutedTextBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="{Binding InviteCode}" FontFamily="Consolas" VerticalAlignment="Center"/>
+                    <Button Grid.Column="2" Command="{Binding CopyInviteCodeCommand}" Padding="6" ToolTip.Tip="Copy the invite code">
+                      <Path Data="{StaticResource CopyIcon}" Stroke="{DynamicResource VsgMutedTextBrush}"
+                            StrokeThickness="1.2" Fill="Transparent"/>
+                    </Button>
+
+                    <TextBlock Grid.Row="1" Text="External" Foreground="{DynamicResource VsgMutedTextBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ExternalAddress}" FontFamily="Consolas" VerticalAlignment="Center"/>
+                    <Button Grid.Row="1" Grid.Column="2" Command="{Binding CopyExternalAddressCommand}" Padding="6" ToolTip.Tip="Copy the external address">
+                      <Path Data="{StaticResource CopyIcon}" Stroke="{DynamicResource VsgMutedTextBrush}"
+                            StrokeThickness="1.2" Fill="Transparent"/>
+                    </Button>
+
+                    <TextBlock Grid.Row="2" Text="LAN" Foreground="{DynamicResource VsgDisabledTextBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding InternalAddress}" FontFamily="Consolas"
+                               VerticalAlignment="Center" Foreground="{DynamicResource VsgDisabledTextBrush}"/>
+                    <Button Grid.Row="2" Grid.Column="2" Command="{Binding CopyInternalAddressCommand}" Padding="6" ToolTip.Tip="Copy the LAN address">
+                      <Path Data="{StaticResource CopyIcon}" Stroke="{DynamicResource VsgDisabledTextBrush}"
+                            StrokeThickness="1.2" Fill="Transparent"/>
+                    </Button>
+
+                    <TextBlock Grid.Row="3" Text="Loopback" Foreground="{DynamicResource VsgDisabledTextBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding LocalAddress}" FontFamily="Consolas"
+                               VerticalAlignment="Center" Foreground="{DynamicResource VsgDisabledTextBrush}"/>
+                    <Button Grid.Row="3" Grid.Column="2" Command="{Binding CopyLocalAddressCommand}" Padding="6" ToolTip.Tip="Copy the loopback address">
+                      <Path Data="{StaticResource CopyIcon}" Stroke="{DynamicResource VsgDisabledTextBrush}"
+                            StrokeThickness="1.2" Fill="Transparent"/>
+                    </Button>
+                  </Grid>
+                </StackPanel>
+              </Border>
+
+              <!-- Rarely touched settings sit in the right column rather than behind an
+                   Expander in the left one: the Fluent expander header paints a dark inset
+                   bar with a chevron that reads as foreign next to these flat cards, and the
+                   left column is the one that has to scroll. -->
+              <Border Padding="16" CornerRadius="4" Background="{DynamicResource VsgPanelBrush}">
+                <StackPanel Spacing="12">
+                  <TextBlock Text="Advanced &amp; startup" FontSize="16" FontWeight="SemiBold"/>
+                  <CheckBox Content="Auto-start server on launch" IsChecked="{Binding ServerControls.AutoStart}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                  <CheckBox Content="Write server logs to file" IsChecked="{Binding ServerControls.WriteServerLogsToFile}" IsEnabled="{Binding ServerControls.CanEdit}"/>
+                  <TextBlock Text="Additional args" Foreground="{DynamicResource VsgMutedTextBrush}"/>
+                  <TextBox Text="{Binding ServerControls.AdditionalArgs}" IsEnabled="{Binding ServerControls.CanEdit}" PlaceholderText="Additional command-line arguments"/>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Grid>
         </ScrollViewer>
       </TabItem>
 
