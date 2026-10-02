@@ -29,6 +29,18 @@ namespace ValheimServerGUI.Game.Mods
 
         /// <summary>Full paths of the installed mod config files (*.cfg) in the config folder.</summary>
         IReadOnlyList<string> GetConfigFiles(string serverFolder);
+
+        /// <summary>
+        /// Makes sure the BepInEx console is disabled in <c>BepInEx/config/BepInEx.cfg</c>.
+        /// Returns true when the file had to be changed.
+        /// </summary>
+        bool EnsureConsoleLoggingDisabled(string serverFolder);
+
+        /// <summary>
+        /// The mods currently present in the plugins folder, with version and timestamp.
+        /// Read-only: this does not touch the files.
+        /// </summary>
+        IReadOnlyList<InstalledPlugin> GetInstalledPlugins(string serverFolder);
     }
 
     /// <summary>
@@ -149,6 +161,37 @@ namespace ValheimServerGUI.Game.Mods
             }
         }
 
+        public IReadOnlyList<InstalledPlugin> GetInstalledPlugins(string serverFolder)
+        {
+            var pluginsFolder = GetPluginsFolder(serverFolder);
+            if (pluginsFolder == null || !Directory.Exists(pluginsFolder)) return Array.Empty<InstalledPlugin>();
+
+            try
+            {
+                return Directory
+                    .GetFiles(pluginsFolder, "*.dll")
+                    .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                    .Select(f => InstalledPlugin.FromFile(f, IsManagedPlugin(f)))
+                    .ToList();
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Could not list the BepInEx plugins in {folder}", pluginsFolder);
+                return Array.Empty<InstalledPlugin>();
+            }
+        }
+
+        /// <summary>
+        /// True for the mods this app knows how to install and update. Valheim Plus ships
+        /// under either name depending on the distribution used.
+        /// </summary>
+        private static bool IsManagedPlugin(string path)
+        {
+            var name = Path.GetFileNameWithoutExtension(path);
+            return string.Equals(name, "ValheimPlus", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(name, "ValheimPlusGrantapher", StringComparison.OrdinalIgnoreCase);
+        }
+
         private void InstallFromZip(string serverFolder, string zipPath, string packVersion)
         {
             if (!File.Exists(zipPath)) throw new FileNotFoundException("BepInEx archive not found.", zipPath);
@@ -175,7 +218,7 @@ namespace ValheimServerGUI.Game.Mods
 
             // BepInEx enables its console by default, which can take over the stdout pipe
             // the GUI relies on for log parsing. Force it off after every install/update.
-            ApplyServerLoggingDefaults(serverFolder);
+            EnsureConsoleLoggingDisabled(serverFolder);
         }
 
         /// <summary>
@@ -206,20 +249,36 @@ namespace ValheimServerGUI.Game.Mods
         /// <summary>
         /// Disables the BepInEx console in BepInEx/config/BepInEx.cfg so that server stdout
         /// is not diverted away from the GUI's redirected pipe. Preserves all other settings.
+        /// Returns true when the file was changed, so callers can tell an actual repair from a
+        /// no-op. Safe to call on every start: it is a no-op once the setting is off.
         /// </summary>
-        private static void ApplyServerLoggingDefaults(string serverFolder)
+        public bool EnsureConsoleLoggingDisabled(string serverFolder)
         {
             try
             {
-                var configPath = Path.Join(serverFolder, "BepInEx", "config", "BepInEx.cfg");
-                if (!File.Exists(configPath)) return;
+                if (string.IsNullOrWhiteSpace(serverFolder)) return false;
 
-                var updated = BepInExConfig.DisableConsoleLogging(File.ReadAllText(configPath));
+                var configPath = Path.Join(serverFolder, "BepInEx", "config", "BepInEx.cfg");
+                if (!File.Exists(configPath)) return false;
+
+                var current = File.ReadAllText(configPath);
+                var updated = BepInExConfig.DisableConsoleLogging(current);
+
+                // The transform is idempotent, so "text changed" is the honest test for
+                // "we had to repair something".
+                if (string.Equals(current, updated, StringComparison.Ordinal)) return false;
+
                 File.WriteAllText(configPath, updated);
+                Logger.Warning(
+                    "BepInEx console logging was enabled in {config}; it was disabled so the server log can be parsed. Changing it back will break the Logs tab.",
+                    configPath);
+                return true;
             }
-            catch
+            catch (Exception e)
             {
-                // Best-effort: a broken config should never abort the install
+                // Best-effort: a broken config must never block starting the server.
+                Logger.Error(e, "Could not disable the BepInEx console in {folder}", serverFolder);
+                return false;
             }
         }
 
@@ -236,10 +295,15 @@ namespace ValheimServerGUI.Game.Mods
             }
             catch
             {
-                // Fall through to the player log below
+                // Fall through to the log readers below
             }
 
-            // Fall back to the version reported in the player log (available after a server run)
+            // Prefer the server's own BepInEx log: it is written by the server process and
+            // therefore present on a headless host.
+            var fromServerLog = BepInExLogReader.Read(serverFolder).BepInExPackVersion;
+            if (!string.IsNullOrWhiteSpace(fromServerLog)) return fromServerLog;
+
+            // Last resort: the Valheim *client* log, which a dedicated-only machine may not have.
             return PlayerLogReader.Read().BepInExPackVersion;
         }
 

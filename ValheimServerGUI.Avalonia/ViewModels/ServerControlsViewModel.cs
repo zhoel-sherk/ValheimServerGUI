@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using ValheimServerGUI.Core.Platform;
 using ValheimServerGUI.Game;
+using ValheimServerGUI.Game.Mods;
 using ValheimServerGUI.Infrastructure;
 using ValheimServerGUI.Tools;
 using ValheimServerGUI.Tools.Logging;
@@ -33,6 +34,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
         private readonly ISteamCloudWorldProvider SteamCloudWorlds;
         private readonly IUserInteraction UserInteraction;
         private readonly IServerLogStream ServerLogStream;
+        private readonly IBepInExManager BepInExManager;
         private readonly IApplicationLogger Logger;
 
         private bool IsLoadingState;
@@ -111,6 +113,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             ISteamCloudWorldProvider steamCloudWorldProvider,
             IUserInteraction userInteraction,
             IServerLogStream serverLogStream,
+            IBepInExManager bepInExManager,
             IApplicationLogger logger)
         {
             Server = server;
@@ -121,6 +124,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             SteamCloudWorlds = steamCloudWorldProvider;
             UserInteraction = userInteraction;
             ServerLogStream = serverLogStream;
+            BepInExManager = bepInExManager;
             Logger = logger;
 
             Server.StatusChanged += OnServerStatusChanged;
@@ -380,6 +384,12 @@ namespace ValheimServerGUI.Avalonia.ViewModels
             IsBusy = true;
             try
             {
+                // BepInEx's console can hijack the server's stdout, which is the pipe the log
+                // parser depends on - the status would then never reach "Running". Repair it on
+                // every start, because an install made outside this app never got the fix.
+                BepInExManager.EnsureConsoleLoggingDisabled(
+                    ValheimPathExtensions.GetServerFolderFromExePath(options.ServerExePath));
+
                 Server.Start(options);
 
                 var userPrefs = UserPrefsProvider.LoadPreferences();
