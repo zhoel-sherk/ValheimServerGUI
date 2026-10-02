@@ -262,13 +262,13 @@ namespace ValheimServerGUI.Game.Mods
                 if (!File.Exists(configPath)) return false;
 
                 var current = File.ReadAllText(configPath);
-                var updated = BepInExConfig.DisableConsoleLogging(current);
 
-                // The transform is idempotent, so "text changed" is the honest test for
-                // "we had to repair something".
-                if (string.Equals(current, updated, StringComparison.Ordinal)) return false;
+                // Decide from the parsed state, not by diffing text: DisableConsoleLogging
+                // normalises line endings, so a mixed-ending file would otherwise look "changed"
+                // on every single start and rewrite the user's config forever.
+                if (BepInExConfig.IsConsoleLoggingDisabled(current)) return false;
 
-                File.WriteAllText(configPath, updated);
+                File.WriteAllText(configPath, BepInExConfig.DisableConsoleLogging(current));
                 Logger.Warning(
                     "BepInEx console logging was enabled in {config}; it was disabled so the server log can be parsed. Changing it back will break the Logs tab.",
                     configPath);

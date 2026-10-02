@@ -55,6 +55,57 @@ namespace ValheimServerGUI.Tests.Game.Mods
 
             Assert.Equal(input, BepInExConfig.DisableConsoleLogging(input));
         }
+
+        // A real BepInEx.cfg on a live server had mixed CRLF/LF endings. An earlier version of
+        // DisableConsoleLogging rebuilt the whole file with a single eol, so it "changed" the file
+        // on every server start and warned every time. Untouched lines must stay byte-identical.
+        [Fact]
+        public void LeavesMixedLineEndingsAloneWhenAlreadyDisabled()
+        {
+            var input = "[Logging.Console]\r\n\r\nEnabled = false\nPreventClose = true\r\n";
+
+            Assert.True(BepInExConfig.IsConsoleLoggingDisabled(input));
+            Assert.Equal(input, BepInExConfig.DisableConsoleLogging(input));
+        }
+
+        [Fact]
+        public void OnlyTheEnabledLineChangesInAMixedEndingFile()
+        {
+            var input = "[Logging.Console]\r\n\r\nEnabled = true\nPreventClose = true\r\n[Logging.Disk]\r\nEnabled = true\r\n";
+
+            var result = BepInExConfig.DisableConsoleLogging(input);
+
+            Assert.Contains("Enabled = false\nPreventClose", result);   // that line's own LF kept
+            Assert.Contains("PreventClose = true\r\n[Logging.Disk]\r\nEnabled = true\r\n", result); // rest untouched
+            Assert.False(BepInExConfig.IsConsoleLoggingDisabled("[Logging.Console]\r\nEnabled = true\r\n"));
+        }
+
+        [Theory]
+        [InlineData("[Logging.Console]\nEnabled = true\n", false)]
+        [InlineData("[Logging.Console]\nEnabled = TRUE\n", false)]
+        [InlineData("[Logging.Console]\nEnabled = false\n", true)]
+        [InlineData("[Logging.Console]\nEnabled = 1\n", true)]     // not "true" -> nothing to disable
+        [InlineData("[General]\nEnabled = true\n", true)]          // wrong section -> console not enabled
+        [InlineData("[Logging.Console]\nLogLevels = Info\n", true)]// no Enabled key -> nothing to disable
+        [InlineData("no console here at all", true)]
+        [InlineData(null, true)]
+        [InlineData("", true)]
+        public void DetectsWhetherTheConsoleIsActuallyEnabled(string config, bool expected)
+        {
+            Assert.Equal(expected, BepInExConfig.IsConsoleLoggingDisabled(config));
+        }
+
+        [Fact]
+        public void StopsAtTheFirstEnabledKeyInTheConsoleSection()
+        {
+            // Two Enabled keys in the same section: only the first one is the console switch,
+            // and the second must be left exactly as it was.
+            var input = "[Logging.Console]\nEnabled = true\nEnabled = true\n";
+
+            var result = BepInExConfig.DisableConsoleLogging(input);
+
+            Assert.Equal("[Logging.Console]\nEnabled = false\nEnabled = true\n", result);
+        }
     }
 
     public class PlayerLogReaderTests
