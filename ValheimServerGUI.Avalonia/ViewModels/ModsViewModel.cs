@@ -32,6 +32,9 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
         public ObservableCollection<ModConfigFileViewModel> ConfigFiles { get; } = new();
 
+        /// <summary>Mods currently present in the BepInEx plugins folder (read-only listing).</summary>
+        public ObservableCollection<InstalledPlugin> InstalledPlugins { get; } = new();
+
         [ObservableProperty]
         private ModConfigFileViewModel? _selectedConfigFile;
 
@@ -80,20 +83,15 @@ namespace ValheimServerGUI.Avalonia.ViewModels
 
         private string? GetServerFolder()
         {
-            var exePath = ServerControls.ServerExePath;
-            if (string.IsNullOrWhiteSpace(exePath)) return null;
+            var folder = ValheimPathExtensions.GetServerFolderFromExePath(ServerControls.ServerExePath);
 
-            try
-            {
-                var expanded = Environment.ExpandEnvironmentVariables(exePath);
-                return Path.GetDirectoryName(Path.GetFullPath(expanded));
-            }
-            catch (Exception e)
+            if (folder == null && !string.IsNullOrWhiteSpace(ServerControls.ServerExePath))
             {
                 // An invalid/partial path (e.g. while the user is typing) must never crash the tab.
-                Logger.Error("Invalid server executable path '{path}': {message}", exePath, e.Message);
-                return null;
+                Logger.Error("Invalid server executable path '{path}'", ServerControls.ServerExePath);
             }
+
+            return folder;
         }
 
         [RelayCommand]
@@ -109,6 +107,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                 BackupsStatus = "No server folder selected";
                 Backups.Clear();
                 ConfigFiles.Clear();
+                InstalledPlugins.Clear();
                 return;
             }
 
@@ -120,6 +119,7 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                 var valheimPlus = ValheimPlusManager.GetStatus(serverFolder);
                 ValheimPlusStatus = FormatModStatus("Valheim Plus", valheimPlus);
 
+                RefreshInstalledPlugins(serverFolder);
                 RefreshBackups(serverFolder);
                 RefreshConfigFiles(serverFolder);
             }
@@ -128,6 +128,16 @@ namespace ValheimServerGUI.Avalonia.ViewModels
                 Logger.Error("Error refreshing the mods tab: {message}", e.Message);
                 BepInExStatus = "Unable to read mod status";
                 ValheimPlusStatus = "Unable to read mod status";
+            }
+        }
+
+        private void RefreshInstalledPlugins(string serverFolder)
+        {
+            InstalledPlugins.Clear();
+
+            foreach (var plugin in BepInExManager.GetInstalledPlugins(serverFolder))
+            {
+                InstalledPlugins.Add(plugin);
             }
         }
 
