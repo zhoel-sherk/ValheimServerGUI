@@ -17,8 +17,8 @@ layout.
 3. A modern, maintainable UI
 4. Native AOT as an experiment after the application is functionally stable
 
-The migration is incremental. The existing WinForms application remains the supported Windows
-client until the Avalonia client reaches feature parity and has passed the same real-server checks.
+The migration is **done**: the Avalonia client is the only client, and the WinForms app and the
+Serverless REST backend were deleted in `1fe06b` (source preserved in tag `legacy-winforms`).
 
 ## Repository reality
 
@@ -292,14 +292,15 @@ Names are provisional and should be chosen when Phase 1 starts:
   preferences, mod/backup contracts and platform-neutral models.
 - `ValheimServerGUI.Infrastructure` (`net10.0`): local process, local filesystem, JSON storage,
   HTTP, logging and platform adapters.
-- `ValheimServerGUI.WinForms` (temporary compatibility client): current UI while the new client is
-  developed. It may remain named `ValheimServerGUI` to reduce release/build churn.
 - `ValheimServerGUI.Avalonia` (`net10.0`): Avalonia application, ViewModels and desktop adapters.
 - `ValheimServerGUI.Remote` (`net10.0`): SSH/SFTP implementation, only after the local seams work.
 
-Do not move `Resources.resx` into Core. Replace resource access from domain code with neutral
-options, path providers and localized UI resources. The current generated resource class returns
-System.Drawing types and would keep the shared project Windows-bound.
+(The `ValheimServerGUI.WinForms` compatibility client proposed here was never built - the
+WinForms app simply became `ValheimServerGUI.Avalonia`.)
+
+The old `Resources.resx` is gone. Its values now live in `Infrastructure/AppSettings.cs`, which
+is where any new shared setting belongs - keep it free of `System.Drawing`/WinForms types so Core
+stays platform-neutral.
 
 ### Required interfaces
 
@@ -529,7 +530,7 @@ Known blockers in this repository:
 
 Preferred sequence:
 
-1. Keep Newtonsoft for the WinForms compatibility client.
+1. Keep Newtonsoft for the Avalonia client (it is what the JSON preference files already use).
 2. Introduce a source-generated `System.Text.Json` serializer context for new Core models.
 3. Migrate persisted JSON with golden files and backward-compatible property names.
 4. Remove untyped deserialization from the AOT client boundary.
@@ -616,8 +617,8 @@ Every phase must leave a working build:
 5. For non-Windows clients: path, encoding, process-signal and permissions tests
 6. For AOT: publish per RID, inspect warnings, then run the published artifact
 
-The WinForms release must stay green until the Avalonia client has passed the same gates. Do not
-delete the WinForms project merely because the Avalonia window renders.
+The Avalonia client is the only client, so there is no second release to keep green. The
+gates above now apply to it directly.
 
 ## References
 

@@ -132,8 +132,12 @@ roadmap has the same gap.
 roadmap is mod list / mod config (on/off) / mod presets.
 
 **Status.** Implemented. `AGENTS.md` and `README.md` now list BepInEx/Valheim Plus,
-Steam Cloud world import, Discord webhook notifications and mod folder/config actions as
-shipped; the remaining roadmap is mod list / mod config / mod presets.
+Steam Cloud world import, Discord webhook notifications, UPnP port forwarding and mod
+folder/config actions as shipped.
+
+**Updated 2.4.5.** A read-only mod list shipped (item 11 covers the rest). The README roadmap
+now reads: mod enable/disable (item 11), Valheim Plus feature toggles (item 12), mod presets,
+and installing arbitrary mods (item 15).
 
 ---
 
@@ -159,3 +163,94 @@ the gaps between log lines that 2.4.4 removed.
 
 **Fix.** Re-capture both screenshots against a 2.4.4+ build (they are the first thing a new
 visitor sees). Not done automatically: capturing needs a live window and a running server.
+
+**Status.** Done in 2.4.4 — all four screenshots recaptured against a live 1.0.12 server.
+
+---
+
+## 11. [open] [high] No way to enable or disable a mod
+
+**Problem.** BepInEx has no per-plugin on/off switch. The only way to stop a mod loading is to
+move its `.dll` out of `BepInEx/plugins`, and the app cannot do that. 2.4.5 lists the plugins
+read-only, which is half the story: an admin can see that seven mods are installed but not
+disable one without opening Explorer while the server is stopped.
+
+**Decided mechanism: move the DLL.** Toggle = move `BepInEx/plugins/<Mod>.dll` to
+`BepInEx/vsg-disabled/<Mod>.dll` and back. Chosen over writing an `enabled` key into the mod's
+config because most mods have no such key — on a real install only 2 of 7 do, so a config-based
+toggle would silently do nothing for the rest.
+
+**Notes for whoever implements it.** The server must be stopped (BepInEx loads plugins once at
+startup, so a moved file needs a restart). Name collisions between the two folders need a
+decision. The UI copy must make clear that this moves files, and `Remove Player`-style
+destructive actions should confirm.
+
+---
+
+## 12. [open] [medium] Valheim Plus feature toggles are unreachable
+
+**Problem.** `BepInEx/config/org.bepinex.plugins.valheim_plus.cfg` is 207 KB and holds 60
+`[Section]` blocks each with an `enabled` key (14 on, 46 off on a real install). The app can open
+the file in the OS editor and nothing else, so every Valheim Plus feature is a hand edit of
+XML-ish text. The file is also pathological: Valheim Plus embeds the whole Unity `KeyCode` enum
+in every keycode comment, which is why it is that large.
+
+**Fix.** Parse the per-section `enabled` keys into a list of checkboxes, reusing the lossless
+`BepInExConfig` edit style so only the touched lines change. Follow the `[Section]` conventions
+`DisableConsoleLogging` already implements, and keep the write atomic.
+
+---
+
+## 13. [open] [medium] Backups are discovered but never created
+
+**Problem.** `BackupService` only lists `<world>_backup_*` entries and rates them Healthy /
+Warning. There is no create, restore, delete or prune, and the retention count shown
+(`backups 4` / `backupshort` / `backuplong`) is a server argument the app has no control over.
+
+**Fix.** Add copy-to-backup, restore-from-backup, delete, and prune-to-count. Restore is
+destructive and needs a confirmation plus a fresh backup first.
+
+---
+
+## 14. [open] [high] No player access control (largest upstream gap)
+
+**Problem.** Valheim reads `adminlist.txt`, `banlist.txt` and `permittedlist.txt` from the save
+folder. Nothing in this app writes them, and a real install had none at all — so there is no way
+to make someone an admin, ban a player, or run a permitted-only server.
+
+Upstream (`runeberry/ValheimServerGUI` `v3.0`) has this as a profile-scoped role model:
+`PlayerAccessListService` plus generation of the three files at server start. The commits are
+`2bd4913` (domain layer; its PlayStation/Nintendo half is already here), `4987ed0` (generate at
+start), `0b9edae`, `790a6a7`, `b49cd0d`, `a0919ee`.
+
+**Porting note.** Do not cherry-pick — the WinForms role editor does not apply, only the Core
+domain and the file generation. Two details from upstream worth preserving: Steam ids may be
+written bare or `Steam_`-prefixed and must be de-duplicated, while non-Steam ids are matched
+**case-sensitively** by `ZNet.ListContainsId`, so the raw log token has to be preserved; and
+header lines plus unauthored lines must survive a rewrite.
+
+---
+
+## 15. [open] [medium] Only BepInEx and Valheim Plus can be installed or updated
+
+**Problem.** `ValheimPlusManager` hardcodes its two plugin file names, and the Thunderstore
+endpoint in `AppSettings.UrlBepInExPackApi` is the only one wired up. On a real install Jotunn,
+Drop That!, Impactful Skills, Network Performance System, PlantEasily and AchievementEnabler are
+installed and completely unmanageable — Jotunn in particular is a dependency host many mods need.
+
+**Fix.** Generalise `ModSourceClient` to arbitrary Thunderstore packages: list, resolve the right
+distribution for a dedicated server, install, update, and surface declared dependencies. Reading
+plugin metadata needs assembly inspection beyond `FileVersionInfo` (GUID, author, dependencies);
+Jotunn additionally ships a `Jotunn.xml` with its docs.
+
+---
+
+## 16. [open] [low] Plugin load failures are invisible
+
+**Problem.** The app never reads `BepInEx/LogOutput.log`; it can only open it in an editor. A
+plugin that throws while loading produces nothing in the GUI. The log does contain such lines
+(alongside Unity shader noise, which is why a naive read is noisy).
+
+**Fix.** Surface `[Error]` / `[Exception]` lines from the mod-loading section as warnings on the
+Mods tab, and consider a "Mods" log view. Needs filtering so Unity's own errors do not drown it
+out.

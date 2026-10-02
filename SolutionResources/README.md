@@ -1,39 +1,33 @@
 # Solution Resources
 
-This folder contains code, configuration, and/or assets that are used in multiple projects in the Solution. Some files are considered "secret" and are not committed to source control. However, the solution is set up so that you **should not need any of these secret files** in order to do local development - only to publish the app or Serverless code.
+This folder is not a build input. Nothing in the solution compiles anything from here — it exists
+only to hold files that are git-ignored, so that Release builds can reference them by path without
+them ever entering git.
 
-In some cases, however, you may want to supply your own mock secret values for testing. Examples of these files are provided below for your reference.
+You **do not need anything in this folder for local development**. The only thing the solution
+expects is the strong-name key, and only for Release builds.
 
 ### ValheimServerGUI.snk
 
-This is only needed when publishing the desktop client application in the Release configuration. If you need to publish the application locally for some reason, simply change the Publish Profile (.pubxml) to publish to Debug configuration temporarily.
+Referenced by the `Release` `PropertyGroup` of four csproj files as
+`AssemblyOriginatorKeyFile`. The file is git-ignored and is deliberately **not** committed — a
+strong-name key in a public repository is not a secret anyone wants leaked.
 
-### ClientSecrets.Values.cs
+Consequences:
 
-This is a... "clever" way of providing secret information to both the client and Serverless applications at compile time. Use this partial static class to set the values of any properties in **ClientSecrets.cs**.
+* `Debug` builds work with no key at all.
+* Release builds need `/p:SignAssembly=false`, which is what the release steps in `AGENTS.md`
+  and `CONTRIBUTING.md` pass. That produces an unsigned build, which is what this fork ships.
 
-```csharp
-namespace ValheimServerGUI.Properties
-{
-  public static partial class Secrets
-  {
-    static Secrets()
-    {
-      // Set the values of any properties in Secrets.cs below
-      RuneberryApiKeyHeader = "some-header-key";
-    }
-  }
-}
-```
+If you want strong-name signing for your own fork, drop your own `.snk` here.
 
-### appsettings.local.json
+### Removed
 
-Configuration values for the Serverless application only when running locally. You can set AWS Lambda environment variables here to imitate running in a cloud environment.
+`ClientSecrets.Values.cs` / `ServerSecrets.Values.cs` and `appsettings.local.json` were documented
+here for the retired Serverless REST backend and its compile-time secrets. Both were deleted in
+`1fe06b` (the backend itself went with them), and the leftover `*.Values.cs` files were halves of
+partial classes whose other half no longer existed — they would not have compiled. They have been
+removed.
 
-```jsonc
-{
-  // These are required to access other AWS services from within the API
-  "AWS_ACCESS_KEY_ID": "",
-  "AWS_SECRET_ACCESS_KEY": ""
-}
-```
+The app has no compile-time secrets: `Infrastructure/AppSettings.cs` holds plain paths, URLs and
+defaults, and the only API it talks to is the public GitHub releases endpoint for this fork.

@@ -57,7 +57,9 @@ Key files:
 - `ValheimServerGUI.Infrastructure/Tools/Logging/LogSeverityClassifier.cs` — maps a rendered line to `LogSeverity` for the Logs tab
 - `ValheimServerGUI.Infrastructure/Tools/Logging/BaseLogger.cs` — rule pipeline; renders substitutions literally (see Logging gotchas)
 - `ValheimServerGUI.Infrastructure/Tools/StartupHelper.cs` — Windows "Run" registry helper
-- `ValheimServerGUI.Infrastructure/Game/Mods/BepInExManager.cs` — BepInEx install/status + paths/config listing
+- `ValheimServerGUI.Infrastructure/Game/Mods/BepInExManager.cs` — BepInEx install/status + paths/config/plugin listing
+- `ValheimServerGUI.Infrastructure/Game/Mods/BepInExLogReader.cs` — versions from the server's own `BepInEx/LogOutput.log`
+- `ValheimServerGUI.Infrastructure/Game/Mods/BepInExConfig.cs` — lossless `BepInEx.cfg` text edit
 - `ValheimServerGUI.Infrastructure/Game/SteamCloudWorldProvider.cs` — Steam Cloud world import
 - `ValheimServerGUI.Avalonia/App.axaml.cs` — composition root + exception boundary + tray
 - `ValheimServerGUI.Avalonia/App.axaml` — Valheim "Mistlands Tech" dark theme
@@ -70,7 +72,7 @@ Requires **.NET SDK 10** (`dotnet --list-sdks`).
 
 ```pwsh
 dotnet build ValheimServerGUI.sln -c Debug
-dotnet test ValheimServerGUI.sln --nologo            # 216 tests, must be green
+dotnet test ValheimServerGUI.sln --nologo            # 231 tests, must be green
 dotnet run --project ValheimServerGUI.Avalonia
 ```
 
@@ -191,6 +193,31 @@ once-per-platform warning.
 
 Server stdout is read as **UTF-8** (`LocalServerProcess`) — required for
 non-ASCII character names. Do not remove those encoding settings.
+
+## BepInEx invariants
+
+Two things the app depends on, both of which fail quietly if broken:
+
+- **`[Logging.Console] Enabled = false` in `BepInEx/config/BepInEx.cfg`.** An enabled BepInEx
+  console calls `AllocConsole`/`SetStdHandle` and can divert the server's stdout away from the
+  redirected pipe that `ServerLogParser` reads — the status then never reaches `Running` and
+  player events are lost. Thunderstore ships it *enabled*, and `CreateNoWindow` does not prevent
+  it. `IBepInExManager.EnsureConsoleLoggingDisabled` repairs it; it is idempotent and is called on
+  every server start from `StartAsync`, so an install made outside the app is fixed too. Never
+  remove that call — it is the only thing that catches a hand-edited or externally-updated config.
+- **Version sources, in order.** Pack version: the `.vsg-bepinex-pack-version` marker (written
+  only when *this app* installed it) → `BepInEx/LogOutput.log` → the Valheim **client**
+  `Player.log`. Only the first two are reliable on a dedicated host; `PlayerLogReader` reads
+  `%LOCALAPPDATA%\IronGate\Valheim\Player.log`, which a machine that never runs the game client
+  does not have. If that log is absent, `PackageVersion` is null and `ModVersion.IsNewer(x, null)`
+  is false, so "check for updates" silently reports nothing to do — which is exactly how this bug
+  presented. BepInEx runs with `AppendLog = false`, so `LogOutput.log` is the latest session only;
+  `LogOutput.log.1` is the rotated older one and must not be parsed.
+
+The plugins folder is **listed read-only**. BepInEx has no per-plugin on/off switch: the only way
+to unload a mod is to move its `.dll` out of `BepInEx/plugins`. Enabling/disabling (via a
+`vsg-disabled` folder) and Valheim Plus's ~60 per-feature `enabled` toggles are open work in
+`TODO.md` — do not assume they exist.
 
 ## Local environment notes
 

@@ -7,8 +7,8 @@ namespace ValheimServerGUI.Core.Platform
 {
     /// <summary>
     /// UI-facing interaction contract: error dialogs, confirmation prompts and file/folder
-    /// pickers. The core must never call MessageBox; the host (WinForms or Avalonia) provides
-    /// an implementation. Commands report failures through this service.
+    /// pickers. The core must never call a message box directly; the client provides an
+    /// implementation. Commands report failures through this service.
     /// </summary>
     public interface IUserInteraction
     {

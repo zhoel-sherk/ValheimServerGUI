@@ -43,7 +43,7 @@ In order to run ValheimServerGUI, you will need the following:
 * **Minimize to tray** - Minimize this app and control your server entirely from the Windows system tray
 * **Server profiles** - Save and switch between server configurations from the profile dropdown (one server runs at a time)
 * **Difficulty presets** - Set world difficulty (Easy, Hard, Hardcore, Casual, and per-modifier or per-key control) via the "Difficulty..." dialog next to the world selector. It can restart a running server so the change takes effect
-* **Works with mods!** - Tested and working with server-side mods such as [Valheim Plus](https://www.nexusmods.com/valheim/mods/2323). Install/update BepInEx and Valheim Plus from the app, and open the plugins/config folders or a mod's config file directly
+* **Works with mods!** - Tested and working with server-side mods such as [Valheim Plus](https://www.nexusmods.com/valheim/mods/2323). Install/update BepInEx and Valheim Plus from the app, list the mods present in the plugins folder, and open the plugins/config folders or a mod's config file directly
 * **Steam Cloud worlds** - Worlds saved to Steam Cloud appear in the world list; import them (Move/Copy) into the server's local save folder to host them
 * **Port forwarding** - Maps the three UDP ports your server needs through UPnP/NAT-PMP from a "Ports" dialog, and warns when you are behind CGNAT/double NAT
 * **Discord notifications** - Optional webhook notifications for server online/offline, player join/leave/death and join-code changes
@@ -59,12 +59,14 @@ The dialog warns about this, and about the restart, before it changes anything.
 
 Ideas for future releases (no timelines, contributions welcome):
 
-* **Mod list** - Browse & install server-side mods
-* **Mod config** - Enable/disable installed mods (on/off)
+* **Enable/disable mods** - Turn individual mods on and off from the Mods tab
+* **Install any mod** - Install and update server-side mods from Thunderstore, with dependencies resolved
 * **Mod presets** - Save & apply whole mod loadouts (presets)
+* **Player roles** - Make players admins, ban them, or run a permitted-only server
 
-BepInEx + Valheim Plus install/update, Steam Cloud world import, Discord webhook notifications,
-UPnP/NAT-PMP port forwarding and mod folder/config actions have shipped.
+BepInEx + Valheim Plus install/update, a read-only list of installed mods, Steam Cloud world
+import, Discord webhook notifications, UPnP/NAT-PMP port forwarding and mod folder/config actions
+have shipped.
 
 ## Quick guide
 
